@@ -7,9 +7,12 @@ import com.matedroid.data.api.models.CarStatus
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,6 +32,12 @@ class DashboardViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+
+    private var autoRefreshJob: Job? = null
+
+    companion object {
+        private const val AUTO_REFRESH_INTERVAL_MS = 5000L
+    }
 
     init {
         loadCars()
@@ -86,6 +95,26 @@ class DashboardViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         error = result.message
                     )
+                }
+            }
+        }
+        startAutoRefresh(carId)
+    }
+
+    private fun startAutoRefresh(carId: Int) {
+        autoRefreshJob?.cancel()
+        autoRefreshJob = viewModelScope.launch {
+            while (isActive) {
+                delay(AUTO_REFRESH_INTERVAL_MS)
+                when (val result = repository.getCarStatus(carId)) {
+                    is ApiResult.Success -> {
+                        _uiState.value = _uiState.value.copy(
+                            carStatus = result.data
+                        )
+                    }
+                    is ApiResult.Error -> {
+                        // Silently ignore errors during auto-refresh
+                    }
                 }
             }
         }
