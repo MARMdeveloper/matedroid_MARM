@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -588,6 +587,7 @@ private fun formatHoursMinutes(hours: Double): String {
     return if (h > 0) "${h}h ${m}m" else "${m}m"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NavigationCard(
     title: String,
@@ -596,9 +596,8 @@ private fun NavigationCard(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
