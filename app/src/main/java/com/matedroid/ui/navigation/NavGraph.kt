@@ -1,9 +1,14 @@
 package com.matedroid.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.matedroid.ui.screens.dashboard.DashboardScreen
 import com.matedroid.ui.screens.settings.SettingsScreen
 
 sealed class Screen(val route: String) {
@@ -22,12 +27,19 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun NavGraph() {
+fun NavGraph(
+    startViewModel: StartDestinationViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
+    val startDestination by startViewModel.startDestination.collectAsState()
+
+    if (startDestination == null) {
+        return // Wait for determination
+    }
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Settings.route
+        startDestination = startDestination!!
     ) {
         composable(Screen.Settings.route) {
             SettingsScreen(
@@ -39,6 +51,12 @@ fun NavGraph() {
             )
         }
 
-        // Dashboard and other screens will be added in subsequent phases
+        composable(Screen.Dashboard.route) {
+            DashboardScreen(
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
+                }
+            )
+        }
     }
 }
