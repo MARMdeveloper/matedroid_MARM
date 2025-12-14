@@ -88,7 +88,8 @@ class TeslamateRepository @Inject constructor(
     ): ApiResult<List<ChargeData>> {
         return try {
             val api = getApi() ?: return ApiResult.Error("Server not configured")
-            val response = api.getCharges(carId, startDate, endDate)
+            // Use show=50000 to fetch all results (API defaults to 100)
+            val response = api.getCharges(carId, startDate, endDate, page = 1, show = 50000)
             if (response.isSuccessful) {
                 val charges = response.body()?.data?.charges ?: emptyList()
                 ApiResult.Success(charges)
@@ -126,7 +127,8 @@ class TeslamateRepository @Inject constructor(
     ): ApiResult<List<DriveData>> {
         return try {
             val api = getApi() ?: return ApiResult.Error("Server not configured")
-            val response = api.getDrives(carId, startDate, endDate)
+            // Use show=50000 to fetch all results (API defaults to 100)
+            val response = api.getDrives(carId, startDate, endDate, page = 1, show = 50000)
             if (response.isSuccessful) {
                 val drives = response.body()?.data?.drives ?: emptyList()
                 ApiResult.Success(drives)

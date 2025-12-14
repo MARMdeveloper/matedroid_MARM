@@ -36,7 +36,9 @@ interface TeslamateApi {
     suspend fun getCharges(
         @Path("carId") carId: Int,
         @Query("startDate") startDate: String? = null,
-        @Query("endDate") endDate: String? = null
+        @Query("endDate") endDate: String? = null,
+        @Query("page") page: Int? = null,
+        @Query("show") show: Int? = null
     ): Response<ChargesResponse>
 
     @GET("api/v1/cars/{carId}/charges/{chargeId}")
@@ -49,7 +51,9 @@ interface TeslamateApi {
     suspend fun getDrives(
         @Path("carId") carId: Int,
         @Query("startDate") startDate: String? = null,
-        @Query("endDate") endDate: String? = null
+        @Query("endDate") endDate: String? = null,
+        @Query("page") page: Int? = null,
+        @Query("show") show: Int? = null
     ): Response<DrivesResponse>
 
     @GET("api/v1/cars/{carId}/drives/{driveId}")
