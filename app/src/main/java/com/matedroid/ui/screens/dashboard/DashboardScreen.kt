@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.EvStation
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
@@ -320,9 +321,9 @@ private fun StatusIndicatorsRow(status: CarStatus) {
 private fun BatteryCard(status: CarStatus) {
     val batteryLevel = status.batteryLevel ?: 0
     val batteryColor = when {
-        batteryLevel >= 60 -> StatusSuccess
-        batteryLevel >= 20 -> StatusWarning
-        else -> StatusError
+        batteryLevel < 20 -> StatusError
+        batteryLevel < 40 -> StatusWarning
+        else -> MaterialTheme.colorScheme.onPrimaryContainer
     }
 
     Card(
@@ -352,12 +353,20 @@ private fun BatteryCard(status: CarStatus) {
                     fontWeight = FontWeight.Bold,
                     color = batteryColor
                 )
-                if (status.pluggedIn == true) {
+                if (status.isCharging) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         imageVector = Icons.Filled.ElectricBolt,
                         contentDescription = "Charging",
                         tint = StatusSuccess
+                    )
+                }
+                if (batteryLevel > 90) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = "High charge level",
+                        tint = StatusWarning
                     )
                 }
             }
