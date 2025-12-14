@@ -1,6 +1,5 @@
 package com.matedroid.data.repository
 
-import android.util.Log
 import com.matedroid.data.api.TeslamateApi
 import com.matedroid.data.api.models.BatteryHealth
 import com.matedroid.data.api.models.CarData
@@ -89,19 +88,14 @@ class TeslamateRepository @Inject constructor(
     ): ApiResult<List<ChargeData>> {
         return try {
             val api = getApi() ?: return ApiResult.Error("Server not configured")
-            Log.d("TeslamateRepo", "getCharges: carId=$carId, startDate=$startDate, endDate=$endDate")
-            // Use show=50000 to fetch all results (API defaults to 100)
             val response = api.getCharges(carId, startDate, endDate, page = 1, show = 50000)
             if (response.isSuccessful) {
                 val charges = response.body()?.data?.charges ?: emptyList()
-                Log.d("TeslamateRepo", "getCharges: returned ${charges.size} charges")
                 ApiResult.Success(charges)
             } else {
-                Log.e("TeslamateRepo", "getCharges failed: ${response.code()}")
                 ApiResult.Error("Failed to fetch charges: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Log.e("TeslamateRepo", "getCharges exception: ${e.message}")
             ApiResult.Error(e.message ?: "Failed to fetch charges")
         }
     }
@@ -132,19 +126,14 @@ class TeslamateRepository @Inject constructor(
     ): ApiResult<List<DriveData>> {
         return try {
             val api = getApi() ?: return ApiResult.Error("Server not configured")
-            Log.d("TeslamateRepo", "getDrives: carId=$carId, startDate=$startDate, endDate=$endDate")
-            // Use show=50000 to fetch all results (API defaults to 100)
             val response = api.getDrives(carId, startDate, endDate, page = 1, show = 50000)
             if (response.isSuccessful) {
                 val drives = response.body()?.data?.drives ?: emptyList()
-                Log.d("TeslamateRepo", "getDrives: returned ${drives.size} drives")
                 ApiResult.Success(drives)
             } else {
-                Log.e("TeslamateRepo", "getDrives failed: ${response.code()}")
                 ApiResult.Error("Failed to fetch drives: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Log.e("TeslamateRepo", "getDrives exception: ${e.message}")
             ApiResult.Error(e.message ?: "Failed to fetch drives")
         }
     }
