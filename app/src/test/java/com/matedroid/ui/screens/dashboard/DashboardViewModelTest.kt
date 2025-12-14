@@ -1,7 +1,10 @@
 package com.matedroid.ui.screens.dashboard
 
+import com.matedroid.data.api.models.BatteryDetails
 import com.matedroid.data.api.models.CarData
 import com.matedroid.data.api.models.CarStatus
+import com.matedroid.data.api.models.CarStatusDetails
+import com.matedroid.data.api.models.ChargingDetails
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
 import io.mockk.coEvery
@@ -30,20 +33,21 @@ class DashboardViewModelTest {
 
     private val testCar = CarData(
         carId = 1,
-        displayName = "Test Tesla",
-        model = "Model 3",
-        vin = "TEST123"
+        name = "Test Tesla"
     )
 
     private val testStatus = CarStatus(
-        carId = 1,
         displayName = "Test Tesla",
         state = "online",
-        batteryLevel = 75,
-        ratedBatteryRangeKm = 300.0,
-        chargeLimitSoc = 80,
-        pluggedIn = false,
-        locked = true
+        batteryDetails = BatteryDetails(
+            batteryLevel = 75,
+            ratedBatteryRange = 300.0
+        ),
+        chargingDetails = ChargingDetails(
+            pluggedIn = false,
+            chargeLimitSoc = 80
+        ),
+        carStatus = CarStatusDetails(locked = true)
     )
 
     @Before
@@ -101,9 +105,9 @@ class DashboardViewModelTest {
 
     @Test
     fun `selectCar updates selected car and loads status`() = runTest {
-        val car1 = CarData(carId = 1, displayName = "Car 1")
-        val car2 = CarData(carId = 2, displayName = "Car 2")
-        val status2 = testStatus.copy(carId = 2, displayName = "Car 2")
+        val car1 = CarData(carId = 1, name = "Car 1")
+        val car2 = CarData(carId = 2, name = "Car 2")
+        val status2 = testStatus.copy(displayName = "Car 2")
 
         coEvery { repository.getCars() } returns ApiResult.Success(listOf(car1, car2))
         coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatus)
@@ -129,7 +133,9 @@ class DashboardViewModelTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        val updatedStatus = testStatus.copy(batteryLevel = 80)
+        val updatedStatus = testStatus.copy(
+            batteryDetails = BatteryDetails(batteryLevel = 80, ratedBatteryRange = 300.0)
+        )
         coEvery { repository.getCarStatus(1) } returns ApiResult.Success(updatedStatus)
 
         viewModel.refresh()
