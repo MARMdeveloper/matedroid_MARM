@@ -114,7 +114,12 @@ fun DashboardScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(uiState.carStatus?.displayName ?: "MateDroid")
+                    Column {
+                        Text(uiState.carStatus?.displayName ?: "MateDroid")
+                        if (uiState.carStatus != null) {
+                            StatusIndicatorsRow(uiState.carStatus!!, uiState.units)
+                        }
+                    }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
@@ -255,17 +260,13 @@ private fun DashboardContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Car image
-            CarImageCard(
+            // Battery Section with Car Image
+            BatteryCard(
+                status = status,
+                units = units,
                 carModel = carModel,
                 carExterior = carExterior
             )
-
-            // Compact status indicators (right-aligned)
-            StatusIndicatorsRow(status, units)
-
-            // Battery Section
-            BatteryCard(status, units)
 
             // Location Section
             status.geofence?.let { geofence ->
@@ -288,7 +289,7 @@ private fun DashboardContent(
 }
 
 @Composable
-private fun CarImageCard(
+private fun CarImage(
     carModel: String?,
     carExterior: CarExterior?,
     modifier: Modifier = Modifier
@@ -322,15 +323,13 @@ private fun CarImageCard(
 
     if (bitmap != null) {
         Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(180.dp),
+            modifier = modifier.height(200.dp),
             contentAlignment = Alignment.Center
         ) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = "Car image",
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit
             )
         }
@@ -414,7 +413,12 @@ private fun StatusIndicatorsRow(status: CarStatus, units: Units?) {
 }
 
 @Composable
-private fun BatteryCard(status: CarStatus, units: Units?) {
+private fun BatteryCard(
+    status: CarStatus,
+    units: Units?,
+    carModel: String? = null,
+    carExterior: CarExterior? = null
+) {
     val batteryLevel = status.batteryLevel ?: 0
     val batteryColor = when {
         batteryLevel < 20 -> StatusError
@@ -431,70 +435,70 @@ private fun BatteryCard(status: CarStatus, units: Units?) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(16.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.BatteryChargingFull,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = batteryColor
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "$batteryLevel%",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold,
-                    color = batteryColor
-                )
-                if (status.isCharging) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Filled.ElectricBolt,
-                        contentDescription = "Charging",
-                        tint = StatusSuccess
-                    )
-                }
-                if (batteryLevel > 90) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Filled.Warning,
-                        contentDescription = "High charge level",
-                        tint = StatusWarning
-                    )
-                }
-            }
+            // Car image at the top
+            CarImage(
+                carModel = carModel,
+                carExterior = carExterior,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Battery info row
             Row(
                 modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text(
-                        text = "Rated Range",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                // Left: Battery percentage with icon
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.BatteryChargingFull,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = batteryColor
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "$batteryLevel%",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = batteryColor
+                    )
+                    if (status.isCharging) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Filled.ElectricBolt,
+                            contentDescription = "Charging",
+                            modifier = Modifier.size(20.dp),
+                            tint = StatusSuccess
+                        )
+                    }
+                    if (batteryLevel > 90) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Filled.Warning,
+                            contentDescription = "High charge level",
+                            modifier = Modifier.size(20.dp),
+                            tint = StatusWarning
+                        )
+                    }
+                }
+
+                // Right: Range and limit
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = status.ratedBatteryRangeKm?.let { UnitFormatter.formatDistance(it, units, 0) } ?: "--",
                         style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                }
-                Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Charge Limit",
+                        text = "Limit: ${status.chargeLimitSoc ?: "--"}%",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
-                    Text(
-                        text = "${status.chargeLimitSoc ?: "--"}%",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
