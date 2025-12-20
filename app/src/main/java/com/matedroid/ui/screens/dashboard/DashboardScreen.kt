@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -224,19 +223,10 @@ private fun DashboardContent(
         // Vehicle Info Section
         VehicleInfoCard(status)
 
-        // Navigation Cards
-        NavigationCard(
-            title = "Charge History",
-            description = "View all charging sessions",
-            icon = Icons.Filled.BatteryChargingFull,
-            onClick = onNavigateToCharges
-        )
-
-        NavigationCard(
-            title = "Drive History",
-            description = "View all trips and driving stats",
-            icon = Icons.Filled.DirectionsCar,
-            onClick = onNavigateToDrives
+        // Quick Links Grid
+        QuickLinksRow(
+            onNavigateToCharges = onNavigateToCharges,
+            onNavigateToDrives = onNavigateToDrives
         )
     }
 }
@@ -600,50 +590,58 @@ private fun formatHoursMinutes(hours: Double): String {
     return if (h > 0) "${h}h ${m}m" else "${m}m"
 }
 
+@Composable
+private fun QuickLinksRow(
+    onNavigateToCharges: () -> Unit,
+    onNavigateToDrives: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QuickLinkItem(
+            title = "Charges",
+            icon = Icons.Filled.BatteryChargingFull,
+            onClick = onNavigateToCharges
+        )
+        QuickLinkItem(
+            title = "Drives",
+            icon = Icons.Filled.DirectionsCar,
+            onClick = onNavigateToDrives
+        )
+        // Placeholder for future links (Statistics, Settings, etc.)
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NavigationCard(
+private fun QuickLinkItem(
     title: String,
-    description: String,
     icon: ImageVector,
     onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(24.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Navigate",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
