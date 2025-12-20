@@ -36,6 +36,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -75,6 +76,7 @@ import com.matedroid.data.api.models.Units
 import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.data.api.models.CarVersions
 import com.matedroid.data.api.models.ChargingDetails
+import com.matedroid.data.api.models.TpmsDetails
 import com.matedroid.data.api.models.ClimateDetails
 import com.matedroid.ui.theme.MateDroidTheme
 import com.matedroid.ui.theme.StatusError
@@ -146,11 +148,15 @@ fun DashboardScreen(
                         }
                     )
                 }
-                uiState.cars.isEmpty() -> {
+                uiState.cars.isEmpty() && uiState.error == null -> {
                     EmptyContent()
                 }
+                uiState.error != null -> {
+                    ErrorContent(message = uiState.error!!)
+                }
                 else -> {
-                    ErrorContent(message = uiState.error ?: "Unknown error")
+                    // Car status still loading after cars loaded
+                    LoadingContent()
                 }
             }
         }
@@ -609,6 +615,9 @@ private fun SmallLocationMap(
 @Composable
 private fun VehicleInfoCard(status: CarStatus, units: Units?) {
     val distanceUnit = UnitFormatter.getDistanceUnit(units)
+    val pressureUnit = UnitFormatter.getPressureUnit(units)
+    val tpms = status.tpmsDetails
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -649,7 +658,106 @@ private fun VehicleInfoCard(status: CarStatus, units: Units?) {
                     icon = Icons.Filled.Settings
                 )
             }
+
+            // Tire pressure section
+            if (tpms != null && (tpms.pressureFl != null || tpms.pressureFr != null)) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TirePressureDisplay(
+                    tpms = tpms,
+                    units = units
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun TirePressureDisplay(
+    tpms: TpmsDetails,
+    units: Units?
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Left tires column
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TirePressureItem(
+                label = "FL",
+                pressure = tpms.pressureFl,
+                hasWarning = tpms.warningFl == true,
+                units = units
+            )
+            TirePressureItem(
+                label = "RL",
+                pressure = tpms.pressureRl,
+                hasWarning = tpms.warningRl == true,
+                units = units
+            )
+        }
+
+        // Car icon in the middle
+        Icon(
+            imageVector = Icons.Filled.DirectionsCar,
+            contentDescription = null,
+            modifier = Modifier.size(40.dp),
+            tint = MaterialTheme.colorScheme.outlineVariant
+        )
+
+        // Right tires column
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TirePressureItem(
+                label = "FR",
+                pressure = tpms.pressureFr,
+                hasWarning = tpms.warningFr == true,
+                units = units
+            )
+            TirePressureItem(
+                label = "RR",
+                pressure = tpms.pressureRr,
+                hasWarning = tpms.warningRr == true,
+                units = units
+            )
+        }
+    }
+}
+
+@Composable
+private fun TirePressureItem(
+    label: String,
+    pressure: Double?,
+    hasWarning: Boolean,
+    units: Units?
+) {
+    val textColor = if (hasWarning) StatusWarning else MaterialTheme.colorScheme.onSurface
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = pressure?.let { UnitFormatter.formatPressure(it, units, 2) } ?: "--",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
+            color = textColor
+        )
     }
 }
 

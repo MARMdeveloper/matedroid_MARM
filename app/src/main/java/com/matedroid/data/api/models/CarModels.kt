@@ -64,7 +64,8 @@ data class CarStatus(
     @Json(name = "driving_details") val drivingDetails: DrivingDetails? = null,
     @Json(name = "climate_details") val climateDetails: ClimateDetails? = null,
     @Json(name = "battery_details") val batteryDetails: BatteryDetails? = null,
-    @Json(name = "charging_details") val chargingDetails: ChargingDetails? = null
+    @Json(name = "charging_details") val chargingDetails: ChargingDetails? = null,
+    @Json(name = "tpms_details") val tpmsDetails: TpmsDetails? = null
 ) {
     // Convenience accessors that flatten the nested structure
     val batteryLevel: Int? get() = batteryDetails?.batteryLevel
@@ -163,4 +164,16 @@ data class ChargingDetails(
     @Json(name = "charger_power") val chargerPower: Int? = null,
     @Json(name = "charger_voltage") val chargerVoltage: Int? = null,
     @Json(name = "time_to_full_charge") val timeToFullCharge: Double? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class TpmsDetails(
+    @Json(name = "tpms_pressure_fl") val pressureFl: Double? = null,
+    @Json(name = "tpms_pressure_fr") val pressureFr: Double? = null,
+    @Json(name = "tpms_pressure_rl") val pressureRl: Double? = null,
+    @Json(name = "tpms_pressure_rr") val pressureRr: Double? = null,
+    @Json(name = "tpms_soft_warning_fl") val warningFl: Boolean? = null,
+    @Json(name = "tpms_soft_warning_fr") val warningFr: Boolean? = null,
+    @Json(name = "tpms_soft_warning_rl") val warningRl: Boolean? = null,
+    @Json(name = "tpms_soft_warning_rr") val warningRr: Boolean? = null
 )
