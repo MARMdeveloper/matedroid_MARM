@@ -7,6 +7,7 @@ import com.matedroid.data.api.models.CarExterior
 import com.matedroid.data.api.models.CarStatus
 import com.matedroid.data.api.models.Units
 import com.matedroid.data.repository.ApiResult
+import com.matedroid.data.repository.GeocodingRepository
 import com.matedroid.data.repository.TeslamateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -25,6 +26,7 @@ data class DashboardUiState(
     val selectedCarId: Int? = null,
     val carStatus: CarStatus? = null,
     val units: Units? = null,
+    val resolvedAddress: String? = null,
     val error: String? = null
 ) {
     private val selectedCar: CarData?
@@ -45,13 +47,15 @@ data class DashboardUiState(
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val repository: TeslamateRepository
+    private val repository: TeslamateRepository,
+    private val geocodingRepository: GeocodingRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private var autoRefreshJob: Job? = null
+    private var lastGeocodedLocation: Pair<Double, Double>? = null
 
     companion object {
         private const val AUTO_REFRESH_INTERVAL_MS = 5000L
@@ -104,11 +108,14 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = repository.getCarStatus(carId)) {
                 is ApiResult.Success -> {
+                    val status = result.data.status
                     _uiState.value = _uiState.value.copy(
-                        carStatus = result.data.status,
+                        carStatus = status,
                         units = result.data.units,
                         error = null
                     )
+                    // Fetch address if no geofence but coordinates are available
+                    fetchAddressIfNeeded(status)
                 }
                 is ApiResult.Error -> {
                     _uiState.value = _uiState.value.copy(
@@ -118,6 +125,34 @@ class DashboardViewModel @Inject constructor(
             }
         }
         startAutoRefresh(carId)
+    }
+
+    private fun fetchAddressIfNeeded(status: CarStatus) {
+        val lat = status.latitude
+        val lon = status.longitude
+
+        // Only fetch if no geofence, coordinates exist, and location changed
+        if (status.geofence == null && lat != null && lon != null) {
+            val currentLocation = Pair(lat, lon)
+            // Check if we've already geocoded this location (with some tolerance)
+            if (lastGeocodedLocation?.let { (lastLat, lastLon) ->
+                    kotlin.math.abs(lastLat - lat) < 0.0001 && kotlin.math.abs(lastLon - lon) < 0.0001
+                } == true) {
+                return
+            }
+
+            lastGeocodedLocation = currentLocation
+            viewModelScope.launch {
+                val address = geocodingRepository.reverseGeocode(lat, lon)
+                if (address != null) {
+                    _uiState.value = _uiState.value.copy(resolvedAddress = address)
+                }
+            }
+        } else if (status.geofence != null) {
+            // Clear resolved address if geofence is available
+            _uiState.value = _uiState.value.copy(resolvedAddress = null)
+            lastGeocodedLocation = null
+        }
     }
 
     private fun startAutoRefresh(carId: Int) {

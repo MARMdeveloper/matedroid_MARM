@@ -146,6 +146,7 @@ fun DashboardScreen(
                         carModel = uiState.selectedCarModel,
                         carTrimBadging = uiState.selectedCarTrimBadging,
                         carExterior = uiState.selectedCarExterior,
+                        resolvedAddress = uiState.resolvedAddress,
                         onNavigateToCharges = {
                             uiState.selectedCarId?.let { onNavigateToCharges(it) }
                         },
@@ -246,6 +247,7 @@ private fun DashboardContent(
     carModel: String? = null,
     carTrimBadging: String? = null,
     carExterior: CarExterior? = null,
+    resolvedAddress: String? = null,
     onNavigateToCharges: () -> Unit = {},
     onNavigateToDrives: () -> Unit = {},
     onNavigateToBattery: () -> Unit = {},
@@ -273,7 +275,7 @@ private fun DashboardContent(
 
             // Location Section - show if we have coordinates
             if (status.latitude != null && status.longitude != null) {
-                LocationCard(status = status)
+                LocationCard(status = status, resolvedAddress = resolvedAddress)
             }
 
             // Vehicle Info Section
@@ -652,14 +654,14 @@ private fun ChargingProgressBar(
 }
 
 @Composable
-private fun LocationCard(status: CarStatus) {
+private fun LocationCard(status: CarStatus, resolvedAddress: String? = null) {
     val context = LocalContext.current
     val latitude = status.latitude
     val longitude = status.longitude
     val geofence = status.geofence
 
-    // Location text: geofence name if available, otherwise coordinates
-    val locationText = geofence ?: run {
+    // Location text: geofence name if available, then resolved address, then coordinates
+    val locationText = geofence ?: resolvedAddress ?: run {
         if (latitude != null && longitude != null) {
             "%.5f, %.5f".format(latitude, longitude)
         } else {
