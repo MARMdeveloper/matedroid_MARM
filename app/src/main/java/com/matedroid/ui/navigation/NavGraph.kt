@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import com.matedroid.ui.screens.battery.BatteryScreen
 import com.matedroid.ui.screens.charges.ChargesScreen
 import com.matedroid.ui.screens.dashboard.DashboardScreen
+import com.matedroid.ui.screens.drives.DriveDetailScreen
 import com.matedroid.ui.screens.drives.DrivesScreen
 import com.matedroid.ui.screens.mileage.MileageScreen
 import com.matedroid.ui.screens.settings.SettingsScreen
@@ -115,6 +116,25 @@ fun NavGraph(
             val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
             DrivesScreen(
                 carId = carId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDriveDetail = { driveId ->
+                    navController.navigate(Screen.DriveDetail.createRoute(carId, driveId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.DriveDetail.route,
+            arguments = listOf(
+                navArgument("carId") { type = NavType.IntType },
+                navArgument("driveId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
+            val driveId = backStackEntry.arguments?.getInt("driveId") ?: return@composable
+            DriveDetailScreen(
+                carId = carId,
+                driveId = driveId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

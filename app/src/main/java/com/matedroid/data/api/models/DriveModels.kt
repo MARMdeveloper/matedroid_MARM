@@ -75,7 +75,19 @@ data class DriveRange(
 
 @JsonClass(generateAdapter = true)
 data class DriveDetailResponse(
-    @Json(name = "data") val data: DriveDetail? = null
+    @Json(name = "data") val data: DriveDetailData? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class DriveDetailData(
+    @Json(name = "car") val car: DriveDetailCar? = null,
+    @Json(name = "drive") val drive: DriveDetail? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class DriveDetailCar(
+    @Json(name = "car_id") val carId: Int? = null,
+    @Json(name = "car_name") val carName: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -99,7 +111,7 @@ data class DriveDetail(
     @Json(name = "inside_temp_avg") val insideTempAvg: Double? = null,
     @Json(name = "energy_consumed_net") val energyConsumedNet: Double? = null,
     @Json(name = "consumption_net") val consumptionNet: Double? = null,
-    @Json(name = "positions") val positions: List<DrivePosition>? = null
+    @Json(name = "drive_details") val positions: List<DrivePosition>? = null
 ) {
     val id: Int get() = driveId
     val distance: Double? get() = odometerDetails?.distance

@@ -1,5 +1,6 @@
 package com.matedroid.ui.screens.drives
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,6 +73,7 @@ enum class DriveDateFilter(val label: String, val days: Long?) {
 fun DrivesScreen(
     carId: Int,
     onNavigateBack: () -> Unit,
+    onNavigateToDriveDetail: (driveId: Int) -> Unit,
     viewModel: DrivesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -138,7 +140,8 @@ fun DrivesScreen(
                     drives = uiState.drives,
                     summary = uiState.summary,
                     selectedFilter = selectedFilter,
-                    onFilterSelected = { applyDateFilter(it) }
+                    onFilterSelected = { applyDateFilter(it) },
+                    onDriveClick = onNavigateToDriveDetail
                 )
             }
         }
@@ -151,7 +154,8 @@ private fun DrivesContent(
     drives: List<DriveData>,
     summary: DrivesSummary,
     selectedFilter: DriveDateFilter,
-    onFilterSelected: (DriveDateFilter) -> Unit
+    onFilterSelected: (DriveDateFilter) -> Unit,
+    onDriveClick: (driveId: Int) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -202,7 +206,10 @@ private fun DrivesContent(
             }
         } else {
             items(drives, key = { it.id }) { drive ->
-                DriveItem(drive = drive)
+                DriveItem(
+                    drive = drive,
+                    onClick = { onDriveClick(drive.id) }
+                )
             }
         }
     }
@@ -322,9 +329,14 @@ private fun SummaryItem(
 }
 
 @Composable
-private fun DriveItem(drive: DriveData) {
+private fun DriveItem(
+    drive: DriveData,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )

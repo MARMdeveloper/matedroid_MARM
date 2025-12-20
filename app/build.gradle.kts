@@ -92,6 +92,9 @@ dependencies {
     // Charts
     implementation(libs.vico.compose.m3)
 
+    // Maps
+    implementation(libs.osmdroid)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)

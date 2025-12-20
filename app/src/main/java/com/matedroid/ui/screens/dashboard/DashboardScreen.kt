@@ -1,9 +1,11 @@
 package com.matedroid.ui.screens.dashboard
 
+import android.graphics.Paint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Battery5Bar
@@ -43,17 +46,27 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import com.matedroid.data.api.models.BatteryDetails
 import com.matedroid.data.api.models.CarGeodata
 import com.matedroid.data.api.models.CarStatus
@@ -512,6 +525,9 @@ private fun ChargingCard(status: CarStatus) {
 
 @Composable
 private fun LocationCard(geofence: String, status: CarStatus) {
+    val latitude = status.latitude
+    val longitude = status.longitude
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -525,7 +541,7 @@ private fun LocationCard(geofence: String, status: CarStatus) {
                 tint = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Location",
                     style = MaterialTheme.typography.labelSmall,
@@ -536,8 +552,62 @@ private fun LocationCard(geofence: String, status: CarStatus) {
                     style = MaterialTheme.typography.titleMedium
                 )
             }
+
+            // Small map showing car location
+            if (latitude != null && longitude != null) {
+                Spacer(modifier = Modifier.width(12.dp))
+                SmallLocationMap(
+                    latitude = latitude,
+                    longitude = longitude,
+                    modifier = Modifier
+                        .width(140.dp)
+                        .height(70.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun SmallLocationMap(
+    latitude: Double,
+    longitude: Double,
+    modifier: Modifier = Modifier
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+
+    DisposableEffect(Unit) {
+        Configuration.getInstance().userAgentValue = "MateDroid/1.0"
+        onDispose { }
+    }
+
+    AndroidView(
+        factory = { ctx ->
+            MapView(ctx).apply {
+                setTileSource(TileSourceFactory.MAPNIK)
+                setMultiTouchControls(false)
+
+                // Disable all interactions for this small preview map
+                setBuiltInZoomControls(false)
+                isClickable = false
+                isFocusable = false
+
+                val carLocation = GeoPoint(latitude, longitude)
+                controller.setZoom(15.0)
+                controller.setCenter(carLocation)
+
+                // Add a marker for the car
+                val marker = Marker(this).apply {
+                    position = carLocation
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    icon = ctx.getDrawable(android.R.drawable.ic_menu_mylocation)
+                }
+                overlays.add(marker)
+            }
+        },
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -657,19 +727,22 @@ private fun QuickLinksRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun QuickLinkItem(
+private fun RowScope.QuickLinkItem(
     title: String,
     icon: ImageVector,
     onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
+        modifier = Modifier.weight(1f),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
