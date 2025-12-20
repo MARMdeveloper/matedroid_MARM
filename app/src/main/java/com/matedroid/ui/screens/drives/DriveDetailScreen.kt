@@ -1,8 +1,11 @@
 package com.matedroid.ui.screens.drives
 
+import android.content.Intent
 import android.graphics.Color as AndroidColor
 import android.graphics.Paint
+import android.net.Uri
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -358,8 +361,27 @@ private fun DriveMapCard(positions: List<DrivePosition>) {
 
     if (validPositions.isEmpty()) return
 
+    val startPoint = validPositions.firstOrNull()
+    val endPoint = validPositions.lastOrNull()
+
+    fun openInMaps() {
+        if (startPoint != null && endPoint != null) {
+            // Open Google Maps with directions from start to end
+            val uri = Uri.parse(
+                "https://www.google.com/maps/dir/?api=1" +
+                        "&origin=${startPoint.latitude},${startPoint.longitude}" +
+                        "&destination=${endPoint.latitude},${endPoint.longitude}" +
+                        "&travelmode=driving"
+            )
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            context.startActivity(intent)
+        }
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { openInMaps() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
