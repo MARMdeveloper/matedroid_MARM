@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Battery5Bar
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricBolt
-import androidx.compose.material.icons.filled.EvStation
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.LocationOn
@@ -246,11 +245,6 @@ private fun DashboardContent(
             // Battery Section
             BatteryCard(status, units)
 
-            // Charging Section (if plugged in)
-            if (status.pluggedIn == true) {
-                ChargingCard(status)
-            }
-
             // Location Section
             status.geofence?.let { geofence ->
                 LocationCard(geofence = geofence, status = status)
@@ -445,7 +439,8 @@ private fun BatteryCard(status: CarStatus, units: Units?) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "${status.chargerPower ?: 0} kW",
@@ -454,10 +449,24 @@ private fun BatteryCard(status: CarStatus, units: Units?) {
                         color = StatusSuccess
                     )
                     Text(
-                        text = status.timeToFullCharge?.let { formatHoursMinutes(it) + " remaining" } ?: "",
+                        text = "+${status.chargeEnergyAdded?.let { "%.1f".format(it) } ?: "0"} kWh",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Timer,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = status.timeToFullCharge?.let { formatHoursMinutes(it) } ?: "--",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
         }
@@ -507,94 +516,6 @@ private fun ChargingProgressBar(
             color = solidGreen,
             size = androidx.compose.ui.geometry.Size(width * currentFraction, height)
         )
-    }
-}
-
-@Composable
-private fun ChargingCard(status: CarStatus) {
-    val isActivelyCharging = status.isCharging
-    val statusColor = if (isActivelyCharging) StatusSuccess else MaterialTheme.colorScheme.primary
-    val statusIcon = if (isActivelyCharging) Icons.Filled.ElectricBolt else Icons.Filled.EvStation
-    val statusText = if (isActivelyCharging) "Charging" else "Plugged In"
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = statusColor.copy(alpha = 0.1f)
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = statusIcon,
-                    contentDescription = null,
-                    tint = statusColor
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = statusText,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = statusColor
-                )
-                // Show charging state if not actively charging
-                if (!isActivelyCharging && status.chargingState != null) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "(${status.chargingState})",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = statusColor.copy(alpha = 0.7f)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (isActivelyCharging) {
-                // Show charging stats when actively charging
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    InfoItem(
-                        label = "Power",
-                        value = "${status.chargerPower ?: 0} kW",
-                        icon = Icons.Filled.Power
-                    )
-                    InfoItem(
-                        label = "Added",
-                        value = "${status.chargeEnergyAdded?.let { "%.1f".format(it) } ?: "0"} kWh",
-                        icon = Icons.Filled.BatteryChargingFull
-                    )
-                    InfoItem(
-                        label = "Time Left",
-                        value = status.timeToFullCharge?.let { formatHoursMinutes(it) } ?: "--",
-                        icon = Icons.Filled.Timer
-                    )
-                }
-            } else {
-                // Show charge limit when just plugged in
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    InfoItem(
-                        label = "Charge Limit",
-                        value = "${status.chargeLimitSoc ?: "--"}%",
-                        icon = Icons.Filled.BatteryChargingFull
-                    )
-                    InfoItem(
-                        label = "Added",
-                        value = "${status.chargeEnergyAdded?.let { "%.1f".format(it) } ?: "0"} kWh",
-                        icon = Icons.Filled.ElectricBolt
-                    )
-                }
-            }
-        }
     }
 }
 
