@@ -857,7 +857,7 @@ private fun EstimatedCapacityCard(stats: BatteryStats) {
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "Estimate based on current ${stats.batteryLevel}% and rated range of %.1f km".format(stats.ratedRange),
+                        text = "Estimate based on current ${stats.batteryLevel}%% and rated range of %.1f km".format(stats.ratedRange),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
