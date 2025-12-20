@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.matedroid.ui.screens.battery.BatteryScreen
 import com.matedroid.ui.screens.charges.ChargesScreen
 import com.matedroid.ui.screens.dashboard.DashboardScreen
 import com.matedroid.ui.screens.drives.DrivesScreen
@@ -29,8 +30,18 @@ sealed class Screen(val route: String) {
     data object DriveDetail : Screen("drives/{carId}/detail/{driveId}") {
         fun createRoute(carId: Int, driveId: Int) = "drives/$carId/detail/$driveId"
     }
-    data object Battery : Screen("battery")
-    data object Updates : Screen("updates")
+    data object Battery : Screen("battery/{carId}?efficiency={efficiency}") {
+        fun createRoute(carId: Int, efficiency: Double? = null): String {
+            return if (efficiency != null) {
+                "battery/$carId?efficiency=$efficiency"
+            } else {
+                "battery/$carId"
+            }
+        }
+    }
+    data object Updates : Screen("updates/{carId}") {
+        fun createRoute(carId: Int) = "updates/$carId"
+    }
 }
 
 @Composable
@@ -68,6 +79,9 @@ fun NavGraph(
                 },
                 onNavigateToDrives = { carId ->
                     navController.navigate(Screen.Drives.createRoute(carId))
+                },
+                onNavigateToBattery = { carId, efficiency ->
+                    navController.navigate(Screen.Battery.createRoute(carId, efficiency))
                 }
             )
         }
@@ -94,6 +108,26 @@ fun NavGraph(
             val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
             DrivesScreen(
                 carId = carId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.Battery.route,
+            arguments = listOf(
+                navArgument("carId") { type = NavType.IntType },
+                navArgument("efficiency") {
+                    type = NavType.FloatType
+                    defaultValue = 0f
+                }
+            )
+        ) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
+            val efficiency = backStackEntry.arguments?.getFloat("efficiency")?.toDouble()
+                ?.takeIf { it > 0 }
+            BatteryScreen(
+                carId = carId,
+                efficiency = efficiency,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

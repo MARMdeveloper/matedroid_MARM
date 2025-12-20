@@ -23,7 +23,10 @@ data class DashboardUiState(
     val selectedCarId: Int? = null,
     val carStatus: CarStatus? = null,
     val error: String? = null
-)
+) {
+    val selectedCarEfficiency: Double?
+        get() = cars.find { it.carId == selectedCarId }?.carDetails?.efficiency
+}
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(

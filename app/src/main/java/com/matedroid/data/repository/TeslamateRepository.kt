@@ -162,7 +162,7 @@ class TeslamateRepository @Inject constructor(
             val api = getApi() ?: return ApiResult.Error("Server not configured")
             val response = api.getBatteryHealth(carId)
             if (response.isSuccessful) {
-                val health = response.body()?.data
+                val health = response.body()?.data?.batteryHealth
                 if (health != null) {
                     ApiResult.Success(health)
                 } else {

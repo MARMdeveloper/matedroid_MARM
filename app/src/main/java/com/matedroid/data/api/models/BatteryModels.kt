@@ -5,17 +5,22 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class BatteryHealthResponse(
-    @Json(name = "data") val data: BatteryHealth? = null
+    @Json(name = "data") val data: BatteryHealthData? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class BatteryHealthData(
+    @Json(name = "battery_health") val batteryHealth: BatteryHealth? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class BatteryHealth(
-    @Json(name = "car_id") val carId: Int? = null,
-    @Json(name = "battery_capacity") val batteryCapacity: Double? = null,
-    @Json(name = "battery_health") val batteryHealth: Double? = null,
-    @Json(name = "battery_level") val batteryLevel: Int? = null,
-    @Json(name = "battery_range_km") val batteryRangeKm: Double? = null,
-    @Json(name = "date") val date: String? = null
+    @Json(name = "max_range") val maxRange: Double? = null,
+    @Json(name = "current_range") val currentRange: Double? = null,
+    @Json(name = "max_capacity") val maxCapacity: Double? = null,
+    @Json(name = "current_capacity") val currentCapacity: Double? = null,
+    @Json(name = "rated_efficiency") val ratedEfficiency: Double? = null,
+    @Json(name = "battery_health_percentage") val batteryHealthPercentage: Double? = null
 )
 
 @JsonClass(generateAdapter = true)

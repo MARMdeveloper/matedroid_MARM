@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Battery5Bar
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricBolt
@@ -71,6 +72,7 @@ fun DashboardScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToCharges: (carId: Int) -> Unit = {},
     onNavigateToDrives: (carId: Int) -> Unit = {},
+    onNavigateToBattery: (carId: Int, efficiency: Double?) -> Unit = { _, _ -> },
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -115,6 +117,11 @@ fun DashboardScreen(
                         },
                         onNavigateToDrives = {
                             uiState.selectedCarId?.let { onNavigateToDrives(it) }
+                        },
+                        onNavigateToBattery = {
+                            uiState.selectedCarId?.let { carId ->
+                                onNavigateToBattery(carId, uiState.selectedCarEfficiency)
+                            }
                         }
                     )
                 }
@@ -195,7 +202,8 @@ private fun ErrorContent(message: String) {
 private fun DashboardContent(
     status: CarStatus,
     onNavigateToCharges: () -> Unit = {},
-    onNavigateToDrives: () -> Unit = {}
+    onNavigateToDrives: () -> Unit = {},
+    onNavigateToBattery: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -232,6 +240,7 @@ private fun DashboardContent(
         QuickLinksRow(
             onNavigateToCharges = onNavigateToCharges,
             onNavigateToDrives = onNavigateToDrives,
+            onNavigateToBattery = onNavigateToBattery,
             modifier = Modifier.padding(16.dp)
         )
     }
@@ -600,6 +609,7 @@ private fun formatHoursMinutes(hours: Double): String {
 private fun QuickLinksRow(
     onNavigateToCharges: () -> Unit,
     onNavigateToDrives: () -> Unit,
+    onNavigateToBattery: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -616,7 +626,12 @@ private fun QuickLinksRow(
             icon = Icons.Filled.DirectionsCar,
             onClick = onNavigateToDrives
         )
-        // Placeholder for future links (Statistics, Settings, etc.)
+        QuickLinkItem(
+            title = "Battery",
+            icon = Icons.Filled.Battery5Bar,
+            onClick = onNavigateToBattery
+        )
+        // Placeholder for future link (Updates, etc.)
         Spacer(modifier = Modifier.weight(1f))
     }
 }
