@@ -534,13 +534,13 @@ private fun RangeCard(stats: BatteryStats, palette: CarColorPalette, onClick: ()
                 RangeValueCard(
                     value = "%.1f km".format(stats.maxRangeNew),
                     label = "Max Range (new)",
-                    iconColor = RangeBlue,
+                    iconColor = CapacityGreen,
                     modifier = Modifier.weight(1f)
                 )
                 RangeValueCard(
                     value = "%.1f km".format(stats.maxRangeNow),
                     label = "Max Range (now)",
-                    iconColor = RangeBlue,
+                    iconColor = CapacityYellow,
                     modifier = Modifier.weight(1f)
                 )
             }

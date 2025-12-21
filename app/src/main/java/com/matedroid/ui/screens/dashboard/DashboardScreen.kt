@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
@@ -438,6 +439,17 @@ private fun StatusIndicatorsRow(
                 style = MaterialTheme.typography.labelMedium,
                 color = if (isLocked) StatusSuccess else StatusWarning
             )
+
+            // Plug indicator (only when plugged in but not charging - charging already shows state)
+            if (status.pluggedIn == true && !status.isCharging) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.Filled.Power,
+                    contentDescription = "Plugged in",
+                    modifier = Modifier.size(16.dp),
+                    tint = palette.accent
+                )
+            }
         }
 
         // Right side: Temperatures
@@ -891,53 +903,121 @@ private fun TirePressureDisplay(
     tpms: TpmsDetails,
     units: Units?
 ) {
+    val okColor = StatusSuccess
+    val warningColor = StatusWarning
+    val carBodyColor = MaterialTheme.colorScheme.outlineVariant
+
+    // Determine colors for each tire
+    val flColor = if (tpms.warningFl == true) warningColor else okColor
+    val frColor = if (tpms.warningFr == true) warningColor else okColor
+    val rlColor = if (tpms.warningRl == true) warningColor else okColor
+    val rrColor = if (tpms.warningRr == true) warningColor else okColor
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left tires column
+        // Left pressure values
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.width(60.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            TirePressureItem(
+            TirePressureValue(
                 label = "FL",
                 pressure = tpms.pressureFl,
-                hasWarning = tpms.warningFl == true,
+                color = flColor,
                 units = units
             )
-            TirePressureItem(
+            Spacer(modifier = Modifier.height(24.dp))
+            TirePressureValue(
                 label = "RL",
                 pressure = tpms.pressureRl,
-                hasWarning = tpms.warningRl == true,
+                color = rlColor,
                 units = units
             )
         }
 
-        // Car icon in the middle
-        Icon(
-            imageVector = Icons.Filled.DirectionsCar,
-            contentDescription = null,
-            modifier = Modifier.size(40.dp),
-            tint = MaterialTheme.colorScheme.outlineVariant
-        )
+        Spacer(modifier = Modifier.width(8.dp))
 
-        // Right tires column
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        // Car top-down view with tires
+        Canvas(
+            modifier = Modifier
+                .width(50.dp)
+                .height(90.dp)
         ) {
-            TirePressureItem(
+            val carWidth = size.width * 0.6f
+            val carHeight = size.height * 0.85f
+            val carLeft = (size.width - carWidth) / 2
+            val carTop = (size.height - carHeight) / 2
+
+            val tireWidth = size.width * 0.18f
+            val tireHeight = size.height * 0.22f
+            val tireCornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
+
+            // Draw car body (rounded rectangle)
+            drawRoundRect(
+                color = carBodyColor,
+                topLeft = androidx.compose.ui.geometry.Offset(carLeft, carTop),
+                size = androidx.compose.ui.geometry.Size(carWidth, carHeight),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx())
+            )
+
+            // Front left tire
+            drawRoundRect(
+                color = flColor,
+                topLeft = androidx.compose.ui.geometry.Offset(0f, carTop - tireHeight * 0.3f),
+                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
+                cornerRadius = tireCornerRadius
+            )
+
+            // Front right tire
+            drawRoundRect(
+                color = frColor,
+                topLeft = androidx.compose.ui.geometry.Offset(size.width - tireWidth, carTop - tireHeight * 0.3f),
+                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
+                cornerRadius = tireCornerRadius
+            )
+
+            // Rear left tire
+            drawRoundRect(
+                color = rlColor,
+                topLeft = androidx.compose.ui.geometry.Offset(0f, carTop + carHeight - tireHeight * 0.7f),
+                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
+                cornerRadius = tireCornerRadius
+            )
+
+            // Rear right tire
+            drawRoundRect(
+                color = rrColor,
+                topLeft = androidx.compose.ui.geometry.Offset(size.width - tireWidth, carTop + carHeight - tireHeight * 0.7f),
+                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
+                cornerRadius = tireCornerRadius
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Right pressure values
+        Column(
+            modifier = Modifier.width(60.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            TirePressureValue(
                 label = "FR",
                 pressure = tpms.pressureFr,
-                hasWarning = tpms.warningFr == true,
+                color = frColor,
                 units = units
             )
-            TirePressureItem(
+            Spacer(modifier = Modifier.height(24.dp))
+            TirePressureValue(
                 label = "RR",
                 pressure = tpms.pressureRr,
-                hasWarning = tpms.warningRr == true,
+                color = rrColor,
                 units = units
             )
         }
@@ -945,27 +1025,26 @@ private fun TirePressureDisplay(
 }
 
 @Composable
-private fun TirePressureItem(
+private fun TirePressureValue(
     label: String,
     pressure: Double?,
-    hasWarning: Boolean,
+    color: androidx.compose.ui.graphics.Color,
     units: Units?
 ) {
-    val textColor = if (hasWarning) StatusWarning else MaterialTheme.colorScheme.onSurface
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            fontWeight = FontWeight.Bold,
+            color = color
         )
         Text(
-            text = pressure?.let { UnitFormatter.formatPressure(it, units, 2) } ?: "--",
+            text = pressure?.let { UnitFormatter.formatPressure(it, units, 1) } ?: "--",
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = textColor
+            color = color
         )
     }
 }
