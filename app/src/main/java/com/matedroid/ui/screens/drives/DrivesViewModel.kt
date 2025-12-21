@@ -12,12 +12,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+
+data class MonthlyDriveData(
+    val yearMonth: YearMonth,
+    val count: Int,
+    val totalDistance: Double
+)
 
 data class DrivesUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val drives: List<DriveData> = emptyList(),
+    val monthlyData: List<MonthlyDriveData> = emptyList(),
     val error: String? = null,
     val startDate: LocalDate? = null,
     val endDate: LocalDate? = null,
@@ -89,11 +98,13 @@ class DrivesViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     val drives = result.data
                     val summary = calculateSummary(drives)
+                    val monthlyData = calculateMonthlyData(drives)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
                             drives = drives,
+                            monthlyData = monthlyData,
                             summary = summary,
                             error = null
                         )
@@ -110,6 +121,33 @@ class DrivesViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun calculateMonthlyData(drives: List<DriveData>): List<MonthlyDriveData> {
+        if (drives.isEmpty()) return emptyList()
+
+        val formatter = DateTimeFormatter.ISO_DATE_TIME
+
+        return drives
+            .mapNotNull { drive ->
+                drive.startDate?.let { dateStr ->
+                    try {
+                        val date = LocalDate.parse(dateStr, formatter)
+                        YearMonth.of(date.year, date.month) to drive
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+            }
+            .groupBy { it.first }
+            .map { (yearMonth, drivesInMonth) ->
+                MonthlyDriveData(
+                    yearMonth = yearMonth,
+                    count = drivesInMonth.size,
+                    totalDistance = drivesInMonth.sumOf { it.second.distance ?: 0.0 }
+                )
+            }
+            .sortedBy { it.yearMonth }
     }
 
     private fun calculateSummary(drives: List<DriveData>): DrivesSummary {

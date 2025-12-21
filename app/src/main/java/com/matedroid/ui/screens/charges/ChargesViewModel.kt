@@ -15,12 +15,21 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+
+data class MonthlyChargeData(
+    val yearMonth: YearMonth,
+    val count: Int,
+    val totalEnergy: Double
+)
 
 data class ChargesUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val charges: List<ChargeData> = emptyList(),
+    val monthlyData: List<MonthlyChargeData> = emptyList(),
     val error: String? = null,
     val startDate: LocalDate? = null,
     val endDate: LocalDate? = null,
@@ -105,11 +114,13 @@ class ChargesViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     val charges = result.data
                     val summary = calculateSummary(charges)
+                    val monthlyData = calculateMonthlyData(charges)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
                             charges = charges,
+                            monthlyData = monthlyData,
                             summary = summary,
                             error = null
                         )
@@ -126,6 +137,33 @@ class ChargesViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun calculateMonthlyData(charges: List<ChargeData>): List<MonthlyChargeData> {
+        if (charges.isEmpty()) return emptyList()
+
+        val formatter = DateTimeFormatter.ISO_DATE_TIME
+
+        return charges
+            .mapNotNull { charge ->
+                charge.startDate?.let { dateStr ->
+                    try {
+                        val date = LocalDate.parse(dateStr, formatter)
+                        YearMonth.of(date.year, date.month) to charge
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+            }
+            .groupBy { it.first }
+            .map { (yearMonth, chargesInMonth) ->
+                MonthlyChargeData(
+                    yearMonth = yearMonth,
+                    count = chargesInMonth.size,
+                    totalEnergy = chargesInMonth.sumOf { it.second.chargeEnergyAdded ?: 0.0 }
+                )
+            }
+            .sortedBy { it.yearMonth }
     }
 
     private fun calculateSummary(charges: List<ChargeData>): ChargesSummary {

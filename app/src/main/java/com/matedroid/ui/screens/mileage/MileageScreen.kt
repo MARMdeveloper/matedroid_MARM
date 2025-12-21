@@ -3,7 +3,6 @@ package com.matedroid.ui.screens.mileage
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,11 +20,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricBolt
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,20 +46,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.matedroid.ui.components.BarChartData
+import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import com.matedroid.ui.theme.StatusSuccess
@@ -251,7 +244,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
+                    imageVector = Icons.Default.Route,
                     contentDescription = null,
                     tint = palette.accent,
                     modifier = Modifier.size(20.dp)
@@ -267,28 +260,22 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SimpleBarChart(
-                data = chartData,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp),
-                barColor = palette.accent
-            )
-
-            // X-axis labels (years)
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                chartData.forEach { (year, _) ->
-                    Text(
-                        text = year.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = palette.onSurfaceVariant
-                    )
-                }
+            val barChartData = chartData.map { (year, distance) ->
+                BarChartData(
+                    label = year.toString(),
+                    value = distance,
+                    displayValue = "%.1f km".format(distance)
+                )
             }
+
+            InteractiveBarChart(
+                data = barChartData,
+                modifier = Modifier.fillMaxWidth(),
+                barColor = palette.accent,
+                labelColor = palette.onSurfaceVariant,
+                valueFormatter = { "%.1f km".format(it) },
+                yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
+            )
         }
     }
 }
@@ -325,7 +312,7 @@ private fun YearRow(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
+                        imageVector = Icons.Default.Route,
                         contentDescription = null,
                         tint = ChartBlue,
                         modifier = Modifier.size(16.dp)
@@ -447,59 +434,37 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
+                    imageVector = Icons.Default.Route,
                     contentDescription = null,
                     tint = palette.accent,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Mileage",
+                    text = "Mileage by Month",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = palette.onSurface
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = "Info",
-                    tint = palette.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SimpleBarChart(
-                data = chartData,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp),
-                barColor = palette.accent
-            )
-
-            // X-axis labels (months 1-12)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                (1..12).forEach { month ->
-                    Text(
-                        text = month.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = palette.onSurfaceVariant,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
-                    )
-                }
+            val barChartData = chartData.map { (month, distance) ->
+                BarChartData(
+                    label = month.toString(),
+                    value = distance,
+                    displayValue = "%.1f km".format(distance)
+                )
             }
 
-            Text(
-                text = "month",
-                style = MaterialTheme.typography.labelSmall,
-                color = palette.onSurfaceVariant,
+            InteractiveBarChart(
+                data = barChartData,
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
+                barColor = palette.accent,
+                labelColor = palette.onSurfaceVariant,
+                valueFormatter = { "%.1f km".format(it) },
+                yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
     }
@@ -544,7 +509,7 @@ private fun MonthRow(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
+                        imageVector = Icons.Default.Route,
                         contentDescription = null,
                         tint = ChartBlue,
                         modifier = Modifier.size(16.dp)
@@ -714,13 +679,13 @@ private fun MonthSummaryCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 StatChip(
-                    icon = Icons.AutoMirrored.Filled.DirectionsRun,
+                    icon = Icons.Default.Route,
                     value = "%.1f km".format(totalDistance),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     prefix = "Ø",
-                    icon = Icons.AutoMirrored.Filled.DirectionsRun,
+                    icon = Icons.Default.Route,
                     value = "%.1f km".format(avgDistance),
                     modifier = Modifier.weight(1f)
                 )
@@ -836,85 +801,6 @@ private fun SummaryItem(
 }
 
 @Composable
-private fun SimpleBarChart(
-    data: List<Pair<Int, Double>>,
-    modifier: Modifier = Modifier,
-    barColor: Color = ChartBlue,
-    labelColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
-) {
-    val maxValue = data.maxOfOrNull { it.second } ?: 1.0
-    val textMeasurer = rememberTextMeasurer()
-
-    Canvas(modifier = modifier) {
-        if (data.isEmpty()) return@Canvas
-
-        val yAxisWidth = 32.dp.toPx()  // Space for Y-axis labels
-        val chartWidth = size.width - yAxisWidth
-
-        // Draw max value label at top
-        drawYAxisLabel(
-            textMeasurer = textMeasurer,
-            text = if (maxValue >= 1000) "%.0fk".format(maxValue / 1000) else "%.0f".format(maxValue),
-            x = yAxisWidth - 4.dp.toPx(),
-            y = 0f,
-            color = labelColor,
-            alignTop = true
-        )
-
-        // Draw min value label (0) at bottom
-        drawYAxisLabel(
-            textMeasurer = textMeasurer,
-            text = "0",
-            x = yAxisWidth - 4.dp.toPx(),
-            y = size.height,
-            color = labelColor,
-            alignTop = false
-        )
-
-        val barWidth = chartWidth / data.size * 0.7f
-        val spacing = chartWidth / data.size * 0.3f / 2
-
-        data.forEachIndexed { index, (_, value) ->
-            val barHeight = if (maxValue > 0) (value / maxValue * size.height).toFloat() else 0f
-            val x = yAxisWidth + index * (barWidth + spacing * 2) + spacing
-            val y = size.height - barHeight
-
-            drawRect(
-                color = barColor,
-                topLeft = Offset(x, y),
-                size = Size(barWidth, barHeight)
-            )
-        }
-    }
-}
-
-private fun DrawScope.drawYAxisLabel(
-    textMeasurer: TextMeasurer,
-    text: String,
-    x: Float,
-    y: Float,
-    color: Color,
-    alignTop: Boolean
-) {
-    val textLayoutResult = textMeasurer.measure(
-        text = text,
-        style = androidx.compose.ui.text.TextStyle(
-            fontSize = 9.sp,
-            textAlign = TextAlign.End
-        )
-    )
-    val yOffset = if (alignTop) 0f else -textLayoutResult.size.height.toFloat()
-    drawText(
-        textLayoutResult = textLayoutResult,
-        color = color,
-        topLeft = Offset(
-            x = x - textLayoutResult.size.width,
-            y = y + yOffset
-        )
-    )
-}
-
-@Composable
 private fun StatChip(
     modifier: Modifier = Modifier,
     prefix: String? = null,
@@ -989,14 +875,14 @@ private fun DailyChartCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Filled.BarChart,
+                        imageVector = Icons.Default.Route,
                         contentDescription = null,
                         tint = palette.accent,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Mileage",
+                        text = "Mileage by Day",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = palette.onSurface
@@ -1011,32 +897,22 @@ private fun DailyChartCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SimpleBarChart(
-                data = chartData,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp),
-                barColor = palette.accent
-            )
-
-            // X-axis labels for days with data
-            if (chartData.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    chartData.forEach { (day, _) ->
-                        Text(
-                            text = day.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = palette.onSurfaceVariant,
-                            modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
+            val barChartData = chartData.map { (day, distance) ->
+                BarChartData(
+                    label = day.toString(),
+                    value = distance,
+                    displayValue = "%.1f km".format(distance)
+                )
             }
+
+            InteractiveBarChart(
+                data = barChartData,
+                modifier = Modifier.fillMaxWidth(),
+                barColor = palette.accent,
+                labelColor = palette.onSurfaceVariant,
+                valueFormatter = { "%.1f km".format(it) },
+                yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
+            )
         }
     }
 }
@@ -1086,7 +962,7 @@ private fun DayTripRow(dayData: DailyMileage) {
                 // Distance
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
+                        imageVector = Icons.Default.Route,
                         contentDescription = null,
                         tint = ChartBlue,
                         modifier = Modifier.size(14.dp)

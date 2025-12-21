@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ElectricBolt
@@ -56,6 +57,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.data.api.models.ChargeData
+import com.matedroid.ui.components.BarChartData
+import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import java.time.LocalDate
@@ -143,6 +146,7 @@ fun ChargesScreen(
             } else {
                 ChargesContent(
                     charges = uiState.charges,
+                    monthlyData = uiState.monthlyData,
                     summary = uiState.summary,
                     currencySymbol = uiState.currencySymbol,
                     selectedFilter = selectedFilter,
@@ -159,6 +163,7 @@ fun ChargesScreen(
 @Composable
 private fun ChargesContent(
     charges: List<ChargeData>,
+    monthlyData: List<MonthlyChargeData>,
     summary: ChargesSummary,
     currencySymbol: String,
     selectedFilter: DateFilter,
@@ -181,6 +186,13 @@ private fun ChargesContent(
 
         item {
             SummaryCard(summary = summary, currencySymbol = currencySymbol, palette = palette)
+        }
+
+        // Monthly charges chart
+        if (monthlyData.isNotEmpty()) {
+            item {
+                MonthlyChargesChart(monthlyData = monthlyData, palette = palette)
+            }
         }
 
         item {
@@ -516,5 +528,57 @@ private fun formatDate(dateStr: String): String {
         dateTime.format(outputFormatter)
     } catch (e: Exception) {
         dateStr
+    }
+}
+
+@Composable
+private fun MonthlyChargesChart(
+    monthlyData: List<MonthlyChargeData>,
+    palette: CarColorPalette
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = palette.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CalendarMonth,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = palette.accent
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Charges per Month",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = palette.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val chartData = monthlyData.map { data ->
+                BarChartData(
+                    label = data.yearMonth.format(DateTimeFormatter.ofPattern("MMM")),
+                    value = data.count.toDouble(),
+                    displayValue = "${data.count} charges"
+                )
+            }
+
+            InteractiveBarChart(
+                data = chartData,
+                modifier = Modifier.fillMaxWidth(),
+                barColor = palette.accent,
+                labelColor = palette.onSurfaceVariant,
+                showEveryNthLabel = if (chartData.size > 6) 3 else 1,
+                valueFormatter = { "%.0f charges".format(it) }
+            )
+        }
     }
 }

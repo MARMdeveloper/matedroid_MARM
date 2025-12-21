@@ -1,6 +1,5 @@
 package com.matedroid.ui.screens.updates
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,19 +49,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.matedroid.ui.components.BarChartData
+import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import java.time.format.DateTimeFormatter
@@ -344,11 +335,6 @@ private fun MonthlyUpdatesChart(
     monthlyData: List<MonthlyUpdateCount>,
     palette: CarColorPalette
 ) {
-    val textMeasurer = rememberTextMeasurer()
-    val barColor = palette.accent
-    val labelColor = palette.onSurfaceVariant
-    val maxCount = monthlyData.maxOfOrNull { it.count } ?: 1
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -377,123 +363,24 @@ private fun MonthlyUpdatesChart(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-            ) {
-                val yAxisWidth = 24.dp.toPx()  // Space for Y-axis labels
-                val chartWidth = size.width - yAxisWidth
-                val barWidth = chartWidth / monthlyData.size
-                val maxBarHeight = size.height - 24.dp.toPx()  // Leave space for X-axis labels
-
-                // Draw max value label at top
-                drawYAxisLabel(
-                    textMeasurer = textMeasurer,
-                    text = maxCount.toString(),
-                    x = yAxisWidth - 4.dp.toPx(),
-                    y = 0f,
-                    color = labelColor,
-                    alignTop = true
+            val chartData = monthlyData.map { data ->
+                BarChartData(
+                    label = data.yearMonth.format(DateTimeFormatter.ofPattern("MMM")),
+                    value = data.count.toDouble(),
+                    displayValue = "${data.count} updates"
                 )
-
-                // Draw min value label (0) at bottom
-                drawYAxisLabel(
-                    textMeasurer = textMeasurer,
-                    text = "0",
-                    x = yAxisWidth - 4.dp.toPx(),
-                    y = maxBarHeight,
-                    color = labelColor,
-                    alignTop = false
-                )
-
-                monthlyData.forEachIndexed { index, data ->
-                    val barHeight = if (maxCount > 0) {
-                        (data.count.toFloat() / maxCount) * maxBarHeight
-                    } else {
-                        0f
-                    }
-
-                    // Draw bar (offset by Y-axis width)
-                    if (barHeight > 0) {
-                        drawRect(
-                            color = barColor,
-                            topLeft = Offset(
-                                x = yAxisWidth + index * barWidth + barWidth * 0.15f,
-                                y = maxBarHeight - barHeight
-                            ),
-                            size = Size(
-                                width = barWidth * 0.7f,
-                                height = barHeight
-                            )
-                        )
-                    }
-
-                    // Draw month label for every 3rd month or if showing 6 months
-                    if (monthlyData.size <= 6 || index % 3 == 0) {
-                        val monthLabel = data.yearMonth.format(DateTimeFormatter.ofPattern("MMM"))
-                        drawMonthLabel(
-                            textMeasurer = textMeasurer,
-                            text = monthLabel,
-                            x = yAxisWidth + index * barWidth + barWidth / 2,
-                            y = size.height - 4.dp.toPx(),
-                            color = labelColor
-                        )
-                    }
-                }
             }
+
+            InteractiveBarChart(
+                data = chartData,
+                modifier = Modifier.fillMaxWidth(),
+                barColor = palette.accent,
+                labelColor = palette.onSurfaceVariant,
+                showEveryNthLabel = if (chartData.size > 6) 3 else 1,
+                valueFormatter = { "%.0f updates".format(it) }
+            )
         }
     }
-}
-
-private fun DrawScope.drawMonthLabel(
-    textMeasurer: TextMeasurer,
-    text: String,
-    x: Float,
-    y: Float,
-    color: Color
-) {
-    val textLayoutResult = textMeasurer.measure(
-        text = text,
-        style = TextStyle(
-            fontSize = 9.sp,
-            textAlign = TextAlign.Center
-        )
-    )
-    drawText(
-        textLayoutResult = textLayoutResult,
-        color = color,
-        topLeft = Offset(
-            x = x - textLayoutResult.size.width / 2,
-            y = y - textLayoutResult.size.height
-        )
-    )
-}
-
-private fun DrawScope.drawYAxisLabel(
-    textMeasurer: TextMeasurer,
-    text: String,
-    x: Float,
-    y: Float,
-    color: Color,
-    alignTop: Boolean
-) {
-    val textLayoutResult = textMeasurer.measure(
-        text = text,
-        style = TextStyle(
-            fontSize = 9.sp,
-            textAlign = TextAlign.End
-        )
-    )
-    val yOffset = if (alignTop) 0f else -textLayoutResult.size.height.toFloat()
-    drawText(
-        textLayoutResult = textLayoutResult,
-        color = color,
-        topLeft = Offset(
-            x = x - textLayoutResult.size.width,
-            y = y + yOffset
-        )
-    )
 }
 
 @Composable

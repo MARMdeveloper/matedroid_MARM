@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocationOn
@@ -57,6 +58,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.data.api.models.DriveData
+import com.matedroid.ui.components.BarChartData
+import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import java.time.LocalDate
@@ -144,6 +147,7 @@ fun DrivesScreen(
             } else {
                 DrivesContent(
                     drives = uiState.drives,
+                    monthlyData = uiState.monthlyData,
                     summary = uiState.summary,
                     selectedFilter = selectedFilter,
                     palette = palette,
@@ -159,6 +163,7 @@ fun DrivesScreen(
 @Composable
 private fun DrivesContent(
     drives: List<DriveData>,
+    monthlyData: List<MonthlyDriveData>,
     summary: DrivesSummary,
     selectedFilter: DriveDateFilter,
     palette: CarColorPalette,
@@ -180,6 +185,13 @@ private fun DrivesContent(
 
         item {
             SummaryCard(summary = summary, palette = palette)
+        }
+
+        // Monthly drives chart
+        if (monthlyData.isNotEmpty()) {
+            item {
+                MonthlyDrivesChart(monthlyData = monthlyData, palette = palette)
+            }
         }
 
         item {
@@ -539,4 +551,56 @@ private fun formatDuration(minutes: Int): String {
     val hours = minutes / 60
     val mins = minutes % 60
     return if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
+}
+
+@Composable
+private fun MonthlyDrivesChart(
+    monthlyData: List<MonthlyDriveData>,
+    palette: CarColorPalette
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = palette.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CalendarMonth,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = palette.accent
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Drives per Month",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = palette.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val chartData = monthlyData.map { data ->
+                BarChartData(
+                    label = data.yearMonth.format(DateTimeFormatter.ofPattern("MMM")),
+                    value = data.count.toDouble(),
+                    displayValue = "${data.count} drives"
+                )
+            }
+
+            InteractiveBarChart(
+                data = chartData,
+                modifier = Modifier.fillMaxWidth(),
+                barColor = palette.accent,
+                labelColor = palette.onSurfaceVariant,
+                showEveryNthLabel = if (chartData.size > 6) 3 else 1,
+                valueFormatter = { "%.0f drives".format(it) }
+            )
+        }
+    }
 }
