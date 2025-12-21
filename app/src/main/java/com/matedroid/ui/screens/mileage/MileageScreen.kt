@@ -23,7 +23,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricBolt
-import androidx.compose.material.icons.filled.AddRoad
+import androidx.compose.material.icons.outlined.AllInclusive
+import com.matedroid.ui.icons.CustomIcons
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -244,7 +245,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.AddRoad,
+                    imageVector = CustomIcons.Road,
                     contentDescription = null,
                     tint = palette.accent,
                     modifier = Modifier.size(20.dp)
@@ -312,7 +313,7 @@ private fun YearRow(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.AddRoad,
+                        imageVector = CustomIcons.Road,
                         contentDescription = null,
                         tint = ChartBlue,
                         modifier = Modifier.size(16.dp)
@@ -434,7 +435,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.AddRoad,
+                    imageVector = CustomIcons.Road,
                     contentDescription = null,
                     tint = palette.accent,
                     modifier = Modifier.size(20.dp)
@@ -509,7 +510,7 @@ private fun MonthRow(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.AddRoad,
+                        imageVector = CustomIcons.Road,
                         contentDescription = null,
                         tint = ChartBlue,
                         modifier = Modifier.size(16.dp)
@@ -679,13 +680,13 @@ private fun MonthSummaryCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 StatChip(
-                    icon = Icons.Default.AddRoad,
+                    icon = CustomIcons.Road,
                     value = "%.1f km".format(totalDistance),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     prefix = "Ø",
-                    icon = Icons.Default.AddRoad,
+                    icon = CustomIcons.Road,
                     value = "%.1f km".format(avgDistance),
                     modifier = Modifier.weight(1f)
                 )
@@ -742,7 +743,7 @@ private fun SummaryRow(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             SummaryItem(
-                icon = Icons.Filled.BarChart,
+                icon = Icons.Outlined.AllInclusive,
                 value = "%.1f km".format(totalDistance),
                 label = "Total",
                 iconColor = iconColor,
@@ -875,7 +876,7 @@ private fun DailyChartCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.AddRoad,
+                        imageVector = CustomIcons.Road,
                         contentDescription = null,
                         tint = palette.accent,
                         modifier = Modifier.size(20.dp)
@@ -962,7 +963,7 @@ private fun DayTripRow(dayData: DailyMileage) {
                 // Distance
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.AddRoad,
+                        imageVector = CustomIcons.Road,
                         contentDescription = null,
                         tint = ChartBlue,
                         modifier = Modifier.size(14.dp)

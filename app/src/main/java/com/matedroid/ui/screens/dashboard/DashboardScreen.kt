@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
+import com.matedroid.ui.icons.CustomIcons
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -1259,7 +1260,7 @@ private fun QuickLinksRow(
         )
         QuickLinkItem(
             title = "Mileage",
-            icon = Icons.Filled.Timeline,
+            icon = CustomIcons.Road,
             palette = palette,
             onClick = onNavigateToMileage
         )

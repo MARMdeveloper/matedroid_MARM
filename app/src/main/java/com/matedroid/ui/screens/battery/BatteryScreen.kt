@@ -24,7 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.AddRoad
+import com.matedroid.ui.icons.CustomIcons
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material3.Card
@@ -598,7 +598,7 @@ private fun RangeValueCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                imageVector = Icons.Default.AddRoad,
+                imageVector = CustomIcons.Road,
                 contentDescription = null,
                 tint = iconColor,
                 modifier = Modifier.size(24.dp)
