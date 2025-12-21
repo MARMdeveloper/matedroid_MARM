@@ -292,13 +292,14 @@ private fun DashboardContent(
                 .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Battery Section with Car Image
+            // Battery Section with Car Image (tappable for battery health)
             BatteryCard(
                 status = status,
                 units = units,
                 carModel = carModel,
                 carTrimBadging = carTrimBadging,
-                carExterior = carExterior
+                carExterior = carExterior,
+                onNavigateToBattery = onNavigateToBattery
             )
 
             // Location Section - show if we have coordinates
@@ -306,23 +307,24 @@ private fun DashboardContent(
                 LocationCard(status = status, units = units, resolvedAddress = resolvedAddress)
             }
 
-            // Vehicle Info Section
-            VehicleInfoCard(
-                status = status,
-                units = units,
-                totalCharges = totalCharges,
-                totalDrives = totalDrives,
-                onNavigateToUpdates = onNavigateToUpdates
-            )
+            // Tire Pressure Section - show if data available
+            val tpms = status.tpmsDetails
+            if (tpms != null && (tpms.pressureFl != null || tpms.pressureFr != null)) {
+                TirePressureCard(tpms = tpms, units = units)
+            }
         }
 
-        // Fixed bottom quick links
+        // Fixed bottom quick links with values
         QuickLinksRow(
             palette = palette,
+            status = status,
+            units = units,
+            totalCharges = totalCharges,
+            totalDrives = totalDrives,
             onNavigateToCharges = onNavigateToCharges,
             onNavigateToDrives = onNavigateToDrives,
-            onNavigateToBattery = onNavigateToBattery,
             onNavigateToMileage = onNavigateToMileage,
+            onNavigateToUpdates = onNavigateToUpdates,
             modifier = Modifier.padding(16.dp)
         )
     }
@@ -502,7 +504,8 @@ private fun BatteryCard(
     units: Units?,
     carModel: String? = null,
     carTrimBadging: String? = null,
-    carExterior: CarExterior? = null
+    carExterior: CarExterior? = null,
+    onNavigateToBattery: () -> Unit = {}
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val palette = CarColorPalettes.forExteriorColor(carExterior?.exteriorColor, isDarkTheme)
@@ -542,9 +545,13 @@ private fun BatteryCard(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Battery info row - closer to car image
+            // Battery info row - tappable to navigate to battery health
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onNavigateToBattery)
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -552,7 +559,7 @@ private fun BatteryCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.BatteryChargingFull,
-                        contentDescription = null,
+                        contentDescription = "Tap for battery health",
                         modifier = Modifier.size(24.dp),
                         tint = batteryColor
                     )
@@ -875,143 +882,19 @@ private fun SmallLocationMap(
     )
     }
 }
-
 @Composable
-private fun VehicleInfoCard(
-    status: CarStatus,
-    units: Units?,
-    totalCharges: Int? = null,
-    totalDrives: Int? = null,
-    onNavigateToUpdates: () -> Unit = {}
+private fun TirePressureCard(
+    tpms: TpmsDetails,
+    units: Units?
 ) {
-    val distanceUnit = UnitFormatter.getDistanceUnit(units)
-    val tpms = status.tpmsDetails
-
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.DirectionsCar,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Vehicle Info",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Compact 2x2 grid with icons
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                CompactInfoItem(
-                    icon = Icons.Filled.Speed,
-                    label = "Odometer",
-                    value = status.odometer?.let {
-                        val value = UnitFormatter.formatDistanceValue(it, units, 0)
-                        "%,.0f $distanceUnit".format(value)
-                    } ?: "--",
-                    modifier = Modifier.weight(1f)
-                )
-                CompactInfoItem(
-                    icon = CustomIcons.SteeringWheel,
-                    label = "Drives",
-                    value = totalDrives?.let { "%,d".format(it) } ?: "--",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                CompactInfoItem(
-                    icon = Icons.Filled.BatteryChargingFull,
-                    label = "Charges",
-                    value = totalCharges?.let { "%,d".format(it) } ?: "--",
-                    modifier = Modifier.weight(1f)
-                )
-                CompactInfoItem(
-                    icon = Icons.Filled.Settings,
-                    label = "SW",
-                    value = status.version ?: "--",
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToUpdates
-                )
-            }
-
-            // Tire pressure section
-            if (tpms != null && (tpms.pressureFl != null || tpms.pressureFr != null)) {
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TirePressureDisplay(
-                    tpms = tpms,
-                    units = units
-                )
-            }
+            TirePressureDisplay(tpms = tpms, units = units)
         }
-    }
-}
-
-@Composable
-private fun CompactInfoItem(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
-) {
-    val accentColor = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-    val textColor = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-
-    Row(
-        modifier = modifier
-            .then(
-                if (onClick != null) {
-                    Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .clickable(onClick = onClick)
-                } else Modifier
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = accentColor
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = accentColor
-            )
-        }
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Medium,
-            color = textColor,
-            modifier = Modifier.padding(start = 8.dp, end = 8.dp)
-        )
     }
 }
 
@@ -1233,39 +1116,52 @@ private fun formatHoursMinutes(hours: Double): String {
 @Composable
 private fun QuickLinksRow(
     palette: CarColorPalette,
+    status: CarStatus,
+    units: Units?,
+    totalCharges: Int?,
+    totalDrives: Int?,
     onNavigateToCharges: () -> Unit,
     onNavigateToDrives: () -> Unit,
-    onNavigateToBattery: () -> Unit,
     onNavigateToMileage: () -> Unit,
+    onNavigateToUpdates: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val distanceUnit = UnitFormatter.getDistanceUnit(units)
+
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         QuickLinkItem(
             title = "Charges",
+            value = totalCharges?.let { "%,d".format(it) } ?: "--",
             icon = Icons.Filled.ElectricBolt,
             palette = palette,
             onClick = onNavigateToCharges
         )
         QuickLinkItem(
-            title = "Battery",
-            icon = Icons.Filled.Battery5Bar,
-            palette = palette,
-            onClick = onNavigateToBattery
-        )
-        QuickLinkItem(
             title = "Drives",
+            value = totalDrives?.let { "%,d".format(it) } ?: "--",
             icon = CustomIcons.SteeringWheel,
             palette = palette,
             onClick = onNavigateToDrives
         )
         QuickLinkItem(
             title = "Mileage",
+            value = status.odometer?.let {
+                val value = UnitFormatter.formatDistanceValue(it, units, 0)
+                "%,.0f".format(value)
+            } ?: "--",
             icon = CustomIcons.Road,
             palette = palette,
             onClick = onNavigateToMileage
+        )
+        QuickLinkItem(
+            title = "SW",
+            value = status.version ?: "--",
+            icon = Icons.Filled.Settings,
+            palette = palette,
+            onClick = onNavigateToUpdates
         )
     }
 }
@@ -1274,6 +1170,7 @@ private fun QuickLinksRow(
 @Composable
 private fun RowScope.QuickLinkItem(
     title: String,
+    value: String,
     icon: ImageVector,
     palette: CarColorPalette,
     onClick: () -> Unit
@@ -1288,19 +1185,26 @@ private fun RowScope.QuickLinkItem(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(vertical = 10.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(20.dp),
                 tint = palette.accent
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
+                text = value,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = palette.onSurface,
+                maxLines = 1
+            )
+            Text(
                 text = title,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = palette.onSurfaceVariant
             )
         }
