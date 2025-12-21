@@ -14,19 +14,28 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.time.temporal.WeekFields
+import java.util.Locale
 import javax.inject.Inject
 
-data class MonthlyDriveData(
-    val yearMonth: YearMonth,
+enum class DriveChartGranularity {
+    DAILY, WEEKLY, MONTHLY
+}
+
+data class DriveChartData(
+    val label: String,
     val count: Int,
-    val totalDistance: Double
+    val totalDistance: Double,
+    val sortKey: Long
 )
 
 data class DrivesUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val drives: List<DriveData> = emptyList(),
-    val monthlyData: List<MonthlyDriveData> = emptyList(),
+    val chartData: List<DriveChartData> = emptyList(),
+    val chartGranularity: DriveChartGranularity = DriveChartGranularity.MONTHLY,
     val error: String? = null,
     val startDate: LocalDate? = null,
     val endDate: LocalDate? = null,
@@ -98,13 +107,15 @@ class DrivesViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     val drives = result.data
                     val summary = calculateSummary(drives)
-                    val monthlyData = calculateMonthlyData(drives)
+                    val granularity = determineGranularity(startDate, endDate)
+                    val chartData = calculateChartData(drives, granularity)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
                             drives = drives,
-                            monthlyData = monthlyData,
+                            chartData = chartData,
+                            chartGranularity = granularity,
                             summary = summary,
                             error = null
                         )
@@ -123,31 +134,58 @@ class DrivesViewModel @Inject constructor(
         }
     }
 
-    private fun calculateMonthlyData(drives: List<DriveData>): List<MonthlyDriveData> {
+    private fun determineGranularity(startDate: LocalDate?, endDate: LocalDate?): DriveChartGranularity {
+        if (startDate == null || endDate == null) return DriveChartGranularity.MONTHLY
+        val days = ChronoUnit.DAYS.between(startDate, endDate)
+        return when {
+            days <= 30 -> DriveChartGranularity.DAILY
+            days <= 90 -> DriveChartGranularity.WEEKLY
+            else -> DriveChartGranularity.MONTHLY
+        }
+    }
+
+    private fun calculateChartData(drives: List<DriveData>, granularity: DriveChartGranularity): List<DriveChartData> {
         if (drives.isEmpty()) return emptyList()
 
         val formatter = DateTimeFormatter.ISO_DATE_TIME
+        val weekFields = WeekFields.of(Locale.getDefault())
 
         return drives
             .mapNotNull { drive ->
                 drive.startDate?.let { dateStr ->
                     try {
                         val date = LocalDate.parse(dateStr, formatter)
-                        YearMonth.of(date.year, date.month) to drive
+                        val (label, sortKey) = when (granularity) {
+                            DriveChartGranularity.DAILY -> {
+                                val dayLabel = date.format(DateTimeFormatter.ofPattern("d/M"))
+                                dayLabel to date.toEpochDay()
+                            }
+                            DriveChartGranularity.WEEKLY -> {
+                                val weekOfYear = date.get(weekFields.weekOfWeekBasedYear())
+                                val year = date.get(weekFields.weekBasedYear())
+                                "W$weekOfYear" to (year * 100L + weekOfYear)
+                            }
+                            DriveChartGranularity.MONTHLY -> {
+                                val yearMonth = YearMonth.of(date.year, date.month)
+                                yearMonth.format(DateTimeFormatter.ofPattern("MMM yy")) to (date.year * 12L + date.monthValue)
+                            }
+                        }
+                        Triple(label, sortKey, drive)
                     } catch (e: Exception) {
                         null
                     }
                 }
             }
-            .groupBy { it.first }
-            .map { (yearMonth, drivesInMonth) ->
-                MonthlyDriveData(
-                    yearMonth = yearMonth,
-                    count = drivesInMonth.size,
-                    totalDistance = drivesInMonth.sumOf { it.second.distance ?: 0.0 }
+            .groupBy { Pair(it.first, it.second) }
+            .map { (key, drivesInPeriod) ->
+                DriveChartData(
+                    label = key.first,
+                    count = drivesInPeriod.size,
+                    totalDistance = drivesInPeriod.sumOf { it.third.distance ?: 0.0 },
+                    sortKey = key.second
                 )
             }
-            .sortedBy { it.yearMonth }
+            .sortedBy { it.sortKey }
     }
 
     private fun calculateSummary(drives: List<DriveData>): DrivesSummary {

@@ -17,19 +17,28 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.time.temporal.WeekFields
+import java.util.Locale
 import javax.inject.Inject
 
-data class MonthlyChargeData(
-    val yearMonth: YearMonth,
+enum class ChartGranularity {
+    DAILY, WEEKLY, MONTHLY
+}
+
+data class ChargeChartData(
+    val label: String,
     val count: Int,
-    val totalEnergy: Double
+    val totalEnergy: Double,
+    val sortKey: Long // For sorting (epoch day, week number, or year-month)
 )
 
 data class ChargesUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val charges: List<ChargeData> = emptyList(),
-    val monthlyData: List<MonthlyChargeData> = emptyList(),
+    val chartData: List<ChargeChartData> = emptyList(),
+    val chartGranularity: ChartGranularity = ChartGranularity.MONTHLY,
     val error: String? = null,
     val startDate: LocalDate? = null,
     val endDate: LocalDate? = null,
@@ -114,13 +123,15 @@ class ChargesViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     val charges = result.data
                     val summary = calculateSummary(charges)
-                    val monthlyData = calculateMonthlyData(charges)
+                    val granularity = determineGranularity(startDate, endDate)
+                    val chartData = calculateChartData(charges, granularity)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
                             charges = charges,
-                            monthlyData = monthlyData,
+                            chartData = chartData,
+                            chartGranularity = granularity,
                             summary = summary,
                             error = null
                         )
@@ -139,31 +150,58 @@ class ChargesViewModel @Inject constructor(
         }
     }
 
-    private fun calculateMonthlyData(charges: List<ChargeData>): List<MonthlyChargeData> {
+    private fun determineGranularity(startDate: LocalDate?, endDate: LocalDate?): ChartGranularity {
+        if (startDate == null || endDate == null) return ChartGranularity.MONTHLY
+        val days = ChronoUnit.DAYS.between(startDate, endDate)
+        return when {
+            days <= 30 -> ChartGranularity.DAILY
+            days <= 90 -> ChartGranularity.WEEKLY
+            else -> ChartGranularity.MONTHLY
+        }
+    }
+
+    private fun calculateChartData(charges: List<ChargeData>, granularity: ChartGranularity): List<ChargeChartData> {
         if (charges.isEmpty()) return emptyList()
 
         val formatter = DateTimeFormatter.ISO_DATE_TIME
+        val weekFields = WeekFields.of(Locale.getDefault())
 
         return charges
             .mapNotNull { charge ->
                 charge.startDate?.let { dateStr ->
                     try {
                         val date = LocalDate.parse(dateStr, formatter)
-                        YearMonth.of(date.year, date.month) to charge
+                        val (label, sortKey) = when (granularity) {
+                            ChartGranularity.DAILY -> {
+                                val dayLabel = date.format(DateTimeFormatter.ofPattern("d/M"))
+                                dayLabel to date.toEpochDay()
+                            }
+                            ChartGranularity.WEEKLY -> {
+                                val weekOfYear = date.get(weekFields.weekOfWeekBasedYear())
+                                val year = date.get(weekFields.weekBasedYear())
+                                "W$weekOfYear" to (year * 100L + weekOfYear)
+                            }
+                            ChartGranularity.MONTHLY -> {
+                                val yearMonth = YearMonth.of(date.year, date.month)
+                                yearMonth.format(DateTimeFormatter.ofPattern("MMM yy")) to (date.year * 12L + date.monthValue)
+                            }
+                        }
+                        Triple(label, sortKey, charge)
                     } catch (e: Exception) {
                         null
                     }
                 }
             }
-            .groupBy { it.first }
-            .map { (yearMonth, chargesInMonth) ->
-                MonthlyChargeData(
-                    yearMonth = yearMonth,
-                    count = chargesInMonth.size,
-                    totalEnergy = chargesInMonth.sumOf { it.second.chargeEnergyAdded ?: 0.0 }
+            .groupBy { Pair(it.first, it.second) }
+            .map { (key, chargesInPeriod) ->
+                ChargeChartData(
+                    label = key.first,
+                    count = chargesInPeriod.size,
+                    totalEnergy = chargesInPeriod.sumOf { it.third.chargeEnergyAdded ?: 0.0 },
+                    sortKey = key.second
                 )
             }
-            .sortedBy { it.yearMonth }
+            .sortedBy { it.sortKey }
     }
 
     private fun calculateSummary(charges: List<ChargeData>): ChargesSummary {

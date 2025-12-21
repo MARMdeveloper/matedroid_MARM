@@ -147,7 +147,8 @@ fun DrivesScreen(
             } else {
                 DrivesContent(
                     drives = uiState.drives,
-                    monthlyData = uiState.monthlyData,
+                    chartData = uiState.chartData,
+                    chartGranularity = uiState.chartGranularity,
                     summary = uiState.summary,
                     selectedFilter = selectedFilter,
                     palette = palette,
@@ -163,7 +164,8 @@ fun DrivesScreen(
 @Composable
 private fun DrivesContent(
     drives: List<DriveData>,
-    monthlyData: List<MonthlyDriveData>,
+    chartData: List<DriveChartData>,
+    chartGranularity: DriveChartGranularity,
     summary: DrivesSummary,
     selectedFilter: DriveDateFilter,
     palette: CarColorPalette,
@@ -187,10 +189,10 @@ private fun DrivesContent(
             SummaryCard(summary = summary, palette = palette)
         }
 
-        // Monthly drives chart
-        if (monthlyData.isNotEmpty()) {
+        // Drives chart (daily/weekly/monthly based on date range)
+        if (chartData.isNotEmpty()) {
             item {
-                MonthlyDrivesChart(monthlyData = monthlyData, palette = palette)
+                DrivesChart(chartData = chartData, granularity = chartGranularity, palette = palette)
             }
         }
 
@@ -554,10 +556,17 @@ private fun formatDuration(minutes: Int): String {
 }
 
 @Composable
-private fun MonthlyDrivesChart(
-    monthlyData: List<MonthlyDriveData>,
+private fun DrivesChart(
+    chartData: List<DriveChartData>,
+    granularity: DriveChartGranularity,
     palette: CarColorPalette
 ) {
+    val title = when (granularity) {
+        DriveChartGranularity.DAILY -> "Drives per Day"
+        DriveChartGranularity.WEEKLY -> "Drives per Week"
+        DriveChartGranularity.MONTHLY -> "Drives per Month"
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -576,7 +585,7 @@ private fun MonthlyDrivesChart(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Drives per Month",
+                    text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = palette.onSurface
@@ -585,20 +594,24 @@ private fun MonthlyDrivesChart(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            val chartData = monthlyData.map { data ->
+            val barData = chartData.map { data ->
                 BarChartData(
-                    label = data.yearMonth.format(DateTimeFormatter.ofPattern("MMM")),
+                    label = data.label,
                     value = data.count.toDouble(),
                     displayValue = "${data.count} drives"
                 )
             }
 
             InteractiveBarChart(
-                data = chartData,
+                data = barData,
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                showEveryNthLabel = if (chartData.size > 6) 3 else 1,
+                showEveryNthLabel = when {
+                    barData.size <= 7 -> 1
+                    barData.size <= 14 -> 2
+                    else -> 3
+                },
                 valueFormatter = { "%.0f drives".format(it) }
             )
         }

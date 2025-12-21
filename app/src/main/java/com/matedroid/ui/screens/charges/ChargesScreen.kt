@@ -146,7 +146,8 @@ fun ChargesScreen(
             } else {
                 ChargesContent(
                     charges = uiState.charges,
-                    monthlyData = uiState.monthlyData,
+                    chartData = uiState.chartData,
+                    chartGranularity = uiState.chartGranularity,
                     summary = uiState.summary,
                     currencySymbol = uiState.currencySymbol,
                     selectedFilter = selectedFilter,
@@ -163,7 +164,8 @@ fun ChargesScreen(
 @Composable
 private fun ChargesContent(
     charges: List<ChargeData>,
-    monthlyData: List<MonthlyChargeData>,
+    chartData: List<ChargeChartData>,
+    chartGranularity: ChartGranularity,
     summary: ChargesSummary,
     currencySymbol: String,
     selectedFilter: DateFilter,
@@ -188,10 +190,10 @@ private fun ChargesContent(
             SummaryCard(summary = summary, currencySymbol = currencySymbol, palette = palette)
         }
 
-        // Monthly charges chart
-        if (monthlyData.isNotEmpty()) {
+        // Charges chart (daily/weekly/monthly based on date range)
+        if (chartData.isNotEmpty()) {
             item {
-                MonthlyChargesChart(monthlyData = monthlyData, palette = palette)
+                ChargesChart(chartData = chartData, granularity = chartGranularity, palette = palette)
             }
         }
 
@@ -532,10 +534,17 @@ private fun formatDate(dateStr: String): String {
 }
 
 @Composable
-private fun MonthlyChargesChart(
-    monthlyData: List<MonthlyChargeData>,
+private fun ChargesChart(
+    chartData: List<ChargeChartData>,
+    granularity: ChartGranularity,
     palette: CarColorPalette
 ) {
+    val title = when (granularity) {
+        ChartGranularity.DAILY -> "Charges per Day"
+        ChartGranularity.WEEKLY -> "Charges per Week"
+        ChartGranularity.MONTHLY -> "Charges per Month"
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -554,7 +563,7 @@ private fun MonthlyChargesChart(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Charges per Month",
+                    text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = palette.onSurface
@@ -563,20 +572,24 @@ private fun MonthlyChargesChart(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            val chartData = monthlyData.map { data ->
+            val barData = chartData.map { data ->
                 BarChartData(
-                    label = data.yearMonth.format(DateTimeFormatter.ofPattern("MMM")),
+                    label = data.label,
                     value = data.count.toDouble(),
                     displayValue = "${data.count} charges"
                 )
             }
 
             InteractiveBarChart(
-                data = chartData,
+                data = barData,
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                showEveryNthLabel = if (chartData.size > 6) 3 else 1,
+                showEveryNthLabel = when {
+                    barData.size <= 7 -> 1
+                    barData.size <= 14 -> 2
+                    else -> 3
+                },
                 valueFormatter = { "%.0f charges".format(it) }
             )
         }
