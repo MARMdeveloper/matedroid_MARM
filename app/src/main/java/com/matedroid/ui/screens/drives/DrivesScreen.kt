@@ -23,7 +23,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
@@ -297,7 +297,7 @@ private fun SummaryCard(summary: DrivesSummary, palette: CarColorPalette) {
                     modifier = Modifier.weight(1.2f)
                 )
                 SummaryItem(
-                    icon = Icons.Default.Route,
+                    icon = Icons.Default.DriveEta,
                     label = "Total Distance",
                     value = "%.1f km".format(summary.totalDistanceKm),
                     palette = palette,
@@ -444,7 +444,7 @@ private fun DriveItem(
             ) {
                 // Distance
                 DriveStatCard(
-                    icon = Icons.Default.Route,
+                    icon = Icons.Default.DriveEta,
                     value = "%.1f".format(drive.distance ?: 0.0),
                     unit = "km",
                     label = "Distance",

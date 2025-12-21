@@ -38,7 +38,7 @@ import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
@@ -920,7 +920,7 @@ private fun VehicleInfoCard(
                     modifier = Modifier.weight(1f)
                 )
                 CompactInfoItem(
-                    icon = Icons.Filled.Route,
+                    icon = Icons.Default.DriveEta,
                     label = "Drives",
                     value = totalDrives?.let { "%,d".format(it) } ?: "--",
                     modifier = Modifier.weight(1f)

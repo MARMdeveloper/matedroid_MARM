@@ -23,7 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricBolt
-import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.AddRoad
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -244,7 +244,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.Route,
+                    imageVector = Icons.Default.AddRoad,
                     contentDescription = null,
                     tint = palette.accent,
                     modifier = Modifier.size(20.dp)
@@ -312,7 +312,7 @@ private fun YearRow(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Route,
+                        imageVector = Icons.Default.AddRoad,
                         contentDescription = null,
                         tint = ChartBlue,
                         modifier = Modifier.size(16.dp)
@@ -434,7 +434,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.Route,
+                    imageVector = Icons.Default.AddRoad,
                     contentDescription = null,
                     tint = palette.accent,
                     modifier = Modifier.size(20.dp)
@@ -509,7 +509,7 @@ private fun MonthRow(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Route,
+                        imageVector = Icons.Default.AddRoad,
                         contentDescription = null,
                         tint = ChartBlue,
                         modifier = Modifier.size(16.dp)
@@ -679,13 +679,13 @@ private fun MonthSummaryCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 StatChip(
-                    icon = Icons.Default.Route,
+                    icon = Icons.Default.AddRoad,
                     value = "%.1f km".format(totalDistance),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     prefix = "Ø",
-                    icon = Icons.Default.Route,
+                    icon = Icons.Default.AddRoad,
                     value = "%.1f km".format(avgDistance),
                     modifier = Modifier.weight(1f)
                 )
@@ -875,7 +875,7 @@ private fun DailyChartCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Route,
+                        imageVector = Icons.Default.AddRoad,
                         contentDescription = null,
                         tint = palette.accent,
                         modifier = Modifier.size(20.dp)
@@ -962,7 +962,7 @@ private fun DayTripRow(dayData: DailyMileage) {
                 // Distance
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Route,
+                        imageVector = Icons.Default.AddRoad,
                         contentDescription = null,
                         tint = ChartBlue,
                         modifier = Modifier.size(14.dp)

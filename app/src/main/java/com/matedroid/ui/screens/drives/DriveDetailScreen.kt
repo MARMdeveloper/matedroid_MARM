@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.DeviceThermostat
 import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.TrendingDown
@@ -185,7 +185,7 @@ private fun DriveDetailContent(
             // Distance & Duration section
             StatsSectionCard(
                 title = "Trip",
-                icon = Icons.Default.Route,
+                icon = Icons.Default.DriveEta,
                 stats = listOf(
                     StatItem("Distance", UnitFormatter.formatDistance(s.distance, units)),
                     StatItem("Duration", formatDuration(s.durationMin)),
