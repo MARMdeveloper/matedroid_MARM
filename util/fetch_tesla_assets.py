@@ -12,6 +12,10 @@ for use in the MateDroid Android app.
 Supports both legacy (pre-2024) and new (Highland/Juniper) models using
 different compositor endpoints.
 
+Both endpoints support transparent PNG output via bkba_opt=1 parameter:
+- bkba_opt=1: Transparent PNG (used for both compositors)
+- bkba_opt=2: Opaque JPEG with background
+
 Usage:
     ./fetch_tesla_assets.py [--output-dir PATH] [--dry-run]
 """
@@ -37,7 +41,7 @@ OLD_BKBA_OPT = 1  # Transparent background
 NEW_COMPOSITOR_URL = "https://static-assets.tesla.com/configurator/compositor"
 NEW_VIEW = "STUD_FRONT34"
 NEW_SIZE = 800
-NEW_BKBA_OPT = 2
+NEW_BKBA_OPT = 1  # Transparent background (1=PNG transparent, 2=JPEG opaque)
 NEW_CONTEXT = "design_studio_2"
 
 # Legacy Model 3 (pre-2024)
@@ -233,8 +237,8 @@ async def download_all_assets(output_dir: Path, dry_run: bool = False) -> tuple[
                         wheel_code,
                         model_config["interior_code"],
                     )
-                    ext = "jpg"
-                    expected_format = "jpeg"
+                    ext = "png"  # bkba_opt=1 returns transparent PNG
+                    expected_format = "png"
 
                 filename = get_output_filename(
                     model_config["file_prefix"], color_code, wheel_code, ext

@@ -6,11 +6,13 @@ package com.matedroid.domain.model
  * Maps TeslamateAPI values (e.g., "MidnightSilver", "Pinwheel18CapKit")
  * to Tesla compositor codes (e.g., "PMNG", "W38B") to construct asset paths.
  *
+ * All images are transparent PNGs (using bkba_opt=1 in compositor URLs).
+ *
  * Supports both legacy models and new Highland/Juniper models:
  * - Legacy Model 3 (pre-2024): m3_{color}_{wheel}.png
- * - Highland Model 3 (2024+): m3h_{color}_{wheel}.jpg or m3hp_{color}_{wheel}.jpg
+ * - Highland Model 3 (2024+): m3h_{color}_{wheel}.png or m3hp_{color}_{wheel}.png
  * - Legacy Model Y (pre-2025): my_{color}_{wheel}.png
- * - Juniper Model Y (2025+): myj_{color}_{wheel}.jpg
+ * - Juniper Model Y (2025+): myj_{color}_{wheel}.png
  */
 object CarImageResolver {
 
@@ -150,8 +152,7 @@ object CarImageResolver {
         // Validate the color is available for this model variant, fallback if not
         val validatedColorCode = validateColorForVariant(modelVariant, resolvedColorCode)
 
-        val ext = if (modelVariant in setOf("m3h", "m3hp", "myj")) "jpg" else "png"
-        return "car_images/${modelVariant}_${validatedColorCode}_${wheelCode}.${ext}"
+        return "car_images/${modelVariant}_${validatedColorCode}_${wheelCode}.png"
     }
 
     /**
@@ -187,14 +188,13 @@ object CarImageResolver {
         val colorCode = mapColor(exteriorColor)
         val modelVariant = determineModelVariant(model, colorCode, wheelType, trimBadging)
         val validatedColor = validateColorForVariant(modelVariant, colorCode ?: DEFAULT_COLORS[modelVariant] ?: "PPSW")
-        val ext = if (modelVariant in setOf("m3h", "m3hp", "myj")) "jpg" else "png"
 
-        val defaultWheelPath = "car_images/${modelVariant}_${validatedColor}_${DEFAULT_WHEELS[modelVariant]}.${ext}"
+        val defaultWheelPath = "car_images/${modelVariant}_${validatedColor}_${DEFAULT_WHEELS[modelVariant]}.png"
         if (assetExists(defaultWheelPath)) return defaultWheelPath
 
         // Try with default color
         val wheelCode = mapWheel(modelVariant, wheelType) ?: DEFAULT_WHEELS[modelVariant] ?: "W38B"
-        val defaultColorPath = "car_images/${modelVariant}_${DEFAULT_COLORS[modelVariant]}_${wheelCode}.${ext}"
+        val defaultColorPath = "car_images/${modelVariant}_${DEFAULT_COLORS[modelVariant]}_${wheelCode}.png"
         if (assetExists(defaultColorPath)) return defaultColorPath
 
         // Fall back to complete default
