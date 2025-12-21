@@ -15,7 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 30 days or less: daily bars
   - 31-90 days: weekly bars
   - More than 90 days: monthly bars
-- **UI Improvements**: Replaced runner icons with road icons in Mileage screen
+- **Custom Icons**: Added Material Symbols icons not available in Compose
+  - Road icon for mileage-related UI elements
+  - Steering wheel icon for drives-related UI elements
+  - AllInclusive icon for total statistics
+
+### Fixed
+- **Location Card**: Now properly shows address when outside geofences
+  - Uses OSM/Nominatim reverse geocoding for address lookup
+  - Falls back to raw coordinates if geocoding fails
+  - Handles empty string geofence values from API
 
 ## [0.3.0] - 2025-12-21
 
