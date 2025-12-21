@@ -893,7 +893,8 @@ private fun VehicleInfoCard(
                 Icon(
                     imageVector = Icons.Filled.DirectionsCar,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -905,55 +906,52 @@ private fun VehicleInfoCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 2x2 Grid of info items
+            // Compact 2x2 grid: Label: Value | Label: Value
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoItem(
+                CompactInfoItem(
                     label = "Odometer",
                     value = status.odometer?.let {
                         val value = UnitFormatter.formatDistanceValue(it, units, 0)
                         "%,.0f $distanceUnit".format(value)
                     } ?: "--",
-                    icon = Icons.Filled.Speed,
                     modifier = Modifier.weight(1f)
                 )
-                InfoItem(
-                    label = "Software",
-                    value = status.version ?: "--",
-                    icon = Icons.Filled.Settings,
-                    onClick = onNavigateToUpdates,
-                    modifier = Modifier.weight(1f)
+                CompactInfoItem(
+                    label = "Drives",
+                    value = totalDrives?.let { "%,d".format(it) } ?: "--",
+                    modifier = Modifier.weight(1f),
+                    alignEnd = true
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoItem(
+                CompactInfoItem(
                     label = "Charges",
                     value = totalCharges?.let { "%,d".format(it) } ?: "--",
-                    icon = Icons.Filled.BatteryChargingFull,
                     modifier = Modifier.weight(1f)
                 )
-                InfoItem(
-                    label = "Drives",
-                    value = totalDrives?.let { "%,d".format(it) } ?: "--",
-                    icon = Icons.Filled.Route,
-                    modifier = Modifier.weight(1f)
+                CompactInfoItem(
+                    label = "SW",
+                    value = status.version ?: "--",
+                    modifier = Modifier.weight(1f),
+                    alignEnd = true,
+                    onClick = onNavigateToUpdates
                 )
             }
 
             // Tire pressure section
             if (tpms != null && (tpms.pressureFl != null || tpms.pressureFr != null)) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    color = MaterialTheme.colorScheme.outlineVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -963,6 +961,42 @@ private fun VehicleInfoCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CompactInfoItem(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    alignEnd: Boolean = false,
+    onClick: (() -> Unit)? = null
+) {
+    val textColor = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Row(
+        modifier = modifier
+            .then(
+                if (onClick != null) {
+                    Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(onClick = onClick)
+                } else Modifier
+            ),
+        horizontalArrangement = if (alignEnd) Arrangement.End else Arrangement.Start
+    ) {
+        Text(
+            text = "$label: ",
+            style = MaterialTheme.typography.bodySmall,
+            color = labelColor
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
+            color = textColor
+        )
     }
 }
 
