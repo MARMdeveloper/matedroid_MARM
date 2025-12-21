@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Multi-Car Support**: Switch between vehicles via dropdown in the title bar
 - **Interactive Bar Charts**: Tap any bar to see exact values in a tooltip
 - **Dynamic Chart Granularity**: Charts adapt to date range (daily/weekly/monthly)
 - **Show Short Drives/Charges Setting**: Hide trivial entries from lists (keeps them in totals)
