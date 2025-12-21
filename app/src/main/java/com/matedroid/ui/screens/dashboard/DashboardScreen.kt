@@ -946,56 +946,73 @@ private fun TirePressureDisplay(
         // Car top-down view with tires
         Canvas(
             modifier = Modifier
-                .width(50.dp)
-                .height(90.dp)
+                .width(60.dp)
+                .height(100.dp)
         ) {
-            val carWidth = size.width * 0.6f
-            val carHeight = size.height * 0.85f
+            val carWidth = size.width * 0.65f
+            val carHeight = size.height * 0.9f
             val carLeft = (size.width - carWidth) / 2
             val carTop = (size.height - carHeight) / 2
 
-            val tireWidth = size.width * 0.18f
-            val tireHeight = size.height * 0.22f
-            val tireCornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
+            val tireWidth = size.width * 0.15f
+            val tireHeight = size.height * 0.18f
+            val tireCornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx())
 
-            // Draw car body (rounded rectangle)
+            // Tire inset from car edges
+            val tireInsetX = carWidth * 0.08f
+            val tireInsetY = carHeight * 0.08f
+
+            // Front left tire (inside car body at top-left corner)
+            drawRoundRect(
+                color = flColor,
+                topLeft = androidx.compose.ui.geometry.Offset(
+                    carLeft + tireInsetX,
+                    carTop + tireInsetY
+                ),
+                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
+                cornerRadius = tireCornerRadius
+            )
+
+            // Front right tire (inside car body at top-right corner)
+            drawRoundRect(
+                color = frColor,
+                topLeft = androidx.compose.ui.geometry.Offset(
+                    carLeft + carWidth - tireWidth - tireInsetX,
+                    carTop + tireInsetY
+                ),
+                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
+                cornerRadius = tireCornerRadius
+            )
+
+            // Rear left tire (inside car body at bottom-left corner)
+            drawRoundRect(
+                color = rlColor,
+                topLeft = androidx.compose.ui.geometry.Offset(
+                    carLeft + tireInsetX,
+                    carTop + carHeight - tireHeight - tireInsetY
+                ),
+                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
+                cornerRadius = tireCornerRadius
+            )
+
+            // Rear right tire (inside car body at bottom-right corner)
+            drawRoundRect(
+                color = rrColor,
+                topLeft = androidx.compose.ui.geometry.Offset(
+                    carLeft + carWidth - tireWidth - tireInsetX,
+                    carTop + carHeight - tireHeight - tireInsetY
+                ),
+                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
+                cornerRadius = tireCornerRadius
+            )
+
+            // Draw car body (rounded rectangle) - drawn last so it's on top
             drawRoundRect(
                 color = carBodyColor,
                 topLeft = androidx.compose.ui.geometry.Offset(carLeft, carTop),
                 size = androidx.compose.ui.geometry.Size(carWidth, carHeight),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx())
-            )
-
-            // Front left tire
-            drawRoundRect(
-                color = flColor,
-                topLeft = androidx.compose.ui.geometry.Offset(0f, carTop - tireHeight * 0.3f),
-                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
-                cornerRadius = tireCornerRadius
-            )
-
-            // Front right tire
-            drawRoundRect(
-                color = frColor,
-                topLeft = androidx.compose.ui.geometry.Offset(size.width - tireWidth, carTop - tireHeight * 0.3f),
-                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
-                cornerRadius = tireCornerRadius
-            )
-
-            // Rear left tire
-            drawRoundRect(
-                color = rlColor,
-                topLeft = androidx.compose.ui.geometry.Offset(0f, carTop + carHeight - tireHeight * 0.7f),
-                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
-                cornerRadius = tireCornerRadius
-            )
-
-            // Rear right tire
-            drawRoundRect(
-                color = rrColor,
-                topLeft = androidx.compose.ui.geometry.Offset(size.width - tireWidth, carTop + carHeight - tireHeight * 0.7f),
-                size = androidx.compose.ui.geometry.Size(tireWidth, tireHeight),
-                cornerRadius = tireCornerRadius
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(10.dp.toPx()),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
             )
         }
 
