@@ -142,6 +142,7 @@ https://static-assets.tesla.com/configurator/compositor?context=design_studio_2&
 | `Performance20*` | `W32P` | `WY20P` | 20" Performance |
 | `Uberturbine21*` | - | `WY1S` | 21" Uberturbine (MY) |
 | `Photon18*` | `W38A` | `WY18P` | 18" Photon (Highland/Juniper) |
+| `Glider18*`, `Nova18*` | `W38A` | - | 18" Glider/Nova (Highland M3) |
 
 **Note**: TeslamateAPI may append suffixes like `CapKit`, `Cover`, etc. The mapping strips these.
 
@@ -179,12 +180,15 @@ Colors introduced with Highland/Juniper (`PN00`, `PN01`, `PR01`, `PX02`) return 
 
 Each trim level has exactly ONE wheel option available.
 
-### 4. No Reliable Highland/Juniper Detection from TeslamateAPI
-TeslamateAPI doesn't clearly indicate if a car is Highland/Juniper. Current detection heuristic:
-- If exterior color is `PN00`, `PN01`, `PR01`, or `PX02` → Highland/Juniper
-- Otherwise → Legacy
+### 4. Highland/Juniper Detection from TeslamateAPI
+TeslamateAPI doesn't explicitly indicate if a car is Highland/Juniper. Detection heuristics:
 
-This may miss Highland/Juniper cars with common colors like Pearl White (`PPSW`).
+1. **Color-based**: If exterior color is `PN00`, `PN01`, `PR01`, or `PX02` → Highland/Juniper
+2. **Wheel-based**: If wheel type is Highland/Juniper-only:
+   - Model 3: `Photon18`, `Glider18`, `Nova18` → Highland
+   - Model Y: `Photon18` → Juniper
+
+This correctly identifies Highland/Juniper cars even with common colors like Pearl White (`PPSW`).
 
 ### 5. Trim Badging for Performance Detection
 - Legacy: `P` prefix (e.g., `P74D`) indicates Performance
