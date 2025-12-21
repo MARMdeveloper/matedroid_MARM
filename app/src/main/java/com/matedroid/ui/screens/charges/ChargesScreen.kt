@@ -278,14 +278,14 @@ private fun SummaryCard(summary: ChargesSummary, currencySymbol: String, palette
                     label = "Total Sessions",
                     value = summary.totalCharges.toString(),
                     palette = palette,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1.2f)
                 )
                 SummaryItem(
                     icon = Icons.Default.BatteryChargingFull,
                     label = "Total Energy",
                     value = "%.1f kWh".format(summary.totalEnergyAdded),
                     palette = palette,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(0.8f)
                 )
             }
 
@@ -299,14 +299,14 @@ private fun SummaryCard(summary: ChargesSummary, currencySymbol: String, palette
                     label = "Total Cost",
                     value = "$currencySymbol%.2f".format(summary.totalCost),
                     palette = palette,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1.2f)
                 )
                 SummaryItem(
                     icon = Icons.Default.Paid,
                     label = "Avg Cost/Session",
                     value = "$currencySymbol%.2f".format(summary.avgCostPerCharge),
                     palette = palette,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(0.8f)
                 )
             }
         }

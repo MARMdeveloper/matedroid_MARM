@@ -276,14 +276,14 @@ private fun SummaryCard(summary: DrivesSummary, palette: CarColorPalette) {
                     label = "Total Trips",
                     value = summary.totalDrives.toString(),
                     palette = palette,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1.2f)
                 )
                 SummaryItem(
                     icon = Icons.Default.Route,
                     label = "Total Distance",
                     value = "%.1f km".format(summary.totalDistanceKm),
                     palette = palette,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(0.8f)
                 )
             }
 
@@ -297,14 +297,14 @@ private fun SummaryCard(summary: DrivesSummary, palette: CarColorPalette) {
                     label = "Total Time",
                     value = formatDuration(summary.totalDurationMin),
                     palette = palette,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1.2f)
                 )
                 SummaryItem(
                     icon = Icons.Default.Speed,
                     label = "Max Speed",
                     value = "${summary.maxSpeedKmh} km/h",
                     palette = palette,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(0.8f)
                 )
             }
         }
