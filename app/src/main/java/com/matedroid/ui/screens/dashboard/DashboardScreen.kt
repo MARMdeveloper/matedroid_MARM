@@ -906,12 +906,12 @@ private fun VehicleInfoCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Compact 2x2 grid: Label: Value | Label: Value
+            // Compact 2x2 grid with icons
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth()
             ) {
                 CompactInfoItem(
+                    icon = Icons.Filled.Speed,
                     label = "Odometer",
                     value = status.odometer?.let {
                         val value = UnitFormatter.formatDistanceValue(it, units, 0)
@@ -920,29 +920,29 @@ private fun VehicleInfoCard(
                     modifier = Modifier.weight(1f)
                 )
                 CompactInfoItem(
+                    icon = Icons.Filled.Route,
                     label = "Drives",
                     value = totalDrives?.let { "%,d".format(it) } ?: "--",
-                    modifier = Modifier.weight(1f),
-                    alignEnd = true
+                    modifier = Modifier.weight(1f)
                 )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth()
             ) {
                 CompactInfoItem(
+                    icon = Icons.Filled.BatteryChargingFull,
                     label = "Charges",
                     value = totalCharges?.let { "%,d".format(it) } ?: "--",
                     modifier = Modifier.weight(1f)
                 )
                 CompactInfoItem(
+                    icon = Icons.Filled.Settings,
                     label = "SW",
                     value = status.version ?: "--",
                     modifier = Modifier.weight(1f),
-                    alignEnd = true,
                     onClick = onNavigateToUpdates
                 )
             }
@@ -966,14 +966,14 @@ private fun VehicleInfoCard(
 
 @Composable
 private fun CompactInfoItem(
+    icon: ImageVector,
     label: String,
     value: String,
     modifier: Modifier = Modifier,
-    alignEnd: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
+    val accentColor = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     val textColor = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         modifier = modifier
@@ -984,12 +984,19 @@ private fun CompactInfoItem(
                         .clickable(onClick = onClick)
                 } else Modifier
             ),
-        horizontalArrangement = if (alignEnd) Arrangement.End else Arrangement.Start
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = accentColor
+        )
+        Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = "$label: ",
             style = MaterialTheme.typography.bodySmall,
-            color = labelColor
+            color = accentColor
         )
         Text(
             text = value,
