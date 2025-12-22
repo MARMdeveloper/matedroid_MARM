@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-12-22
+
+### Added
+- **GitHub Release**: First public release on GitHub with automated APK builds
+
 ## [0.5.1] - 2025-12-22
 
 ### Added
@@ -70,8 +75,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/yourusername/matedroid/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/yourusername/matedroid/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/yourusername/matedroid/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/yourusername/matedroid/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/yourusername/matedroid/releases/tag/v0.1.0
+[Unreleased]: https://github.com/vide/matedroid/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/vide/matedroid/releases/tag/v0.6.0
+[0.5.1]: https://github.com/vide/matedroid/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/vide/matedroid/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/vide/matedroid/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/vide/matedroid/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/vide/matedroid/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/vide/matedroid/releases/tag/v0.1.0

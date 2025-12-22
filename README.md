@@ -2,6 +2,8 @@
 
 A native Android application for viewing Tesla vehicle data from your self-hosted [Teslamate](https://github.com/adriankumpf/teslamate) instance via the [TeslamateApi](https://github.com/tobiasehlert/teslamateapi).
 
+**DISCLAIMER**: This app has been *vibe-coded*
+
 ## Features
 
 - **Dashboard** - Real-time vehicle status at a glance with 3D car image matching your vehicle's color and wheels
@@ -10,7 +12,20 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 - **Drive History** - Track trips with efficiency metrics and route visualization
 - **Battery Health** - Monitor battery degradation over time
 - **Software Updates** - Track update history
-- **Dark Mode** - Follows system theme
+- **Car color based themes** - Light/dark themes with palette based on the car color
+
+### Gallery
+
+<img src="docs/screenshots/main-dashboard.jpg" alt="Main dashboard" height="400" border=10>
+<img src="docs/screenshots/battery-health.jpg" alt="Battery health dashboard" height="400" border=10>
+<img src="docs/screenshots/mileage.jpg" alt="Mileage dashboard" height="400" border=10>
+<img src="docs/screenshots/software-versions.jpg" alt="Mileage dashboard" height="400" border=10>
+
+
+<img src="docs/screenshots/drives.jpg" alt="Drives dashboard" height="400" border=10>
+<img src="docs/screenshots/drive-details.jpg" alt="Drive details" height="400" border=10>
+<img src="docs/screenshots/charges.jpg" alt="Drives dashboard" height="400" border=10>
+<img src="docs/screenshots/charge-details.jpg" alt="Drive details" height="400" border=10>
 
 ## Requirements
 
@@ -24,7 +39,7 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 
 ### From Release (Recommended)
 
-Download the latest APK from the [Releases](https://github.com/yourusername/matedroid/releases) page and install it on your Android device.
+Download the latest APK from the [Releases](https://github.com/vide/matedroid/releases) page and install it on your Android device.
 
 ### Build from Source
 
@@ -38,7 +53,7 @@ Download the latest APK from the [Releases](https://github.com/yourusername/mate
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/matedroid.git
+git clone https://github.com/vide/matedroid.git
 cd matedroid
 
 # Build debug APK
@@ -52,80 +67,7 @@ cd matedroid
 
 ## Development
 
-Please see [DEVELOPMENT.md](DEVELOPMENT.md) for more details on how this app was created and how to build and test it.
-
-### Utility Scripts
-
-#### `util/fetch_tesla_assets.py`
-
-Python script to download Tesla car 3D renders from Tesla's compositor service. Requires [uv](https://github.com/astral-sh/uv) for dependency management.
-
-```bash
-# Download all car images (Model 3 & Y, various colors/wheels)
-./util/fetch_tesla_assets.py
-
-# Preview what would be downloaded
-./util/fetch_tesla_assets.py --dry-run
-
-# Custom output directory
-./util/fetch_tesla_assets.py --output-dir /path/to/assets
-```
-
-See [ASSETS.md](ASSETS.md) for detailed documentation on Tesla compositor APIs, color/wheel code mappings, and troubleshooting.
-
-### Running Tests
-
-```bash
-# Unit tests
-./gradlew test
-
-# Instrumented tests (requires emulator/device)
-./gradlew connectedAndroidTest
-```
-
-### Releasing
-
-Releases are automated via GitHub Actions. When a release is published, the workflow builds the APK and attaches it to the release.
-
-```bash
-# 1. Update version in app/build.gradle.kts (versionCode and versionName)
-# 2. Update CHANGELOG.md with release notes
-# 3. Commit and push
-
-# 4. Create a release with GitHub CLI
-gh release create v0.5.0 --generate-notes
-
-# Or create a draft release to edit notes first
-gh release create v0.5.0 --generate-notes --draft
-```
-
-#### Signing Configuration (Optional)
-
-For release signing with a custom keystore, set these repository secrets:
-- `KEYSTORE_BASE64`: Base64-encoded keystore file (`base64 -w0 your.keystore`)
-- `KEYSTORE_PASSWORD`: Keystore password
-- `KEY_ALIAS`: Key alias
-- `KEY_PASSWORD`: Key password
-
-Without secrets, the APK is signed with a debug keystore (fine for sideloading, not for Play Store).
-
-### Development Workflow
-
-1. Start your Android emulator or connect a device
-2. Build and install: `./gradlew installDebug`
-3. View logs: `adb logcat | grep -i matedroid`
-
-Or use Android Studio:
-1. Open the project folder
-2. Wait for Gradle sync
-3. Click Run (green play button)
-
-## Configuration
-
-On first launch, you'll be prompted to configure your TeslamateApi connection:
-
-1. **Server URL**: Your TeslamateApi instance URL (e.g., `https://teslamate-api.example.com`)
-2. **API Token**: (Optional) If your instance requires authentication
+Please see [DEVELOPMENT.md](docs/DEVELOPMENT.md) for more details on how this app was created and how to build and test it.
 
 ## License
 
@@ -135,4 +77,4 @@ This project is licensed under the GNU General Public License v3.0. See [LICENSE
 
 - [Teslamate](https://github.com/adriankumpf/teslamate) - Self-hosted Tesla data logger
 - [TeslamateApi](https://github.com/tobiasehlert/teslamateapi) - RESTful API for Teslamate
-- [t-buddy](https://github.com/garanda21/t-buddy) - iOS app inspiration
+- [t-buddy](https://github.com/garanda21/t-buddy) - iOS app that triggered this development and was used as inspiration. Many kudos, it's a wonderful app and you should use it if you are on iOS!
