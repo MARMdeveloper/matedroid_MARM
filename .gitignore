@@ -92,3 +92,6 @@ lint/tmp/
 ehthumbs.db
 Thumbs.db
 mockups/
+
+# Logo source files (generated icons are in res/mipmap-*)
+matedroid-logo*.png
