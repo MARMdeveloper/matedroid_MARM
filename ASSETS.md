@@ -142,6 +142,7 @@ https://static-assets.tesla.com/configurator/compositor?context=design_studio_2&
 | `Performance20*` | `W32P` | `WY20P` | 20" Performance |
 | `Uberturbine21*` | - | `WY1S` | 21" Uberturbine (MY) |
 | `Photon18*` | `W38A` | `WY18P` | 18" Photon (Highland/Juniper) |
+| `Crossflow19*` | - | `WY19P` | 19" Crossflow (Juniper MY) |
 | `Glider18*`, `Nova18*` | `W38A` | - | 18" Glider/Nova (Highland M3) |
 
 **Note**: TeslamateAPI may append suffixes like `CapKit`, `Cover`, etc. The mapping strips these.
@@ -161,6 +162,7 @@ https://static-assets.tesla.com/configurator/compositor?context=design_studio_2&
 | `WY0S` | - | - | - | ✅ | ❌ |
 | `WY1S` | - | - | - | ✅ | ❌ |
 | `WY18P` | - | - | - | ❌ | ✅ |
+| `WY19P` | - | - | - | ❌ | ✅ |
 
 ---
 
@@ -233,10 +235,10 @@ Format: `{model_variant}_{color_code}_{wheel_code}.png`
 | Highland Model 3 | 7 | 1 | 7 | PNG |
 | Highland M3 Performance | 7 | 1 | 7 | PNG |
 | Legacy Model Y | 5 | 5 | 25 | PNG |
-| Juniper Model Y | 3 | 1 | 3 | PNG |
+| Juniper Model Y | 3 | 2 | 6 | PNG |
 | Model S | 5 | 1 | 5 | PNG |
 | Model X | 5 | 1 | 5 | PNG |
-| **Total** | | | **73** | **~7 MB** |
+| **Total** | | | **76** | **~7 MB** |
 
 ---
 

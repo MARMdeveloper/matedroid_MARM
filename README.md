@@ -18,6 +18,8 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 - A running [Teslamate](https://github.com/adriankumpf/teslamate) instance
 - [TeslamateApi](https://github.com/tobiasehlert/teslamateapi) deployed and accessible
 
+**This projects needs Teslamate API to work**, it will not work just with plan Teslamate. Please follow the Teslamate API instructions and make sure it is working as expected before opening any issue, thanks!
+
 ## Installation
 
 ### From Release (Recommended)
@@ -50,31 +52,7 @@ cd matedroid
 
 ## Development
 
-### Project Structure
-
-```
-matedroid/
-├── app/src/main/java/com/matedroid/
-│   ├── data/           # Data layer (API, repository, local storage)
-│   ├── domain/         # Domain layer (models, use cases)
-│   ├── ui/             # UI layer (screens, components, theme)
-│   └── di/             # Dependency injection modules
-├── gradle/             # Gradle wrapper and version catalog
-├── util/               # Utility scripts
-├── ASSETS.md           # Tesla car image asset documentation
-└── PLAN.md             # Detailed implementation plan
-```
-
-### Tech Stack
-
-- **Language**: Kotlin
-- **UI**: Jetpack Compose with Material Design 3
-- **Architecture**: MVVM + Clean Architecture
-- **DI**: Hilt
-- **Networking**: Retrofit + OkHttp + Moshi
-- **Local Storage**: DataStore
-- **Charts**: Vico
-- **Maps**: osmdroid (OpenStreetMap)
+Please see [DEVELOPMENT.md](DEVELOPMENT.md) for more details on how this app was created and how to build and test it.
 
 ### Utility Scripts
 

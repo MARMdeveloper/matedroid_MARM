@@ -99,7 +99,7 @@ JUNIPER_MY = {
     "trim_code": "MTY68",
     "interior_code": "IBB3",
     "colors": ["PPSW", "PN01", "PX02"],
-    "wheels": ["WY18P"],  # New Juniper wheels
+    "wheels": ["WY18P", "WY19P"],  # WY18P = Photon 18", WY19P = Crossflow 19"
     "compositor": "new",
 }
 
