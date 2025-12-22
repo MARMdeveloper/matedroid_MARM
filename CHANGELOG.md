@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-12-22
+
 ### Added
 - **Multi-Car Support**: Switch between vehicles via dropdown in the title bar
 - **Interactive Bar Charts**: Tap any bar to see exact values in a tooltip
@@ -18,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Settings Toggles**: Certificate and display options now use toggle switches
 
 ### Fixed
+- **HTTP Connections**: Allow unsecure HTTP connections to the TeslamateApi server
 - **Location Card**: Shows reverse-geocoded address when outside geofences
 - **Dashboard Cards**: Consistent styling across all cards
 
@@ -51,7 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/yourusername/matedroid/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/yourusername/matedroid/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/yourusername/matedroid/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/yourusername/matedroid/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/yourusername/matedroid/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yourusername/matedroid/releases/tag/v0.1.0
