@@ -22,10 +22,14 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+            // CI: use secrets from environment variables
+            // Local: fall back to debug keystore
+            val keystorePath = System.getenv("KEYSTORE_BASE64")?.let { "release.keystore" }
+                ?: "${System.getProperty("user.home")}/.android/debug.keystore"
+            storeFile = file(keystorePath)
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
         }
     }
 

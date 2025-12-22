@@ -105,6 +105,32 @@ See [ASSETS.md](ASSETS.md) for detailed documentation on Tesla compositor APIs, 
 ./gradlew connectedAndroidTest
 ```
 
+### Releasing
+
+Releases are automated via GitHub Actions. When a release is published, the workflow builds the APK and attaches it to the release.
+
+```bash
+# 1. Update version in app/build.gradle.kts (versionCode and versionName)
+# 2. Update CHANGELOG.md with release notes
+# 3. Commit and push
+
+# 4. Create a release with GitHub CLI
+gh release create v0.5.0 --generate-notes
+
+# Or create a draft release to edit notes first
+gh release create v0.5.0 --generate-notes --draft
+```
+
+#### Signing Configuration (Optional)
+
+For release signing with a custom keystore, set these repository secrets:
+- `KEYSTORE_BASE64`: Base64-encoded keystore file (`base64 -w0 your.keystore`)
+- `KEYSTORE_PASSWORD`: Keystore password
+- `KEY_ALIAS`: Key alias
+- `KEY_PASSWORD`: Key password
+
+Without secrets, the APK is signed with a debug keystore (fine for sideloading, not for Play Store).
+
 ### Development Workflow
 
 1. Start your Android emulator or connect a device
