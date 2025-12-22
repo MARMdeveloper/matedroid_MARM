@@ -16,16 +16,18 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 
 ### Gallery
 
-<img src="docs/screenshots/main-dashboard.jpg" alt="Main dashboard" height="400" border=10>
-<img src="docs/screenshots/battery-health.jpg" alt="Battery health dashboard" height="400" border=10>
-<img src="docs/screenshots/mileage.jpg" alt="Mileage dashboard" height="400" border=10>
-<img src="docs/screenshots/software-versions.jpg" alt="Mileage dashboard" height="400" border=10>
-
-
-<img src="docs/screenshots/drives.jpg" alt="Drives dashboard" height="400" border=10>
-<img src="docs/screenshots/drive-details.jpg" alt="Drive details" height="400" border=10>
-<img src="docs/screenshots/charges.jpg" alt="Drives dashboard" height="400" border=10>
-<img src="docs/screenshots/charge-details.jpg" alt="Drive details" height="400" border=10>
+<p>
+<img src="docs/screenshots/main-dashboard.jpg" alt="Main dashboard" height="300">
+<img src="docs/screenshots/battery-health.jpg" alt="Battery health" height="300">
+<img src="docs/screenshots/mileage.jpg" alt="Mileage" height="300">
+<img src="docs/screenshots/software-versions.jpg" alt="Software versions" height="300">
+</p>
+<p>
+<img src="docs/screenshots/drives.jpg" alt="Drives" height="300">
+<img src="docs/screenshots/drive-details.jpg" alt="Drive details" height="300">
+<img src="docs/screenshots/charges.jpg" alt="Charges" height="300">
+<img src="docs/screenshots/charge-details.jpg" alt="Charge details" height="300">
+</p>
 
 ## Requirements
 
