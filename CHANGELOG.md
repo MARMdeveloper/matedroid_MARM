@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Software Versions**: Tap the external link icon next to any version to view release notes on NotATeslaApp
+
 ### Fixed
 - **Software Versions**: Show all software updates instead of only the first 100
 

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Timer
@@ -49,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -413,6 +415,8 @@ private fun SoftwareVersionCard(
     palette: CarColorPalette
 ) {
     val dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
+    val uriHandler = LocalUriHandler.current
+    val releaseNotesUrl = "https://www.notateslaapp.com/software-updates/version/${update.version}/release-notes"
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -435,7 +439,8 @@ private fun SoftwareVersionCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
                 ) {
                     Icon(
                         imageVector = Icons.Default.SystemUpdate,
@@ -445,12 +450,26 @@ private fun SoftwareVersionCard(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text(
-                            text = update.version,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (update.isCurrent) palette.onSurface else MaterialTheme.colorScheme.onSurface
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = update.version,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (update.isCurrent) palette.onSurface else MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            IconButton(
+                                onClick = { uriHandler.openUri(releaseNotesUrl) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                                    contentDescription = "View release notes",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = if (update.isCurrent) palette.accent.copy(alpha = 0.7f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
                         if (update.isCurrent) {
                             Text(
                                 text = "Current version",
