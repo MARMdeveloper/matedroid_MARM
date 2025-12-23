@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Software Versions**: Show all software updates instead of only the first 100
+
 ## [0.6.1] - 2025-12-22
 
 ### Fixed

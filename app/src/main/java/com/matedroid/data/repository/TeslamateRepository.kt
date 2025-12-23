@@ -187,7 +187,7 @@ class TeslamateRepository @Inject constructor(
     suspend fun getUpdates(carId: Int): ApiResult<List<UpdateData>> {
         return try {
             val api = getApi() ?: return ApiResult.Error("Server not configured")
-            val response = api.getUpdates(carId)
+            val response = api.getUpdates(carId, page = 1, show = 50000)
             if (response.isSuccessful) {
                 val updates = response.body()?.data?.updates ?: emptyList()
                 ApiResult.Success(updates)

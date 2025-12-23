@@ -69,6 +69,8 @@ interface TeslamateApi {
 
     @GET("api/v1/cars/{carId}/updates")
     suspend fun getUpdates(
-        @Path("carId") carId: Int
+        @Path("carId") carId: Int,
+        @Query("page") page: Int? = null,
+        @Query("show") show: Int? = null
     ): Response<UpdatesResponse>
 }
