@@ -15,6 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -75,24 +76,28 @@ class DashboardViewModel @Inject constructor(
 
     fun loadCars() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
 
             when (val result = repository.getCars()) {
                 is ApiResult.Success -> {
                     val cars = result.data
                     val selectedCarId = cars.firstOrNull()?.carId
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        cars = cars,
-                        selectedCarId = selectedCarId
-                    )
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            cars = cars,
+                            selectedCarId = selectedCarId
+                        )
+                    }
                     selectedCarId?.let { loadCarStatus(it) }
                 }
                 is ApiResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = result.message
-                    )
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = result.message
+                        )
+                    }
                 }
             }
         }
@@ -101,40 +106,42 @@ class DashboardViewModel @Inject constructor(
     fun selectCar(carId: Int) {
         // Reset state when switching cars
         lastGeocodedLocation = null
-        _uiState.value = _uiState.value.copy(
-            selectedCarId = carId,
-            carStatus = null,
-            resolvedAddress = null,
-            totalCharges = null,
-            totalDrives = null
-        )
+        _uiState.update {
+            it.copy(
+                selectedCarId = carId,
+                carStatus = null,
+                resolvedAddress = null,
+                totalCharges = null,
+                totalDrives = null
+            )
+        }
         loadCarStatus(carId)
     }
 
     fun refresh() {
         val carId = _uiState.value.selectedCarId ?: return
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isRefreshing = true, error = null)
+            _uiState.update { it.copy(isRefreshing = true, error = null) }
 
             // Fetch car status directly (not via loadCarStatus which launches separate coroutine)
             when (val result = repository.getCarStatus(carId)) {
                 is ApiResult.Success -> {
                     val status = result.data.status
-                    _uiState.value = _uiState.value.copy(
-                        carStatus = status,
-                        units = result.data.units,
-                        error = null
-                    )
+                    _uiState.update {
+                        it.copy(
+                            carStatus = status,
+                            units = result.data.units,
+                            error = null
+                        )
+                    }
                     fetchAddressIfNeeded(status)
                 }
                 is ApiResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        error = result.message
-                    )
+                    _uiState.update { it.copy(error = result.message) }
                 }
             }
 
-            _uiState.value = _uiState.value.copy(isRefreshing = false)
+            _uiState.update { it.copy(isRefreshing = false) }
         }
     }
 
@@ -143,18 +150,18 @@ class DashboardViewModel @Inject constructor(
             when (val result = repository.getCarStatus(carId)) {
                 is ApiResult.Success -> {
                     val status = result.data.status
-                    _uiState.value = _uiState.value.copy(
-                        carStatus = status,
-                        units = result.data.units,
-                        error = null
-                    )
+                    _uiState.update {
+                        it.copy(
+                            carStatus = status,
+                            units = result.data.units,
+                            error = null
+                        )
+                    }
                     // Fetch address if no geofence but coordinates are available
                     fetchAddressIfNeeded(status)
                 }
                 is ApiResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        error = result.message
-                    )
+                    _uiState.update { it.copy(error = result.message) }
                 }
             }
         }
@@ -167,7 +174,7 @@ class DashboardViewModel @Inject constructor(
             // Load charges count
             when (val result = repository.getCharges(carId, null, null)) {
                 is ApiResult.Success -> {
-                    _uiState.value = _uiState.value.copy(totalCharges = result.data.size)
+                    _uiState.update { it.copy(totalCharges = result.data.size) }
                 }
                 is ApiResult.Error -> { /* ignore */ }
             }
@@ -176,7 +183,7 @@ class DashboardViewModel @Inject constructor(
             // Load drives count
             when (val result = repository.getDrives(carId, null, null)) {
                 is ApiResult.Success -> {
-                    _uiState.value = _uiState.value.copy(totalDrives = result.data.size)
+                    _uiState.update { it.copy(totalDrives = result.data.size) }
                 }
                 is ApiResult.Error -> { /* ignore */ }
             }
@@ -202,12 +209,12 @@ class DashboardViewModel @Inject constructor(
             viewModelScope.launch {
                 val address = geocodingRepository.reverseGeocode(lat, lon)
                 if (address != null) {
-                    _uiState.value = _uiState.value.copy(resolvedAddress = address)
+                    _uiState.update { it.copy(resolvedAddress = address) }
                 }
             }
         } else if (hasGeofence) {
             // Clear resolved address if geofence is available
-            _uiState.value = _uiState.value.copy(resolvedAddress = null)
+            _uiState.update { it.copy(resolvedAddress = null) }
             lastGeocodedLocation = null
         }
     }
@@ -220,10 +227,12 @@ class DashboardViewModel @Inject constructor(
                 when (val result = repository.getCarStatus(carId)) {
                     is ApiResult.Success -> {
                         val status = result.data.status
-                        _uiState.value = _uiState.value.copy(
-                            carStatus = status,
-                            units = result.data.units
-                        )
+                        _uiState.update {
+                            it.copy(
+                                carStatus = status,
+                                units = result.data.units
+                            )
+                        }
                         // Update address if location changed
                         fetchAddressIfNeeded(status)
                     }
@@ -236,6 +245,6 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
+        _uiState.update { it.copy(error = null) }
     }
 }

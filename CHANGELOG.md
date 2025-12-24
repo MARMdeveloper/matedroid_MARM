@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mileage**: Round Total and Avg/Year values to whole numbers for cleaner display
 
 ### Fixed
+- **Dashboard**: Fix race condition where drive/charge counts could fail to display for users with large datasets
 - **Software Versions**: Show all software updates instead of only the first 100
 
 ## [0.6.1] - 2025-12-22

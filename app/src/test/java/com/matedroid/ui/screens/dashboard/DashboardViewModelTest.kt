@@ -5,7 +5,10 @@ import com.matedroid.data.api.models.CarData
 import com.matedroid.data.api.models.CarStatus
 import com.matedroid.data.api.models.CarStatusDetails
 import com.matedroid.data.api.models.ChargingDetails
+import com.matedroid.data.api.models.Units
 import com.matedroid.data.repository.ApiResult
+import com.matedroid.data.repository.CarStatusWithUnits
+import com.matedroid.data.repository.GeocodingRepository
 import com.matedroid.data.repository.TeslamateRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,6 +32,7 @@ class DashboardViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var repository: TeslamateRepository
+    private lateinit var geocodingRepository: GeocodingRepository
     private lateinit var viewModel: DashboardViewModel
 
     private val testCar = CarData(
@@ -50,10 +54,16 @@ class DashboardViewModelTest {
         carStatus = CarStatusDetails(locked = true)
     )
 
+    private val testStatusWithUnits = CarStatusWithUnits(
+        status = testStatus,
+        units = Units()
+    )
+
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         repository = mockk()
+        geocodingRepository = mockk()
     }
 
     @After
@@ -62,13 +72,15 @@ class DashboardViewModelTest {
     }
 
     private fun createViewModel(): DashboardViewModel {
-        return DashboardViewModel(repository)
+        return DashboardViewModel(repository, geocodingRepository)
     }
 
     @Test
     fun `loadCars fetches cars and selects first one`() = runTest {
         coEvery { repository.getCars() } returns ApiResult.Success(listOf(testCar))
-        coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatus)
+        coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatusWithUnits)
+        coEvery { repository.getCharges(1, null, null) } returns ApiResult.Success(emptyList())
+        coEvery { repository.getDrives(1, null, null) } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -108,10 +120,13 @@ class DashboardViewModelTest {
         val car1 = CarData(carId = 1, name = "Car 1")
         val car2 = CarData(carId = 2, name = "Car 2")
         val status2 = testStatus.copy(displayName = "Car 2")
+        val status2WithUnits = CarStatusWithUnits(status = status2, units = Units())
 
         coEvery { repository.getCars() } returns ApiResult.Success(listOf(car1, car2))
-        coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatus)
-        coEvery { repository.getCarStatus(2) } returns ApiResult.Success(status2)
+        coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatusWithUnits)
+        coEvery { repository.getCarStatus(2) } returns ApiResult.Success(status2WithUnits)
+        coEvery { repository.getCharges(any(), null, null) } returns ApiResult.Success(emptyList())
+        coEvery { repository.getDrives(any(), null, null) } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -128,7 +143,9 @@ class DashboardViewModelTest {
     @Test
     fun `refresh reloads car status`() = runTest {
         coEvery { repository.getCars() } returns ApiResult.Success(listOf(testCar))
-        coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatus)
+        coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatusWithUnits)
+        coEvery { repository.getCharges(1, null, null) } returns ApiResult.Success(emptyList())
+        coEvery { repository.getDrives(1, null, null) } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -136,7 +153,8 @@ class DashboardViewModelTest {
         val updatedStatus = testStatus.copy(
             batteryDetails = BatteryDetails(batteryLevel = 80, ratedBatteryRange = 300.0)
         )
-        coEvery { repository.getCarStatus(1) } returns ApiResult.Success(updatedStatus)
+        val updatedStatusWithUnits = CarStatusWithUnits(status = updatedStatus, units = Units())
+        coEvery { repository.getCarStatus(1) } returns ApiResult.Success(updatedStatusWithUnits)
 
         viewModel.refresh()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -178,6 +196,8 @@ class DashboardViewModelTest {
     fun `status error is shown when status fetch fails`() = runTest {
         coEvery { repository.getCars() } returns ApiResult.Success(listOf(testCar))
         coEvery { repository.getCarStatus(1) } returns ApiResult.Error("Status error")
+        coEvery { repository.getCharges(1, null, null) } returns ApiResult.Success(emptyList())
+        coEvery { repository.getDrives(1, null, null) } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
