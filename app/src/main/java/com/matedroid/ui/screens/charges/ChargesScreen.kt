@@ -1,5 +1,6 @@
 package com.matedroid.ui.screens.charges
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BatteryChargingFull
@@ -47,11 +50,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,17 +64,8 @@ import com.matedroid.ui.components.BarChartData
 import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
-enum class DateFilter(val label: String, val days: Long?) {
-    LAST_7_DAYS("Last 7 days", 7),
-    LAST_30_DAYS("Last 30 days", 30),
-    LAST_90_DAYS("Last 90 days", 90),
-    LAST_YEAR("Last year", 365),
-    ALL_TIME("All time", null)
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,33 +78,17 @@ fun ChargesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var selectedFilter by remember { mutableStateOf(DateFilter.LAST_7_DAYS) }
     val isDarkTheme = isSystemInDarkTheme()
     val palette = CarColorPalettes.forExteriorColor(exteriorColor, isDarkTheme)
 
     LaunchedEffect(carId) {
         viewModel.setCarId(carId)
-        // Apply default 7-day filter on initial load
-        val endDate = LocalDate.now()
-        val startDate = endDate.minusDays(7)
-        viewModel.setDateFilter(startDate, endDate)
     }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(error)
             viewModel.clearError()
-        }
-    }
-
-    fun applyDateFilter(filter: DateFilter) {
-        selectedFilter = filter
-        if (filter.days != null) {
-            val endDate = LocalDate.now()
-            val startDate = endDate.minusDays(filter.days)
-            viewModel.setDateFilter(startDate, endDate)
-        } else {
-            viewModel.clearDateFilter()
         }
     }
 
@@ -150,14 +128,20 @@ fun ChargesScreen(
             } else {
                 ChargesContent(
                     charges = uiState.charges,
+                    dcChargeIds = uiState.dcChargeIds,
                     chartData = uiState.chartData,
                     chartGranularity = uiState.chartGranularity,
                     summary = uiState.summary,
                     currencySymbol = uiState.currencySymbol,
-                    selectedFilter = selectedFilter,
+                    selectedFilter = uiState.selectedFilter,
+                    initialScrollPosition = uiState.scrollPosition,
+                    initialScrollOffset = uiState.scrollOffset,
                     palette = palette,
-                    onFilterSelected = { applyDateFilter(it) },
-                    onChargeClick = onNavigateToChargeDetail
+                    onFilterSelected = { viewModel.setDateFilter(it) },
+                    onChargeClick = { chargeId, scrollIndex, scrollOffset ->
+                        viewModel.saveScrollPosition(scrollIndex, scrollOffset)
+                        onNavigateToChargeDetail(chargeId)
+                    }
                 )
             }
         }
@@ -168,16 +152,25 @@ fun ChargesScreen(
 @Composable
 private fun ChargesContent(
     charges: List<ChargeData>,
+    dcChargeIds: Set<Int>,
     chartData: List<ChargeChartData>,
     chartGranularity: ChartGranularity,
     summary: ChargesSummary,
     currencySymbol: String,
     selectedFilter: DateFilter,
+    initialScrollPosition: Int,
+    initialScrollOffset: Int,
     palette: CarColorPalette,
     onFilterSelected: (DateFilter) -> Unit,
-    onChargeClick: (Int) -> Unit
+    onChargeClick: (chargeId: Int, scrollIndex: Int, scrollOffset: Int) -> Unit
 ) {
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = initialScrollPosition,
+        initialFirstVisibleItemScrollOffset = initialScrollOffset
+    )
+
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -236,8 +229,17 @@ private fun ChargesContent(
             items(charges, key = { it.chargeId }) { charge ->
                 ChargeItem(
                     charge = charge,
+                    // Show DC badge if in dcChargeIds, AC otherwise
+                    // Will be correct once sync has processed charge details
+                    isDcCharge = charge.chargeId in dcChargeIds,
                     currencySymbol = currencySymbol,
-                    onClick = { onChargeClick(charge.chargeId) }
+                    onClick = {
+                        onChargeClick(
+                            charge.chargeId,
+                            listState.firstVisibleItemIndex,
+                            listState.firstVisibleItemScrollOffset
+                        )
+                    }
                 )
             }
         }
@@ -369,6 +371,7 @@ private fun SummaryItem(
 @Composable
 private fun ChargeItem(
     charge: ChargeData,
+    isDcCharge: Boolean,
     currencySymbol: String,
     onClick: () -> Unit
 ) {
@@ -384,7 +387,7 @@ private fun ChargeItem(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Header card with location and date
+            // Header card with location, date, and AC/DC badge
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -407,8 +410,9 @@ private fun ChargeItem(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = charge.address ?: "Unknown location",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
                         )
                         charge.startDate?.let { dateStr ->
                             Text(
@@ -418,6 +422,8 @@ private fun ChargeItem(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    ChargeTypeBadge(isDcCharge = isDcCharge)
                 }
             }
 
@@ -523,6 +529,27 @@ private fun ChargeStatCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+private fun ChargeTypeBadge(isDcCharge: Boolean) {
+    val backgroundColor = if (isDcCharge) Color(0xFFFF9800) else Color(0xFF4CAF50)
+    val text = if (isDcCharge) "DC" else "AC"
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
     }
 }
 

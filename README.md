@@ -7,6 +7,7 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 ## Features
 
 - **Dashboard** - Real-time vehicle status at a glance with 3D car image matching your vehicle's color and wheels
+- **Stats for Nerds** - Tap car image for advanced statistics: records, extremes, AC/DC ratio
 - **Charging History** - View all charging sessions with statistics and charts
 - **Charge Details** - Interactive map and detailed power/voltage/temperature charts
 - **Drive History** - Track trips with efficiency metrics and route visualization

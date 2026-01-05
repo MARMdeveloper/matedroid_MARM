@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Paint
 import android.net.Uri
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -135,6 +136,7 @@ fun ChargeDetailScreen(
                     stats = uiState.stats,
                     units = uiState.units,
                     currencySymbol = uiState.currencySymbol,
+                    isDcCharge = uiState.isDcCharge,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -148,6 +150,7 @@ private fun ChargeDetailContent(
     stats: ChargeDetailStats?,
     units: Units?,
     currencySymbol: String,
+    isDcCharge: Boolean,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -160,7 +163,7 @@ private fun ChargeDetailContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Location header card
-        LocationHeaderCard(detail = detail, currencySymbol = currencySymbol)
+        LocationHeaderCard(detail = detail, currencySymbol = currencySymbol, isDcCharge = isDcCharge)
 
         // Map showing charge location
         if (detail.latitude != null && detail.longitude != null) {
@@ -251,20 +254,24 @@ private fun ChargeDetailContent(
             // Charts
             val chargePoints = detail.chargePoints
             if (!chargePoints.isNullOrEmpty() && chargePoints.size > 2) {
+                // Extract time range for labels
+                val timeLabels = extractTimeLabels(chargePoints)
+
                 if (chargePoints.any { (it.chargerPower ?: 0) > 0 }) {
-                    PowerChartCard(chargePoints = chargePoints)
+                    PowerChartCard(chargePoints = chargePoints, timeLabels = timeLabels)
                 }
-                if (chargePoints.any { (it.chargerVoltage ?: 0) > 0 }) {
-                    VoltageChartCard(chargePoints = chargePoints)
+                // Only show voltage chart for AC charges
+                if (!isDcCharge && chargePoints.any { (it.chargerVoltage ?: 0) > 0 }) {
+                    VoltageChartCard(chargePoints = chargePoints, timeLabels = timeLabels)
                 }
                 if (chargePoints.any { (it.chargerCurrent ?: 0) > 0 }) {
-                    CurrentChartCard(chargePoints = chargePoints)
+                    CurrentChartCard(chargePoints = chargePoints, timeLabels = timeLabels)
                 }
                 if (chargePoints.any { it.outsideTemp != null }) {
-                    TemperatureChartCard(chargePoints = chargePoints, units = units)
+                    TemperatureChartCard(chargePoints = chargePoints, units = units, timeLabels = timeLabels)
                 }
                 if (chargePoints.any { it.batteryLevel != null }) {
-                    BatteryChartCard(chargePoints = chargePoints)
+                    BatteryChartCard(chargePoints = chargePoints, timeLabels = timeLabels)
                 }
             }
         }
@@ -274,7 +281,7 @@ private fun ChargeDetailContent(
 }
 
 @Composable
-private fun LocationHeaderCard(detail: ChargeDetail, currencySymbol: String) {
+private fun LocationHeaderCard(detail: ChargeDetail, currencySymbol: String, isDcCharge: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -379,7 +386,7 @@ private fun LocationHeaderCard(detail: ChargeDetail, currencySymbol: String) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Energy Added (left side)
+                    // Energy Added (left side) with AC/DC badge
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Power,
@@ -394,12 +401,16 @@ private fun LocationHeaderCard(detail: ChargeDetail, currencySymbol: String) {
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
-                            Text(
-                                text = "%.2f kWh".format(energy),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF4CAF50)
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "%.2f kWh".format(energy),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF4CAF50)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                ChargeTypeBadge(isDcCharge = isDcCharge)
+                            }
                         }
                     }
 
@@ -588,7 +599,7 @@ private fun StatItemView(
 }
 
 @Composable
-private fun PowerChartCard(chargePoints: List<ChargePoint>) {
+private fun PowerChartCard(chargePoints: List<ChargePoint>, timeLabels: List<String>) {
     val powers = chargePoints.mapNotNull { it.chargerPower?.toFloat() }
     if (powers.size < 2) return
 
@@ -597,12 +608,13 @@ private fun PowerChartCard(chargePoints: List<ChargePoint>) {
         icon = Icons.Default.Bolt,
         data = powers,
         color = Color(0xFF4CAF50),
-        unit = "kW"
+        unit = "kW",
+        timeLabels = timeLabels
     )
 }
 
 @Composable
-private fun VoltageChartCard(chargePoints: List<ChargePoint>) {
+private fun VoltageChartCard(chargePoints: List<ChargePoint>, timeLabels: List<String>) {
     val voltages = chargePoints.mapNotNull { it.chargerVoltage?.toFloat() }
     if (voltages.size < 2) return
 
@@ -611,12 +623,13 @@ private fun VoltageChartCard(chargePoints: List<ChargePoint>) {
         icon = Icons.Default.ElectricalServices,
         data = voltages,
         color = MaterialTheme.colorScheme.tertiary,
-        unit = "V"
+        unit = "V",
+        timeLabels = timeLabels
     )
 }
 
 @Composable
-private fun CurrentChartCard(chargePoints: List<ChargePoint>) {
+private fun CurrentChartCard(chargePoints: List<ChargePoint>, timeLabels: List<String>) {
     val currents = chargePoints.mapNotNull { it.chargerCurrent?.toFloat() }
     if (currents.size < 2) return
 
@@ -625,12 +638,13 @@ private fun CurrentChartCard(chargePoints: List<ChargePoint>) {
         icon = Icons.Default.Power,
         data = currents,
         color = MaterialTheme.colorScheme.secondary,
-        unit = "A"
+        unit = "A",
+        timeLabels = timeLabels
     )
 }
 
 @Composable
-private fun TemperatureChartCard(chargePoints: List<ChargePoint>, units: Units?) {
+private fun TemperatureChartCard(chargePoints: List<ChargePoint>, units: Units?, timeLabels: List<String>) {
     val temps = chargePoints.mapNotNull { it.outsideTemp?.toFloat() }
     if (temps.size < 2) return
 
@@ -640,6 +654,7 @@ private fun TemperatureChartCard(chargePoints: List<ChargePoint>, units: Units?)
         data = temps,
         color = Color(0xFFFF9800),
         unit = UnitFormatter.getTemperatureUnit(units),
+        timeLabels = timeLabels,
         convertValue = { value ->
             if (units?.unitOfTemperature == "F") (value * 9f / 5f + 32f) else value
         }
@@ -647,7 +662,7 @@ private fun TemperatureChartCard(chargePoints: List<ChargePoint>, units: Units?)
 }
 
 @Composable
-private fun BatteryChartCard(chargePoints: List<ChargePoint>) {
+private fun BatteryChartCard(chargePoints: List<ChargePoint>, timeLabels: List<String>) {
     val batteryLevels = chargePoints.mapNotNull { it.batteryLevel?.toFloat() }
     if (batteryLevels.size < 2) return
 
@@ -657,7 +672,8 @@ private fun BatteryChartCard(chargePoints: List<ChargePoint>) {
         data = batteryLevels,
         color = MaterialTheme.colorScheme.primary,
         unit = "%",
-        fixedMinMax = Pair(0f, 100f)
+        fixedMinMax = Pair(0f, 100f),
+        timeLabels = timeLabels
     )
 }
 
@@ -670,6 +686,7 @@ private fun ChartCard(
     unit: String,
     showZeroLine: Boolean = false,
     fixedMinMax: Pair<Float, Float>? = null,
+    timeLabels: List<String> = emptyList(),
     convertValue: (Float) -> Float = { it }
 ) {
     Card(
@@ -707,19 +724,23 @@ private fun ChartCard(
             val surfaceColor = MaterialTheme.colorScheme.onSurface
             val gridColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
 
+            // Chart area height (leaves room for time labels)
+            val chartHeight = 120.dp
+            val timeLabelHeight = if (timeLabels.isNotEmpty()) 20.dp else 0.dp
+
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .height(chartHeight + timeLabelHeight)
             ) {
                 val width = size.width
-                val height = size.height
+                val chartHeightPx = chartHeight.toPx()
                 val stepX = width / (convertedData.size - 1).coerceAtLeast(1)
 
                 // Draw grid lines
                 val gridLineCount = 4
                 for (i in 0..gridLineCount) {
-                    val y = height * i / gridLineCount
+                    val y = chartHeightPx * i / gridLineCount
                     drawLine(
                         color = gridColor,
                         start = Offset(0f, y),
@@ -730,7 +751,7 @@ private fun ChartCard(
 
                 // Draw zero line if needed
                 if (showZeroLine && minValue < 0 && maxValue > 0) {
-                    val zeroY = height * (1 - (0f - minValue) / range)
+                    val zeroY = chartHeightPx * (1 - (0f - minValue) / range)
                     drawLine(
                         color = surfaceColor.copy(alpha = 0.5f),
                         start = Offset(0f, zeroY),
@@ -744,8 +765,8 @@ private fun ChartCard(
                     for (i in 0 until convertedData.size - 1) {
                         val x1 = i * stepX
                         val x2 = (i + 1) * stepX
-                        val y1 = height * (1 - (convertedData[i] - minValue) / range)
-                        val y2 = height * (1 - (convertedData[i + 1] - minValue) / range)
+                        val y1 = chartHeightPx * (1 - (convertedData[i] - minValue) / range)
+                        val y2 = chartHeightPx * (1 - (convertedData[i + 1] - minValue) / range)
 
                         drawLine(
                             color = color,
@@ -756,7 +777,7 @@ private fun ChartCard(
                     }
                 }
 
-                // Draw Y-axis labels for all grid lines
+                // Draw Y-axis labels for all grid lines and time labels
                 drawContext.canvas.nativeCanvas.apply {
                     val textPaint = Paint().apply {
                         this.color = surfaceColor.copy(alpha = 0.7f).toArgb()
@@ -765,7 +786,7 @@ private fun ChartCard(
                     }
 
                     for (i in 0..gridLineCount) {
-                        val y = height * i / gridLineCount
+                        val y = chartHeightPx * i / gridLineCount
                         val value = maxValue - (range * i / gridLineCount)
                         val label = "%.0f".format(value) + " $unit"
 
@@ -778,9 +799,79 @@ private fun ChartCard(
 
                         drawText(label, 8f, textY, textPaint)
                     }
+
+                    // Draw time labels on X axis (4 labels)
+                    if (timeLabels.size == 4) {
+                        val timeY = chartHeightPx + timeLabelHeight.toPx() - 4f
+                        val positions = listOf(0f, width / 3f, width * 2f / 3f, width)
+
+                        timeLabels.forEachIndexed { index, label ->
+                            if (label.isNotEmpty()) {
+                                val textWidth = textPaint.measureText(label)
+                                val x = when (index) {
+                                    0 -> 0f  // Left aligned
+                                    3 -> positions[index] - textWidth  // Right aligned
+                                    else -> positions[index] - textWidth / 2  // Center aligned
+                                }
+                                drawText(label, x.coerceAtLeast(0f), timeY, textPaint)
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ChargeTypeBadge(isDcCharge: Boolean) {
+    val backgroundColor = if (isDcCharge) Color(0xFFFF9800) else Color(0xFF4CAF50)
+    val text = if (isDcCharge) "DC" else "AC"
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+    }
+}
+
+/**
+ * Extract 4 time labels from charge points for X axis display.
+ * Returns list of 4 time strings at 0%, 33%, 67%, and 100% positions.
+ */
+private fun extractTimeLabels(chargePoints: List<ChargePoint>): List<String> {
+    if (chargePoints.isEmpty()) return listOf("", "", "", "")
+
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+    val times = chargePoints.mapNotNull { point ->
+        point.date?.let { dateStr ->
+            try {
+                val dateTime = try {
+                    OffsetDateTime.parse(dateStr).toLocalDateTime()
+                } catch (e: DateTimeParseException) {
+                    LocalDateTime.parse(dateStr.replace("Z", ""))
+                }
+                dateTime
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    if (times.isEmpty()) return listOf("", "", "", "")
+
+    val indices = listOf(0, times.size / 3, times.size * 2 / 3, times.size - 1)
+    return indices.map { idx ->
+        times.getOrNull(idx.coerceIn(0, times.size - 1))?.format(timeFormatter) ?: ""
     }
 }
 

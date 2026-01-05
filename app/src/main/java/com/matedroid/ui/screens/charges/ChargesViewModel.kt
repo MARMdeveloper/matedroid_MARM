@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.ChargeData
 import com.matedroid.data.local.SettingsDataStore
+import com.matedroid.data.local.dao.AggregateDao
 import com.matedroid.data.model.Currency
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
@@ -26,6 +27,14 @@ enum class ChartGranularity {
     DAILY, WEEKLY, MONTHLY
 }
 
+enum class DateFilter(val label: String, val days: Long?) {
+    LAST_7_DAYS("Last 7 days", 7),
+    LAST_30_DAYS("Last 30 days", 30),
+    LAST_90_DAYS("Last 90 days", 90),
+    LAST_YEAR("Last year", 365),
+    ALL_TIME("All time", null)
+}
+
 data class ChargeChartData(
     val label: String,
     val count: Int,
@@ -37,11 +46,16 @@ data class ChargesUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val charges: List<ChargeData> = emptyList(),
+    val dcChargeIds: Set<Int> = emptySet(),
+    val processedChargeIds: Set<Int> = emptySet(),  // Charges that have aggregate data
     val chartData: List<ChargeChartData> = emptyList(),
     val chartGranularity: ChartGranularity = ChartGranularity.MONTHLY,
     val error: String? = null,
     val startDate: LocalDate? = null,
     val endDate: LocalDate? = null,
+    val selectedFilter: DateFilter = DateFilter.LAST_7_DAYS,  // Preserve filter in ViewModel
+    val scrollPosition: Int = 0,  // First visible item index
+    val scrollOffset: Int = 0,    // Scroll offset within first item
     val summary: ChargesSummary = ChargesSummary(),
     val currencySymbol: String = "€"
 )
@@ -57,7 +71,8 @@ data class ChargesSummary(
 @HiltViewModel
 class ChargesViewModel @Inject constructor(
     private val repository: TeslamateRepository,
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
+    private val aggregateDao: AggregateDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChargesUiState())
@@ -83,16 +98,22 @@ class ChargesViewModel @Inject constructor(
     }
 
     fun setCarId(id: Int) {
-        carId = id
+        if (carId != id) {
+            carId = id
+            // Apply default filter on first load
+            setDateFilter(_uiState.value.selectedFilter)
+        }
     }
 
-    fun setDateFilter(startDate: LocalDate?, endDate: LocalDate?) {
-        _uiState.update { it.copy(startDate = startDate, endDate = endDate) }
-        loadCharges(startDate, endDate)
+    fun setDateFilter(filter: DateFilter) {
+        val endDate = LocalDate.now()
+        val startDate = filter.days?.let { endDate.minusDays(it) }
+        _uiState.update { it.copy(startDate = startDate, endDate = if (filter.days != null) endDate else null, selectedFilter = filter) }
+        loadCharges(startDate, if (filter.days != null) endDate else null)
     }
 
     fun clearDateFilter() {
-        _uiState.update { it.copy(startDate = null, endDate = null) }
+        _uiState.update { it.copy(startDate = null, endDate = null, selectedFilter = DateFilter.ALL_TIME) }
         loadCharges(null, null)
     }
 
@@ -106,6 +127,10 @@ class ChargesViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun saveScrollPosition(firstVisibleIndex: Int, offset: Int) {
+        _uiState.update { it.copy(scrollPosition = firstVisibleIndex, scrollOffset = offset) }
     }
 
     private fun loadCharges(startDate: LocalDate? = null, endDate: LocalDate? = null) {
@@ -123,6 +148,18 @@ class ChargesViewModel @Inject constructor(
             // API expects RFC3339 format: 2006-01-02T15:04:05Z
             val startDateStr = startDate?.let { "${it}T00:00:00Z" }
             val endDateStr = endDate?.let { "${it}T23:59:59Z" }
+
+            // Fetch charge IDs from local database aggregates
+            val dcChargeIds = try {
+                aggregateDao.getDcChargeIds(id).toSet()
+            } catch (e: Exception) {
+                emptySet()
+            }
+            val processedChargeIds = try {
+                aggregateDao.getAllProcessedChargeIds(id).toSet()
+            } catch (e: Exception) {
+                emptySet()
+            }
 
             when (val result = repository.getCharges(id, startDateStr, endDateStr)) {
                 is ApiResult.Success -> {
@@ -144,6 +181,8 @@ class ChargesViewModel @Inject constructor(
                             isLoading = false,
                             isRefreshing = false,
                             charges = displayedCharges,
+                            dcChargeIds = dcChargeIds,
+                            processedChargeIds = processedChargeIds,
                             chartData = chartData,
                             chartGranularity = granularity,
                             summary = summary,

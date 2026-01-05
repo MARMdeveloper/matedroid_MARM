@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Stats for Nerds**: Tap the car image on Dashboard to access advanced statistics
+  - Quick Stats: Total drives/charges, distance, energy, efficiency, top speed
+  - Records: Longest drive, fastest drive, most efficient drive, biggest charge, busiest day
+  - Deep Stats (synced in background): Elevation extremes, temperature extremes, max charging power, AC/DC ratio
+  - Year filter to view stats for specific years or all time
+  - Background sync of drive/charge details for Deep Stats computation
+
 ## [0.7.1] - 2025-12-25
 
 ### Fixed

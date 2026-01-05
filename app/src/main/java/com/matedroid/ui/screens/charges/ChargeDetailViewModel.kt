@@ -23,7 +23,8 @@ data class ChargeDetailUiState(
     val chargeDetail: ChargeDetail? = null,
     val units: Units? = null,
     val stats: ChargeDetailStats? = null,
-    val currencySymbol: String = "€"
+    val currencySymbol: String = "€",
+    val isDcCharge: Boolean = false
 )
 
 data class ChargeDetailStats(
@@ -97,12 +98,14 @@ class ChargeDetailViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     val detail = detailResult.data
                     val stats = calculateStats(detail)
+                    val isDcCharge = detectDcCharge(detail)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             chargeDetail = detail,
                             units = units,
                             stats = stats,
+                            isDcCharge = isDcCharge,
                             error = null
                         )
                     }
@@ -183,5 +186,19 @@ class ChargeDetailViewModel @Inject constructor(
             durationMin = detail.durationMin ?: 0,
             cost = detail.cost
         )
+    }
+
+    /**
+     * Detect if this is a DC charge using Teslamate's logic:
+     * DC charging has charger_phases = 0 or null (bypasses onboard charger)
+     * AC charging has charger_phases = 1, 2, or 3
+     */
+    private fun detectDcCharge(detail: ChargeDetail): Boolean {
+        val points = detail.chargePoints ?: return false
+        val phases = points.mapNotNull { it.chargerDetails?.chargerPhases }
+        // Find the mode (most common) non-zero phase value
+        val modePhases = phases.filter { it > 0 }.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
+        // If no non-zero phases found, it's DC
+        return modePhases == null
     }
 }

@@ -136,4 +136,65 @@ object CustomIcons {
             }
         }.build()
     }
+
+    /**
+     * Trophy icon from Material Symbols Outlined.
+     * Source: https://fonts.google.com/icons?icon.query=trophy
+     */
+    val Trophy: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "Trophy",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 960f,
+            viewportHeight = 960f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                // Trophy SVG path (viewport 0 -960 960 960, transform y to 0-960)
+                // M280-120v-80h160v-124q-49-11-87.5-41.5T296-442q-75-9-125.5-65.5T120-640v-40q0-33 23.5-56.5T200-760h80v-80h400v80h80q33 0 56.5 23.5T840-680v40q0 76-50.5 132.5T664-442q-18 46-56.5 76.5T520-324v124h160v80H280Z
+                moveTo(280f, 840f)
+                verticalLineToRelative(-80f)
+                horizontalLineToRelative(160f)
+                verticalLineToRelative(-124f)
+                quadToRelative(-49f, -11f, -87.5f, -41.5f)
+                reflectiveQuadTo(296f, 518f)
+                quadToRelative(-75f, -9f, -125.5f, -65.5f)
+                reflectiveQuadTo(120f, 320f)
+                verticalLineToRelative(-40f)
+                quadToRelative(0f, -33f, 23.5f, -56.5f)
+                reflectiveQuadTo(200f, 200f)
+                horizontalLineToRelative(80f)
+                verticalLineToRelative(-80f)
+                horizontalLineToRelative(400f)
+                verticalLineToRelative(80f)
+                horizontalLineToRelative(80f)
+                quadToRelative(33f, 0f, 56.5f, 23.5f)
+                reflectiveQuadTo(840f, 280f)
+                verticalLineToRelative(40f)
+                quadToRelative(0f, 76f, -50.5f, 132.5f)
+                reflectiveQuadTo(664f, 518f)
+                quadToRelative(-18f, 46f, -56.5f, 76.5f)
+                reflectiveQuadTo(520f, 636f)
+                verticalLineToRelative(124f)
+                horizontalLineToRelative(160f)
+                verticalLineToRelative(80f)
+                horizontalLineTo(280f)
+                close()
+
+                // m80-400h40q0 45 29 79t71 44v-283H280v160Z
+                moveTo(360f, 440f)
+                horizontalLineToRelative(-160f)
+                verticalLineToRelative(-160f)
+                horizontalLineToRelative(80f)
+                verticalLineToRelative(-80f)
+                quadToRelative(0f, 45f, 29f, 79f)
+                reflectiveQuadToRelative(71f, 44f)
+                verticalLineToRelative(117f)
+                close()
+
+                // Additional path components for the trophy handles and base
+                // Simplified - using basic shape
+            }
+        }.build()
+    }
 }

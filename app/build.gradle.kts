@@ -6,6 +6,11 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Room schema export location for migrations
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 android {
     namespace = "com.matedroid"
     compileSdk = 35
@@ -103,6 +108,16 @@ dependencies {
     // DataStore
     implementation(libs.datastore.preferences)
     implementation(libs.security.crypto)
+
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
 
     // Charts
     implementation(libs.vico.compose.m3)

@@ -81,6 +81,13 @@ fun SettingsScreen(
         }
     }
 
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearSuccessMessage()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -102,7 +109,8 @@ fun SettingsScreen(
                 onShowShortDrivesChargesChange = viewModel::updateShowShortDrivesCharges,
                 onTestConnection = viewModel::testConnection,
                 onSave = { viewModel.saveSettings(onNavigateToDashboard) },
-                onPalettePreview = onNavigateToPalettePreview
+                onPalettePreview = onNavigateToPalettePreview,
+                onForceResync = viewModel::forceResync
             )
         }
     }
@@ -132,11 +140,13 @@ private fun SettingsContent(
     onShowShortDrivesChargesChange: (Boolean) -> Unit,
     onTestConnection: () -> Unit,
     onSave: () -> Unit,
-    onPalettePreview: () -> Unit = {}
+    onPalettePreview: () -> Unit = {},
+    onForceResync: () -> Unit = {}
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     var currencyDropdownExpanded by remember { mutableStateOf(false) }
     var showShortDrivesChargesInfoDialog by remember { mutableStateOf(false) }
+    var showResyncConfirmDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -376,6 +386,67 @@ private fun SettingsContent(
                 confirmButton = {
                     TextButton(onClick = { showShortDrivesChargesInfoDialog = false }) {
                         Text("OK")
+                    }
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Data Management section
+        Text(
+            text = "Data Management",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = { showResyncConfirmDialog = true },
+            enabled = !uiState.isResyncing,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (uiState.isResyncing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(if (uiState.isResyncing) "Resyncing..." else "Force Full Resync")
+        }
+
+        Text(
+            text = "Re-downloads all drive and charge details. Use if stats seem incorrect.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+
+        // Resync confirmation dialog
+        if (showResyncConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showResyncConfirmDialog = false },
+                title = { Text("Force Full Resync?") },
+                text = {
+                    Text(
+                        "This will reset the sync progress and re-download all drive and charge details from the server.\n\n" +
+                        "The process may take several minutes depending on how much data you have."
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showResyncConfirmDialog = false
+                            onForceResync()
+                        }
+                    ) {
+                        Text("Resync")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showResyncConfirmDialog = false }) {
+                        Text("Cancel")
                     }
                 }
             )

@@ -127,5 +127,21 @@ data class DrivePosition(
     @Json(name = "speed") val speed: Int? = null,
     @Json(name = "power") val power: Int? = null,
     @Json(name = "battery_level") val batteryLevel: Int? = null,
-    @Json(name = "elevation") val elevation: Int? = null
+    @Json(name = "elevation") val elevation: Int? = null,
+    @Json(name = "climate_info") val climateInfo: DriveClimateInfo? = null
+) {
+    // Convenience accessors
+    val insideTemp: Double? get() = climateInfo?.insideTemp
+    val outsideTemp: Double? get() = climateInfo?.outsideTemp
+    val isClimateOn: Boolean get() = climateInfo?.isClimateOn == true
+}
+
+@JsonClass(generateAdapter = true)
+data class DriveClimateInfo(
+    @Json(name = "inside_temp") val insideTemp: Double? = null,
+    @Json(name = "outside_temp") val outsideTemp: Double? = null,
+    @Json(name = "is_climate_on") val isClimateOn: Boolean? = null,
+    @Json(name = "fan_status") val fanStatus: Int? = null,
+    @Json(name = "driver_temp_setting") val driverTempSetting: Double? = null,
+    @Json(name = "passenger_temp_setting") val passengerTempSetting: Double? = null
 )

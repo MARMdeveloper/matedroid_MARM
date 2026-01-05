@@ -60,6 +60,7 @@ import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import com.matedroid.ui.theme.StatusSuccess
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
@@ -71,7 +72,9 @@ private val ChartBlue = Color(0xFF42A5F5)
 fun MileageScreen(
     carId: Int,
     exteriorColor: String? = null,
+    targetDay: String? = null,
     onNavigateBack: () -> Unit,
+    onNavigateToDriveDetail: (Int) -> Unit = {},
     viewModel: MileageViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -81,6 +84,18 @@ fun MileageScreen(
 
     LaunchedEffect(carId) {
         viewModel.setCarId(carId)
+    }
+
+    // Auto-navigate to target day if provided
+    LaunchedEffect(targetDay, uiState.isLoading) {
+        if (targetDay != null && !uiState.isLoading && uiState.allDrives.isNotEmpty()) {
+            try {
+                val date = LocalDate.parse(targetDay)
+                viewModel.navigateToDay(date)
+            } catch (e: Exception) {
+                // Invalid date format, ignore
+            }
+        }
     }
 
     LaunchedEffect(uiState.error) {
@@ -153,7 +168,7 @@ fun MileageScreen(
 
         // Level 3: Month Detail overlay
         AnimatedVisibility(
-            visible = uiState.selectedMonth != null,
+            visible = uiState.selectedMonth != null && uiState.selectedDay == null,
             enter = slideInHorizontally(initialOffsetX = { it }),
             exit = slideOutHorizontally(targetOffsetX = { it })
         ) {
@@ -165,7 +180,24 @@ fun MileageScreen(
                     dailyData = uiState.dailyData,
                     dailyChartData = viewModel.getDailyChartData(),
                     palette = palette,
-                    onClose = { viewModel.clearSelectedMonth() }
+                    onClose = { viewModel.clearSelectedMonth() },
+                    onDayClick = { viewModel.selectDay(it) }
+                )
+            }
+        }
+
+        // Level 4: Day Detail overlay
+        AnimatedVisibility(
+            visible = uiState.selectedDay != null,
+            enter = slideInHorizontally(initialOffsetX = { it }),
+            exit = slideOutHorizontally(targetOffsetX = { it })
+        ) {
+            uiState.selectedDayData?.let { dayData ->
+                DayDetailScreen(
+                    dayData = dayData,
+                    palette = palette,
+                    onClose = { viewModel.clearSelectedDay() },
+                    onDriveClick = onNavigateToDriveDetail
                 )
             }
         }
@@ -567,7 +599,8 @@ private fun MonthDetailScreen(
     dailyData: List<DailyMileage>,
     dailyChartData: List<Pair<Int, Double>>,
     palette: CarColorPalette,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onDayClick: (LocalDate) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -625,7 +658,10 @@ private fun MonthDetailScreen(
 
                 // Daily trip rows
                 items(dailyData) { dayData ->
-                    DayTripRow(dayData = dayData)
+                    DayTripRow(
+                        dayData = dayData,
+                        onClick = { onDayClick(dayData.date) }
+                    )
                 }
             }
         }
@@ -934,7 +970,10 @@ private fun DailyChartCard(
 }
 
 @Composable
-private fun DayTripRow(dayData: DailyMileage) {
+private fun DayTripRow(
+    dayData: DailyMileage,
+    onClick: () -> Unit
+) {
     val dayOfWeek = dayData.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
     val dateStr = "%d %s".format(
         dayData.date.dayOfMonth,
@@ -942,7 +981,9 @@ private fun DayTripRow(dayData: DailyMileage) {
     )
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -1033,6 +1074,291 @@ private fun DayTripRow(dayData: DailyMileage) {
                     )
                 }
             }
+
+            // Arrow indicator
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "View details",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+// ============================================================================
+// Level 4: Day Detail
+// ============================================================================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DayDetailScreen(
+    dayData: DailyMileage,
+    palette: CarColorPalette,
+    onClose: () -> Unit,
+    onDriveClick: (Int) -> Unit
+) {
+    val dayOfWeek = dayData.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+    val dateStr = "%d %s %d".format(
+        dayData.date.dayOfMonth,
+        dayData.date.month.getDisplayName(TextStyle.FULL, Locale.getDefault()),
+        dayData.date.year
+    )
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(dayOfWeek) },
+                navigationIcon = {
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Day summary card
+            item {
+                DaySummaryCard(
+                    dayData = dayData,
+                    dateStr = dateStr,
+                    palette = palette
+                )
+            }
+
+            // Drives header
+            if (dayData.drives.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Drives",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Drive rows
+                items(dayData.drives) { drive ->
+                    DriveRow(
+                        drive = drive,
+                        onClick = { onDriveClick(drive.driveId) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DaySummaryCard(
+    dayData: DailyMileage,
+    dateStr: String,
+    palette: CarColorPalette
+) {
+    val avgDistance = if (dayData.driveCount > 0) dayData.totalDistance / dayData.driveCount else 0.0
+    val avgEnergy = if (dayData.driveCount > 0) dayData.totalEnergy / dayData.driveCount else 0.0
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = palette.surface
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = dateStr,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.onSurface
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.DirectionsCar,
+                        contentDescription = null,
+                        tint = palette.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = dayData.driveCount.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.onSurface
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Stats grid
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatChip(
+                    icon = CustomIcons.Road,
+                    value = "%.1f km".format(dayData.totalDistance),
+                    modifier = Modifier.weight(1f)
+                )
+                StatChip(
+                    prefix = "Ø",
+                    icon = CustomIcons.Road,
+                    value = "%.1f km".format(avgDistance),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatChip(
+                    prefix = "Ø",
+                    iconText = "🔋",
+                    value = "%.0f%%".format(dayData.avgBatteryUsage),
+                    modifier = Modifier.weight(1f)
+                )
+                StatChip(
+                    prefix = "Ø",
+                    icon = Icons.Filled.ElectricBolt,
+                    value = "%.1f kWh".format(avgEnergy),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DriveRow(
+    drive: com.matedroid.data.api.models.DriveData,
+    onClick: () -> Unit
+) {
+    val startTime = drive.startDate?.let { parseTime(it) } ?: ""
+    val endTime = drive.endDate?.let { parseTime(it) } ?: ""
+    val distance = drive.distance ?: 0.0
+    val duration = drive.durationMin ?: 0
+    val energyUsed = drive.energyConsumedNet ?: 0.0
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Time info
+            Column(modifier = Modifier.width(70.dp)) {
+                Text(
+                    text = startTime,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "→ $endTime",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Stats
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Distance
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = CustomIcons.Road,
+                        contentDescription = null,
+                        tint = ChartBlue,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "%.1f km".format(distance),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                // Duration
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "⏱",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "${duration}m",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                // Energy
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.ElectricBolt,
+                        contentDescription = null,
+                        tint = StatusSuccess,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "%.1f kWh".format(energyUsed),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            // Arrow indicator
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "View details",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+private fun parseTime(dateStr: String): String {
+    return try {
+        val dateTime = java.time.OffsetDateTime.parse(dateStr)
+        "%02d:%02d".format(dateTime.hour, dateTime.minute)
+    } catch (e: Exception) {
+        try {
+            val dateTime = java.time.LocalDateTime.parse(dateStr.replace("Z", ""))
+            "%02d:%02d".format(dateTime.hour, dateTime.minute)
+        } catch (e2: Exception) {
+            ""
         }
     }
 }

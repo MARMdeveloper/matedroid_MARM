@@ -66,7 +66,11 @@ data class MileageUiState(
 
     // Month detail view state
     val selectedMonth: YearMonth? = null,
-    val dailyData: List<DailyMileage> = emptyList()
+    val dailyData: List<DailyMileage> = emptyList(),
+
+    // Day detail view state
+    val selectedDay: LocalDate? = null,
+    val selectedDayData: DailyMileage? = null
 )
 
 @HiltViewModel
@@ -121,6 +125,28 @@ class MileageViewModel @Inject constructor(
 
     fun clearSelectedMonth() {
         _uiState.update { it.copy(selectedMonth = null, dailyData = emptyList()) }
+    }
+
+    fun selectDay(date: LocalDate) {
+        val dayData = _uiState.value.dailyData.find { it.date == date }
+        _uiState.update { it.copy(selectedDay = date, selectedDayData = dayData) }
+    }
+
+    fun clearSelectedDay() {
+        _uiState.update { it.copy(selectedDay = null, selectedDayData = null) }
+    }
+
+    /**
+     * Navigates directly to a specific day's detail view.
+     * This auto-selects the year and month, then the day.
+     */
+    fun navigateToDay(date: LocalDate) {
+        // First ensure the year is selected and month data is aggregated
+        selectYear(date.year)
+        // Then select the month and aggregate daily data
+        selectMonth(YearMonth.of(date.year, date.month))
+        // Finally select the day
+        selectDay(date)
     }
 
     private fun loadAllDrives() {

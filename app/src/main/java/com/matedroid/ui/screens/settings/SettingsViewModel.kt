@@ -2,9 +2,19 @@ package com.matedroid.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkManager
 import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
+import com.matedroid.data.sync.DataSyncWorker
+import com.matedroid.data.sync.SyncManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,8 +32,10 @@ data class SettingsUiState(
     val isLoading: Boolean = true,
     val isTesting: Boolean = false,
     val isSaving: Boolean = false,
+    val isResyncing: Boolean = false,
     val testResult: TestResult? = null,
-    val error: String? = null
+    val error: String? = null,
+    val successMessage: String? = null
 )
 
 sealed class TestResult {
@@ -33,8 +45,10 @@ sealed class TestResult {
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val settingsDataStore: SettingsDataStore,
-    private val repository: TeslamateRepository
+    private val repository: TeslamateRepository,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -172,5 +186,60 @@ class SettingsViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun clearSuccessMessage() {
+        _uiState.value = _uiState.value.copy(successMessage = null)
+    }
+
+    fun forceResync() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isResyncing = true, error = null)
+            try {
+                // Get all cars and reset sync for each
+                when (val result = repository.getCars()) {
+                    is ApiResult.Success -> {
+                        for (car in result.data) {
+                            syncManager.resetSync(car.carId)
+                        }
+                        // Trigger immediate sync via WorkManager
+                        triggerImmediateSync()
+                        _uiState.value = _uiState.value.copy(
+                            isResyncing = false,
+                            successMessage = "Resync started. Check the Stats screen for progress."
+                        )
+                    }
+                    is ApiResult.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isResyncing = false,
+                            error = "Failed to start resync: ${result.message}"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isResyncing = false,
+                    error = "Failed to start resync: ${e.message}"
+                )
+            }
+        }
+    }
+
+    private fun triggerImmediateSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val syncRequest = OneTimeWorkRequestBuilder<DataSyncWorker>()
+            .setConstraints(constraints)
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .addTag(DataSyncWorker.TAG)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            DataSyncWorker.WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            syncRequest
+        )
     }
 }

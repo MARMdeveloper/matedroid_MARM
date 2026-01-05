@@ -1,0 +1,337 @@
+package com.matedroid.data.sync
+
+import com.matedroid.data.api.models.ChargeData
+import com.matedroid.data.api.models.ChargeDetail
+import com.matedroid.data.api.models.DriveData
+import com.matedroid.data.api.models.DriveDetail
+import com.matedroid.data.local.dao.AggregateDao
+import com.matedroid.data.local.dao.ChargeSummaryDao
+import com.matedroid.data.local.dao.DriveSummaryDao
+import com.matedroid.data.local.entity.ChargeDetailAggregate
+import com.matedroid.data.local.entity.ChargeSummary
+import com.matedroid.data.local.entity.DriveDetailAggregate
+import com.matedroid.data.local.entity.DriveSummary
+import com.matedroid.data.local.entity.SchemaVersion
+import com.matedroid.data.repository.ApiResult
+import com.matedroid.data.repository.TeslamateRepository
+import kotlinx.coroutines.delay
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Repository for syncing data from TeslamateApi to local database.
+ */
+@Singleton
+class SyncRepository @Inject constructor(
+    private val teslamateRepository: TeslamateRepository,
+    private val driveSummaryDao: DriveSummaryDao,
+    private val chargeSummaryDao: ChargeSummaryDao,
+    private val aggregateDao: AggregateDao,
+    private val syncManager: SyncManager,
+    private val logCollector: SyncLogCollector
+) {
+    companion object {
+        private const val TAG = "SyncRepository"
+        private const val THROTTLE_DELAY_MS = 100L  // Delay between API calls
+    }
+
+    private fun log(message: String) = logCollector.log(TAG, message)
+    private fun logError(message: String, error: Throwable? = null) = logCollector.logError(TAG, message, error)
+
+    /**
+     * Sync all data for a car.
+     * Phase 1: Sync summaries (fast, 2 API calls)
+     * Phase 2: Sync details (slow, 1 API call per drive/charge)
+     */
+    suspend fun syncCar(carId: Int): Boolean {
+        log("Starting sync for car $carId")
+
+        // Phase 1: Sync summaries
+        syncManager.updateSummaryProgress(carId, "Fetching drives and charges...")
+
+        val summariesSuccess = syncSummaries(carId)
+        if (!summariesSuccess) {
+            syncManager.markSyncError(carId, "Failed to sync summaries")
+            return false
+        }
+
+        syncManager.markSummariesComplete(carId)
+
+        // Check if details need syncing
+        if (syncManager.areDetailsSynced(carId)) {
+            log("Details already synced for car $carId")
+            return true
+        }
+
+        // Phase 2: Sync drive details
+        val driveSuccess = syncDriveDetails(carId)
+        if (!driveSuccess) {
+            syncManager.markSyncError(carId, "Failed to sync drive details")
+            return false
+        }
+
+        syncManager.markDriveDetailsComplete(carId)
+
+        // Phase 3: Sync charge details
+        val chargeSuccess = syncChargeDetails(carId)
+        if (!chargeSuccess) {
+            syncManager.markSyncError(carId, "Failed to sync charge details")
+            return false
+        }
+
+        syncManager.markSyncComplete(carId)
+        log("Sync complete for car $carId")
+        return true
+    }
+
+    /**
+     * Sync only summaries (Quick Stats).
+     * Fast operation - 2 API calls regardless of data size.
+     */
+    suspend fun syncSummaries(carId: Int): Boolean {
+        log("Syncing summaries for car $carId")
+
+        // Fetch and store drives
+        when (val drivesResult = teslamateRepository.getDrives(carId)) {
+            is ApiResult.Success -> {
+                val summaries = drivesResult.data.map { it.toDriveSummary(carId) }
+                driveSummaryDao.upsertAll(summaries)
+                log("Synced ${summaries.size} drives for car $carId")
+            }
+            is ApiResult.Error -> {
+                logError("Failed to fetch drives: ${drivesResult.message}")
+                return false
+            }
+        }
+
+        // Fetch and store charges
+        when (val chargesResult = teslamateRepository.getCharges(carId)) {
+            is ApiResult.Success -> {
+                val summaries = chargesResult.data.map { it.toChargeSummary(carId) }
+                chargeSummaryDao.upsertAll(summaries)
+                log("Synced ${summaries.size} charges for car $carId")
+            }
+            is ApiResult.Error -> {
+                logError("Failed to fetch charges: ${chargesResult.message}")
+                return false
+            }
+        }
+
+        return true
+    }
+
+    /**
+     * Sync drive details (Deep Stats - elevation, temperature extremes).
+     * Slow operation - 1 API call per unprocessed drive.
+     */
+    suspend fun syncDriveDetails(carId: Int): Boolean {
+        val unprocessedIds = driveSummaryDao.getUnprocessedDriveIds(carId, SchemaVersion.CURRENT)
+        val total = unprocessedIds.size
+        log("Processing $total drive details for car $carId")
+
+        unprocessedIds.forEachIndexed { index, driveId ->
+            val remaining = total - index - 1
+            when (val result = teslamateRepository.getDriveDetail(carId, driveId)) {
+                is ApiResult.Success -> {
+                    val aggregate = computeDriveAggregate(carId, result.data)
+                    aggregateDao.upsertDriveAggregate(aggregate)
+                    syncManager.updateDriveDetailProgress(carId, driveId)
+                    log("Drive $driveId synced ($remaining remaining)")
+                }
+                is ApiResult.Error -> {
+                    logError("Drive $driveId failed: ${result.message} ($remaining remaining)")
+                    // Continue with next drive instead of failing entirely
+                }
+            }
+
+            // Throttle to avoid overwhelming the API
+            delay(THROTTLE_DELAY_MS)
+        }
+
+        return true
+    }
+
+    /**
+     * Sync charge details (Deep Stats - AC/DC ratio, max power).
+     * Slow operation - 1 API call per unprocessed charge.
+     */
+    suspend fun syncChargeDetails(carId: Int): Boolean {
+        val unprocessedIds = chargeSummaryDao.getUnprocessedChargeIds(carId, SchemaVersion.CURRENT)
+        val total = unprocessedIds.size
+        log("Processing $total charge details for car $carId")
+
+        unprocessedIds.forEachIndexed { index, chargeId ->
+            val remaining = total - index - 1
+            when (val result = teslamateRepository.getChargeDetail(carId, chargeId)) {
+                is ApiResult.Success -> {
+                    val aggregate = computeChargeAggregate(carId, result.data)
+                    aggregateDao.upsertChargeAggregate(aggregate)
+                    syncManager.updateChargeDetailProgress(carId, chargeId)
+                    log("Charge $chargeId synced ($remaining remaining)")
+                }
+                is ApiResult.Error -> {
+                    logError("Charge $chargeId failed: ${result.message} ($remaining remaining)")
+                    // Continue with next charge instead of failing entirely
+                }
+            }
+
+            // Throttle to avoid overwhelming the API
+            delay(THROTTLE_DELAY_MS)
+        }
+
+        return true
+    }
+
+    /**
+     * Compute aggregates from drive detail positions.
+     */
+    private fun computeDriveAggregate(carId: Int, detail: DriveDetail): DriveDetailAggregate {
+        val positions = detail.positions ?: emptyList()
+
+        // Elevation stats
+        val elevations = positions.mapNotNull { it.elevation }
+        val hasElevationData = elevations.isNotEmpty()
+
+        // First and last elevations for net climb calculation
+        val startElevation = positions.firstOrNull()?.elevation
+        val endElevation = positions.lastOrNull()?.elevation
+
+        var elevationGain = 0
+        var elevationLoss = 0
+        if (elevations.size > 1) {
+            for (i in 1 until elevations.size) {
+                val diff = elevations[i] - elevations[i - 1]
+                if (diff > 0) elevationGain += diff
+                else elevationLoss += -diff
+            }
+        }
+
+        // Temperature stats
+        val insideTemps = positions.mapNotNull { it.insideTemp }
+        val outsideTemps = positions.mapNotNull { it.outsideTemp }
+
+        // Power stats
+        val powers = positions.mapNotNull { it.power }
+
+        // Climate usage
+        val climateOnCount = positions.count { it.isClimateOn }
+
+        return DriveDetailAggregate(
+            driveId = detail.driveId,
+            carId = carId,
+            schemaVersion = SchemaVersion.CURRENT,
+            computedAt = System.currentTimeMillis(),
+
+            maxElevation = elevations.maxOrNull(),
+            minElevation = elevations.minOrNull(),
+            startElevation = startElevation,
+            endElevation = endElevation,
+            elevationGain = if (hasElevationData) elevationGain else null,
+            elevationLoss = if (hasElevationData) elevationLoss else null,
+            hasElevationData = hasElevationData,
+
+            maxInsideTemp = insideTemps.maxOrNull(),
+            minInsideTemp = insideTemps.minOrNull(),
+            maxOutsideTemp = outsideTemps.maxOrNull(),
+            minOutsideTemp = outsideTemps.minOrNull(),
+
+            maxPower = powers.maxOrNull(),
+            minPower = powers.minOrNull(),
+
+            climateOnPositions = climateOnCount,
+            positionCount = positions.size
+        )
+    }
+
+    /**
+     * Compute aggregates from charge detail points.
+     */
+    private fun computeChargeAggregate(carId: Int, detail: ChargeDetail): ChargeDetailAggregate {
+        val points = detail.chargePoints ?: emptyList()
+
+        // Find first point with charger info for type detection
+        val firstWithCharger = points.firstOrNull { it.chargerDetails != null }
+        val chargerDetails = firstWithCharger?.chargerDetails
+
+        // Power stats
+        val powers = points.mapNotNull { it.chargerPower }
+        val voltages = points.mapNotNull { it.chargerVoltage }
+        val currents = points.mapNotNull { it.chargerCurrent }
+
+        // Temperature stats
+        val temps = points.mapNotNull { it.outsideTemp }
+
+        // Determine if DC charger using Teslamate's logic:
+        // DC charging has charger_phases = 0 or null (bypasses onboard charger)
+        // AC charging has charger_phases = 1, 2, or 3
+        val phases = points.mapNotNull { it.chargerDetails?.chargerPhases }
+        val modePhases = phases.filter { it > 0 }.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
+        val isFastCharger = modePhases == null  // No non-zero phases means DC
+
+        return ChargeDetailAggregate(
+            chargeId = detail.chargeId,
+            carId = carId,
+            schemaVersion = SchemaVersion.CURRENT,
+            computedAt = System.currentTimeMillis(),
+
+            isFastCharger = isFastCharger,
+            fastChargerBrand = chargerDetails?.fastChargerBrand?.takeIf { it != "<invalid>" },
+            connectorType = chargerDetails?.fastChargerType,
+
+            maxChargerPower = powers.maxOrNull(),
+            maxChargerVoltage = voltages.maxOrNull(),
+            maxChargerCurrent = currents.maxOrNull(),
+            chargerPhases = chargerDetails?.chargerPhases,
+
+            maxOutsideTemp = temps.maxOrNull(),
+            minOutsideTemp = temps.minOrNull(),
+
+            chargePointCount = points.size
+        )
+    }
+}
+
+// Extension functions to convert API models to database entities
+
+private fun DriveData.toDriveSummary(carId: Int): DriveSummary {
+    return DriveSummary(
+        driveId = driveId,
+        carId = carId,
+        startDate = startDate ?: "",
+        endDate = endDate ?: "",
+        startAddress = startAddress ?: "",
+        endAddress = endAddress ?: "",
+        distance = distance ?: 0.0,
+        durationMin = durationMin ?: 0,
+        speedMax = speedMax ?: 0,
+        speedAvg = speedAvg?.toInt() ?: 0,
+        powerMax = powerMax ?: 0,
+        powerMin = powerMin ?: 0,
+        startBatteryLevel = startBatteryLevel ?: 0,
+        endBatteryLevel = endBatteryLevel ?: 0,
+        outsideTempAvg = outsideTempAvg,
+        insideTempAvg = insideTempAvg,
+        energyConsumed = energyConsumedNet,
+        efficiency = efficiencyWhKm
+    )
+}
+
+private fun ChargeData.toChargeSummary(carId: Int): ChargeSummary {
+    return ChargeSummary(
+        chargeId = chargeId,
+        carId = carId,
+        startDate = startDate ?: "",
+        endDate = endDate ?: "",
+        address = address ?: "",
+        latitude = latitude ?: 0.0,
+        longitude = longitude ?: 0.0,
+        energyAdded = chargeEnergyAdded ?: 0.0,
+        energyUsed = chargeEnergyUsed,
+        cost = cost,
+        durationMin = durationMin ?: 0,
+        startBatteryLevel = startBatteryLevel ?: 0,
+        endBatteryLevel = endBatteryLevel ?: 0,
+        outsideTempAvg = outsideTempAvg,
+        odometer = odometer ?: 0.0
+    )
+}
