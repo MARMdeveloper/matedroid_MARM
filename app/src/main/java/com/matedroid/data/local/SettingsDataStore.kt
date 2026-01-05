@@ -20,7 +20,8 @@ data class AppSettings(
     val apiToken: String = "",
     val acceptInvalidCerts: Boolean = false,
     val currencyCode: String = "EUR",
-    val showShortDrivesCharges: Boolean = false
+    val showShortDrivesCharges: Boolean = false,
+    val teslamateBaseUrl: String = ""
 ) {
     val isConfigured: Boolean
         get() = serverUrl.isNotBlank()
@@ -35,6 +36,7 @@ class SettingsDataStore @Inject constructor(
     private val acceptInvalidCertsKey = booleanPreferencesKey("accept_invalid_certs")
     private val currencyCodeKey = stringPreferencesKey("currency_code")
     private val showShortDrivesChargesKey = booleanPreferencesKey("show_short_drives_charges")
+    private val teslamateBaseUrlKey = stringPreferencesKey("teslamate_base_url")
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { preferences ->
         AppSettings(
@@ -42,7 +44,8 @@ class SettingsDataStore @Inject constructor(
             apiToken = preferences[apiTokenKey] ?: "",
             acceptInvalidCerts = preferences[acceptInvalidCertsKey] ?: false,
             currencyCode = preferences[currencyCodeKey] ?: "EUR",
-            showShortDrivesCharges = preferences[showShortDrivesChargesKey] ?: false
+            showShortDrivesCharges = preferences[showShortDrivesChargesKey] ?: false,
+            teslamateBaseUrl = preferences[teslamateBaseUrlKey] ?: ""
         )
     }
 
@@ -73,6 +76,12 @@ class SettingsDataStore @Inject constructor(
     suspend fun saveShowShortDrivesCharges(show: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[showShortDrivesChargesKey] = show
+        }
+    }
+
+    suspend fun saveTeslamateBaseUrl(url: String) {
+        context.dataStore.edit { preferences ->
+            preferences[teslamateBaseUrlKey] = url
         }
     }
 

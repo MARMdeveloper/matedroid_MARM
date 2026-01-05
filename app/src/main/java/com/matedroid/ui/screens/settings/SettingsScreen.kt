@@ -107,6 +107,7 @@ fun SettingsScreen(
                 onAcceptInvalidCertsChange = viewModel::updateAcceptInvalidCerts,
                 onCurrencyChange = viewModel::updateCurrency,
                 onShowShortDrivesChargesChange = viewModel::updateShowShortDrivesCharges,
+                onTeslamateBaseUrlChange = viewModel::updateTeslamateBaseUrl,
                 onTestConnection = viewModel::testConnection,
                 onSave = { viewModel.saveSettings(onNavigateToDashboard) },
                 onPalettePreview = onNavigateToPalettePreview,
@@ -138,6 +139,7 @@ private fun SettingsContent(
     onAcceptInvalidCertsChange: (Boolean) -> Unit,
     onCurrencyChange: (String) -> Unit,
     onShowShortDrivesChargesChange: (Boolean) -> Unit,
+    onTeslamateBaseUrlChange: (String) -> Unit,
     onTestConnection: () -> Unit,
     onSave: () -> Unit,
     onPalettePreview: () -> Unit = {},
@@ -156,7 +158,7 @@ private fun SettingsContent(
     ) {
         Text(
             text = "Connect to TeslamateApi",
-            style = MaterialTheme.typography.headlineSmall
+            style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -281,6 +283,33 @@ private fun SettingsContent(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Teslamate Settings
+        Text(
+            text = "Teslamate Settings",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = uiState.teslamateBaseUrl,
+            onValueChange = onTeslamateBaseUrlChange,
+            label = { Text("Teslamate Base URL") },
+            placeholder = { Text("https://teslamate.example.com") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
+        )
+
+        Text(
+            text = "Used for editing charge costs directly in Teslamate.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp)
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -575,6 +604,7 @@ private fun SettingsScreenPreview() {
             onAcceptInvalidCertsChange = {},
             onCurrencyChange = {},
             onShowShortDrivesChargesChange = {},
+            onTeslamateBaseUrlChange = {},
             onTestConnection = {},
             onSave = {}
         )
@@ -596,6 +626,7 @@ private fun SettingsScreenWithResultPreview() {
             onAcceptInvalidCertsChange = {},
             onCurrencyChange = {},
             onShowShortDrivesChargesChange = {},
+            onTeslamateBaseUrlChange = {},
             onTestConnection = {},
             onSave = {}
         )
@@ -617,6 +648,7 @@ private fun SettingsScreenWithWarningPreview() {
             onAcceptInvalidCertsChange = {},
             onCurrencyChange = {},
             onShowShortDrivesChargesChange = {},
+            onTeslamateBaseUrlChange = {},
             onTestConnection = {},
             onSave = {}
         )

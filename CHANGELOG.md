@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Deep Stats (synced in background): Elevation extremes, temperature extremes, max charging power, AC/DC ratio
   - Year filter to view stats for specific years or all time
   - Background sync of drive/charge details for Deep Stats computation
+- **Charges**: Tap the Cost card to edit the charge cost directly in Teslamate (requires Teslamate Base URL in Settings)
+- **Settings**: New "Teslamate Settings" section with Base URL for direct Teslamate integration
 
 ## [0.7.1] - 2025-12-25
 

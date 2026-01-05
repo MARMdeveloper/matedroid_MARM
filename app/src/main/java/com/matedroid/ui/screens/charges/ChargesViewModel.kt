@@ -57,7 +57,8 @@ data class ChargesUiState(
     val scrollPosition: Int = 0,  // First visible item index
     val scrollOffset: Int = 0,    // Scroll offset within first item
     val summary: ChargesSummary = ChargesSummary(),
-    val currencySymbol: String = "€"
+    val currencySymbol: String = "€",
+    val teslamateBaseUrl: String = ""
 )
 
 data class ChargesSummary(
@@ -86,14 +87,19 @@ class ChargesViewModel @Inject constructor(
     }
 
     init {
-        loadCurrency()
+        loadSettings()
     }
 
-    private fun loadCurrency() {
+    private fun loadSettings() {
         viewModelScope.launch {
             val settings = settingsDataStore.settings.first()
             val currency = Currency.findByCode(settings.currencyCode)
-            _uiState.update { it.copy(currencySymbol = currency.symbol) }
+            _uiState.update {
+                it.copy(
+                    currencySymbol = currency.symbol,
+                    teslamateBaseUrl = settings.teslamateBaseUrl
+                )
+            }
         }
     }
 

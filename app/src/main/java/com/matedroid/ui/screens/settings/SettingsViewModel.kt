@@ -29,6 +29,7 @@ data class SettingsUiState(
     val acceptInvalidCerts: Boolean = false,
     val currencyCode: String = "EUR",
     val showShortDrivesCharges: Boolean = false,
+    val teslamateBaseUrl: String = "",
     val isLoading: Boolean = true,
     val isTesting: Boolean = false,
     val isSaving: Boolean = false,
@@ -67,6 +68,7 @@ class SettingsViewModel @Inject constructor(
                 acceptInvalidCerts = settings.acceptInvalidCerts,
                 currencyCode = settings.currencyCode,
                 showShortDrivesCharges = settings.showShortDrivesCharges,
+                teslamateBaseUrl = settings.teslamateBaseUrl,
                 isLoading = false
             )
         }
@@ -107,6 +109,13 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(showShortDrivesCharges = show)
         viewModelScope.launch {
             settingsDataStore.saveShowShortDrivesCharges(show)
+        }
+    }
+
+    fun updateTeslamateBaseUrl(url: String) {
+        _uiState.value = _uiState.value.copy(teslamateBaseUrl = url)
+        viewModelScope.launch {
+            settingsDataStore.saveTeslamateBaseUrl(url.trimEnd('/'))
         }
     }
 

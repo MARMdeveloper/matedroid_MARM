@@ -1,5 +1,7 @@
 package com.matedroid.ui.screens.charges
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Paid
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Card
@@ -56,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -133,6 +137,7 @@ fun ChargesScreen(
                     chartGranularity = uiState.chartGranularity,
                     summary = uiState.summary,
                     currencySymbol = uiState.currencySymbol,
+                    teslamateBaseUrl = uiState.teslamateBaseUrl,
                     selectedFilter = uiState.selectedFilter,
                     initialScrollPosition = uiState.scrollPosition,
                     initialScrollOffset = uiState.scrollOffset,
@@ -157,6 +162,7 @@ private fun ChargesContent(
     chartGranularity: ChartGranularity,
     summary: ChargesSummary,
     currencySymbol: String,
+    teslamateBaseUrl: String,
     selectedFilter: DateFilter,
     initialScrollPosition: Int,
     initialScrollOffset: Int,
@@ -164,6 +170,7 @@ private fun ChargesContent(
     onFilterSelected: (DateFilter) -> Unit,
     onChargeClick: (chargeId: Int, scrollIndex: Int, scrollOffset: Int) -> Unit
 ) {
+    val context = LocalContext.current
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = initialScrollPosition,
         initialFirstVisibleItemScrollOffset = initialScrollOffset
@@ -233,6 +240,13 @@ private fun ChargesContent(
                     // Will be correct once sync has processed charge details
                     isDcCharge = charge.chargeId in dcChargeIds,
                     currencySymbol = currencySymbol,
+                    onEditCost = if (teslamateBaseUrl.isNotBlank()) {
+                        {
+                            val url = "$teslamateBaseUrl/charge-cost/${charge.chargeId}"
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
+                        }
+                    } else null,
                     onClick = {
                         onChargeClick(
                             charge.chargeId,
@@ -373,6 +387,7 @@ private fun ChargeItem(
     charge: ChargeData,
     isDcCharge: Boolean,
     currencySymbol: String,
+    onEditCost: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     Card(
@@ -455,13 +470,15 @@ private fun ChargeItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Cost
+                // Cost (tappable if editable)
                 ChargeStatCard(
                     icon = Icons.Default.Paid,
                     value = "$currencySymbol%.2f".format(charge.cost ?: 0.0),
                     unit = "",
                     label = "Cost",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    trailingIcon = if (onEditCost != null) Icons.AutoMirrored.Filled.OpenInNew else null,
+                    onClick = onEditCost
                 )
 
                 // Battery levels
@@ -485,49 +502,67 @@ private fun ChargeStatCard(
     value: String,
     unit: String,
     label: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    trailingIcon: ImageVector? = null,
+    onClick: (() -> Unit)? = null
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                verticalAlignment = Alignment.Bottom
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                if (unit.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(2.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.Bottom
+                ) {
                     Text(
-                        text = unit,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = value,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
+                    if (unit.isNotEmpty()) {
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = unit,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // Trailing icon in top-right corner
+            if (trailingIcon != null) {
+                Icon(
+                    imageVector = trailingIcon,
+                    contentDescription = "Edit",
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .size(14.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
