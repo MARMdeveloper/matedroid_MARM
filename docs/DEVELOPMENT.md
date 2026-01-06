@@ -95,8 +95,18 @@ Without secrets, the APK is signed with a debug keystore (fine for sideloading, 
 ### Development Workflow
 
 1. Start your Android emulator or connect a device
-2. Build and install: `./gradlew installDebug`
+2. Build and install: `make install`
 3. View logs: `adb logcat | grep -i matedroid`
+
+#### Makefile Targets
+
+| Target | Description |
+|--------|-------------|
+| `make build` | Build debug APK |
+| `make install` | Build and install debug APK on connected device |
+| `make run` | Build, install, and launch the app |
+| `make clean` | Clean build artifacts |
+| `make test` | Run unit tests |
 
 Or use Android Studio:
 1. Open the project folder
