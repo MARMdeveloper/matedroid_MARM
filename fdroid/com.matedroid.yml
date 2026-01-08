@@ -26,11 +26,6 @@ Builds:
     versionCode: 12
     commit: v0.8.1
     subdir: app
-    submodules: true
-    sudo:
-      - apt-get update
-      - apt-get install -y openjdk-17-jdk-headless
-      - update-java-alternatives -a
     gradle:
       - yes
 
