@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Dashboard**: Breathing glow effect around car image when charging
+  - Glow pulses smoothly in opacity with 2-second cycle
+  - Color shifts from palette accent toward AC (green) or DC (orange) charging color
+  - Glow follows the exact shape of the car
 - **Charges**: Swipeable charts showing Energy, Cost, and Number of Charges
   - Swipe left/right on the chart to switch between metrics
   - Page indicator dots show current chart position
