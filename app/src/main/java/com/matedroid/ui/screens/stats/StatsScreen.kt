@@ -173,6 +173,7 @@ fun StatsScreen(
                     selectedYearFilter = uiState.selectedYearFilter,
                     deepSyncProgress = uiState.deepSyncProgress,
                     palette = palette,
+                    currencySymbol = uiState.currencySymbol,
                     onYearFilterSelected = { viewModel.setYearFilter(it) },
                     onNavigateToDriveDetail = onNavigateToDriveDetail,
                     onNavigateToChargeDetail = onNavigateToChargeDetail,
@@ -266,6 +267,7 @@ private fun StatsContent(
     selectedYearFilter: YearFilter,
     deepSyncProgress: Float,
     palette: CarColorPalette,
+    currencySymbol: String,
     onYearFilterSelected: (YearFilter) -> Unit,
     onNavigateToDriveDetail: (Int) -> Unit,
     onNavigateToChargeDetail: (Int) -> Unit,
@@ -304,6 +306,7 @@ private fun StatsContent(
                 quickStats = stats.quickStats,
                 deepStats = stats.deepStats,
                 palette = palette,
+                currencySymbol = currencySymbol,
                 onDriveClick = onNavigateToDriveDetail,
                 onChargeClick = onNavigateToChargeDetail,
                 onDayClick = onNavigateToDayDetail
@@ -317,7 +320,7 @@ private fun StatsContent(
 
         // Quick Stats - Charges Overview
         item {
-            QuickStatsChargesCard(quickStats = stats.quickStats, palette = palette)
+            QuickStatsChargesCard(quickStats = stats.quickStats, palette = palette, currencySymbol = currencySymbol)
         }
 
         // AC/DC Ratio (moved here, near charges)
@@ -481,7 +484,7 @@ private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalett
 }
 
 @Composable
-private fun QuickStatsChargesCard(quickStats: QuickStats, palette: CarColorPalette) {
+private fun QuickStatsChargesCard(quickStats: QuickStats, palette: CarColorPalette, currencySymbol: String) {
     StatsCard(
         title = "Charges Overview",
         icon = Icons.Default.BatteryChargingFull,
@@ -504,12 +507,12 @@ private fun QuickStatsChargesCard(quickStats: QuickStats, palette: CarColorPalet
             Row(modifier = Modifier.fillMaxWidth()) {
                 StatItem(
                     label = "Total Cost",
-                    value = "%.2f €".format(quickStats.totalCost),
+                    value = "%.2f %s".format(quickStats.totalCost, currencySymbol),
                     modifier = Modifier.weight(1f)
                 )
                 StatItem(
                     label = "Avg Cost/kWh",
-                    value = quickStats.avgCostPerKwh?.let { "%.3f €".format(it) } ?: "N/A",
+                    value = quickStats.avgCostPerKwh?.let { "%.3f %s".format(it, currencySymbol) } ?: "N/A",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -536,6 +539,7 @@ private fun RecordsCard(
     quickStats: QuickStats,
     deepStats: DeepStats?,
     palette: CarColorPalette,
+    currencySymbol: String,
     onDriveClick: (Int) -> Unit,
     onChargeClick: (Int) -> Unit,
     onDayClick: (String) -> Unit
@@ -586,13 +590,13 @@ private fun RecordsCard(
     }
     quickStats.mostExpensiveCharge?.let { charge ->
         charge.cost?.let { cost ->
-            chargeRecords.add(RecordData("💸", "Most Expensive", "%.2f €".format(cost), charge.startDate.take(10)) { onChargeClick(charge.chargeId) })
+            chargeRecords.add(RecordData("💸", "Most Expensive", "%.2f %s".format(cost, currencySymbol), charge.startDate.take(10)) { onChargeClick(charge.chargeId) })
         }
     }
     quickStats.mostExpensivePerKwhCharge?.let { charge ->
         charge.cost?.let { cost ->
             if (charge.energyAdded > 0) {
-                chargeRecords.add(RecordData("📈", "Priciest/kWh", "%.3f €".format(cost / charge.energyAdded), charge.startDate.take(10)) { onChargeClick(charge.chargeId) })
+                chargeRecords.add(RecordData("📈", "Priciest/kWh", "%.3f %s".format(cost / charge.energyAdded, currencySymbol), charge.startDate.take(10)) { onChargeClick(charge.chargeId) })
             }
         }
     }

@@ -9,6 +9,8 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
+import com.matedroid.data.local.SettingsDataStore
+import com.matedroid.data.model.Currency
 import com.matedroid.data.repository.StatsRepository
 import com.matedroid.data.sync.DataSyncWorker
 import com.matedroid.data.sync.SyncLogCollector
@@ -23,6 +25,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,6 +39,7 @@ data class StatsUiState(
     val selectedYearFilter: YearFilter = YearFilter.AllTime,
     val deepSyncProgress: Float = 0f,
     val syncProgress: SyncProgress? = null,
+    val currencySymbol: String = "€",
     val error: String? = null
 )
 
@@ -44,7 +48,8 @@ class StatsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val statsRepository: StatsRepository,
     private val syncManager: SyncManager,
-    private val syncLogCollector: SyncLogCollector
+    private val syncLogCollector: SyncLogCollector,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StatsUiState())
@@ -58,6 +63,18 @@ class StatsViewModel @Inject constructor(
 
     private var carId: Int? = null
     private var syncObserverJob: Job? = null
+
+    init {
+        loadSettings()
+    }
+
+    private fun loadSettings() {
+        viewModelScope.launch {
+            val settings = settingsDataStore.settings.first()
+            val currency = Currency.findByCode(settings.currencyCode)
+            _uiState.update { it.copy(currencySymbol = currency.symbol) }
+        }
+    }
 
     fun setCarId(id: Int) {
         carId = id

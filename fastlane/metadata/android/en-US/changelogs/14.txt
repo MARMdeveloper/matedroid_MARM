@@ -1,0 +1,2 @@
+Fixed:
+- Stats for Nerds: Currency now uses user's configured currency instead of hardcoded EUR
