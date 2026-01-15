@@ -25,6 +25,7 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val serverUrl: String = "",
+    val secondaryServerUrl: String = "",
     val apiToken: String = "",
     val acceptInvalidCerts: Boolean = false,
     val currencyCode: String = "EUR",
@@ -39,9 +40,28 @@ data class SettingsUiState(
     val successMessage: String? = null
 )
 
-sealed class TestResult {
-    data object Success : TestResult()
-    data class Failure(val message: String) : TestResult()
+/**
+ * Represents the result of testing a single server connection.
+ */
+sealed class ServerTestResult {
+    data object Success : ServerTestResult()
+    data class Failure(val message: String) : ServerTestResult()
+}
+
+/**
+ * Represents the combined results of testing primary and optionally secondary server connections.
+ */
+data class TestResult(
+    val primaryResult: ServerTestResult,
+    val secondaryResult: ServerTestResult? = null // null if no secondary URL configured
+) {
+    val isFullySuccessful: Boolean
+        get() = primaryResult is ServerTestResult.Success &&
+                (secondaryResult == null || secondaryResult is ServerTestResult.Success)
+
+    val hasAnySuccess: Boolean
+        get() = primaryResult is ServerTestResult.Success ||
+                secondaryResult is ServerTestResult.Success
 }
 
 @HiltViewModel
@@ -64,6 +84,7 @@ class SettingsViewModel @Inject constructor(
             val settings = settingsDataStore.settings.first()
             _uiState.value = _uiState.value.copy(
                 serverUrl = settings.serverUrl,
+                secondaryServerUrl = settings.secondaryServerUrl,
                 apiToken = settings.apiToken,
                 acceptInvalidCerts = settings.acceptInvalidCerts,
                 currencyCode = settings.currencyCode,
@@ -77,6 +98,14 @@ class SettingsViewModel @Inject constructor(
     fun updateServerUrl(url: String) {
         _uiState.value = _uiState.value.copy(
             serverUrl = url,
+            testResult = null,
+            error = null
+        )
+    }
+
+    fun updateSecondaryServerUrl(url: String) {
+        _uiState.value = _uiState.value.copy(
+            secondaryServerUrl = url,
             testResult = null,
             error = null
         )
@@ -123,37 +152,66 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isTesting = true, testResult = null, error = null)
 
-            val url = _uiState.value.serverUrl.trimEnd('/')
-            if (url.isBlank()) {
+            val primaryUrl = _uiState.value.serverUrl.trimEnd('/')
+            val secondaryUrl = _uiState.value.secondaryServerUrl.trimEnd('/')
+
+            // Validate primary URL
+            if (primaryUrl.isBlank()) {
                 _uiState.value = _uiState.value.copy(
                     isTesting = false,
-                    testResult = TestResult.Failure("Server URL is required")
+                    testResult = TestResult(
+                        primaryResult = ServerTestResult.Failure("Server URL is required")
+                    )
                 )
                 return@launch
             }
 
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            if (!primaryUrl.startsWith("http://") && !primaryUrl.startsWith("https://")) {
                 _uiState.value = _uiState.value.copy(
                     isTesting = false,
-                    testResult = TestResult.Failure("URL must start with http:// or https://")
+                    testResult = TestResult(
+                        primaryResult = ServerTestResult.Failure("URL must start with http:// or https://")
+                    )
                 )
                 return@launch
             }
 
-            when (val result = repository.testConnection(url, _uiState.value.acceptInvalidCerts)) {
-                is ApiResult.Success -> {
-                    _uiState.value = _uiState.value.copy(
-                        isTesting = false,
-                        testResult = TestResult.Success
+            // Validate secondary URL format if provided
+            if (secondaryUrl.isNotBlank() &&
+                !secondaryUrl.startsWith("http://") && !secondaryUrl.startsWith("https://")) {
+                _uiState.value = _uiState.value.copy(
+                    isTesting = false,
+                    testResult = TestResult(
+                        primaryResult = ServerTestResult.Failure("Primary URL not tested"),
+                        secondaryResult = ServerTestResult.Failure("Secondary URL must start with http:// or https://")
                     )
-                }
-                is ApiResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        isTesting = false,
-                        testResult = TestResult.Failure(result.message)
-                    )
-                }
+                )
+                return@launch
             }
+
+            // Test primary server
+            val primaryResult = when (val result = repository.testConnection(primaryUrl, _uiState.value.acceptInvalidCerts)) {
+                is ApiResult.Success -> ServerTestResult.Success
+                is ApiResult.Error -> ServerTestResult.Failure(result.message)
+            }
+
+            // Test secondary server if configured
+            val secondaryResult = if (secondaryUrl.isNotBlank()) {
+                when (val result = repository.testConnection(secondaryUrl, _uiState.value.acceptInvalidCerts)) {
+                    is ApiResult.Success -> ServerTestResult.Success
+                    is ApiResult.Error -> ServerTestResult.Failure(result.message)
+                }
+            } else {
+                null
+            }
+
+            _uiState.value = _uiState.value.copy(
+                isTesting = false,
+                testResult = TestResult(
+                    primaryResult = primaryResult,
+                    secondaryResult = secondaryResult
+                )
+            )
         }
     }
 
@@ -171,8 +229,11 @@ class SettingsViewModel @Inject constructor(
                     return@launch
                 }
 
+                val secondaryUrl = _uiState.value.secondaryServerUrl.trimEnd('/')
+
                 settingsDataStore.saveSettings(
                     serverUrl = url,
+                    secondaryServerUrl = secondaryUrl,
                     apiToken = _uiState.value.apiToken,
                     acceptInvalidCerts = _uiState.value.acceptInvalidCerts,
                     currencyCode = _uiState.value.currencyCode
