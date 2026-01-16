@@ -77,7 +77,9 @@ jobs:
             app/build/outputs/apk/debug/${{ env.APK_NAME_DEBUG }}
 
       - name: Upload to Google Play
-        if: github.event_name == 'release' && secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != ''
+        if: github.event_name == 'release' && env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != ''
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -87,11 +89,12 @@ jobs:
           status: completed
           changesNotSentForReview: false
 
-      - name: Upload APKs as artifacts
+      - name: Upload APKs and AAB as artifacts
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: apks
+          name: build-outputs
           path: |
             app/build/outputs/apk/release/${{ env.APK_NAME }}
             app/build/outputs/apk/debug/${{ env.APK_NAME_DEBUG }}
+            app/build/outputs/bundle/release/app-release.aab
