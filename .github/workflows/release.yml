@@ -76,7 +76,7 @@ jobs:
             app/build/outputs/apk/release/${{ env.APK_NAME }}
             app/build/outputs/apk/debug/${{ env.APK_NAME_DEBUG }}
 
-      - name: Upload to Google Play (Internal Testing)
+      - name: Upload to Google Play (Closed Testing)
         if: github.event_name == 'release' && env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != ''
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -85,7 +85,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.matedroid
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
-          track: internal
+          track: alpha
           status: completed
 
       - name: Upload to Google Play (Production)
