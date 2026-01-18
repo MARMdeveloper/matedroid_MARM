@@ -877,6 +877,7 @@ private fun StatusIndicatorsRow(
         if (isAsleep) {
             val sleepDuration = formatDurationSince(status.stateSince)
             if (sleepDuration != null) {
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = sleepDuration,
                     style = MaterialTheme.typography.labelSmall,
