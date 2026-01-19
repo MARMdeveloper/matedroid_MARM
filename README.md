@@ -20,6 +20,7 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 - **Battery Health** - Monitor battery degradation over time
 - **Software Updates** - Track update history
 - **Car color based themes** - Light/dark themes with palette based on the car color
+- **Multi-language** - Available in English, Italian, Spanish, and Catalan
 
 ### Gallery
 
