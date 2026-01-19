@@ -1,0 +1,14 @@
+Now available in 4 languages: English, Italian, Spanish, and Catalan!
+
+Added:
+- Multi-language support with full localization
+- Sleep duration display with bedtime icon when car is asleep
+- Improved dashboard status indicators with new chip design and icons
+
+Changed:
+- Drives screen now shows total battery consumed instead of average per drive
+
+Fixed:
+- Hide charger voltage/current section for DC charging sessions (no relevant data)
+- Power icon now shows green color when charging
+- Various translation corrections

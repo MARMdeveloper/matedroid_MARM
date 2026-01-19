@@ -7,8 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-01-19
+
+### Added
+- **Internationalization (i18n)**: Full multi-language support for English, Italian, Spanish, and Catalan
+- **Internationalization (i18n)**: Per-app language selection on Android 13+ via system settings
+- **Dashboard**: Sleep duration display with bedtime icon when car is asleep
+- **Dashboard**: Improved status indicators with chip design and new icons
+
+### Changed
+- **Drives**: Now shows total battery consumed instead of average per drive
+- **Charge Details & Drive Details**: Responsive column layout adapts to screen width (2-4 columns) (contributed by [@MARMdeveloper](https://github.com/MARMdeveloper))
+
 ### Fixed
 - **Charge Details**: Hide charger voltage/current section and charts for DC charging sessions (contributed by [@MARMdeveloper](https://github.com/MARMdeveloper)) (fixes #65)
+- **Dashboard**: Power icon now shows green when charging
+- Various translation fixes
 
 ## [0.10.0] - 2026-01-17
 
@@ -229,7 +243,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/vide/matedroid/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/vide/matedroid/compare/v0.9.4...v0.10.0
 [0.9.4]: https://github.com/vide/matedroid/compare/v0.9.3...v0.9.4
 [0.9.3]: https://github.com/vide/matedroid/compare/v0.9.2...v0.9.3
