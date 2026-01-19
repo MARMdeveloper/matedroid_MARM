@@ -17,7 +17,7 @@
 bin/
 gen/
 out/
-release/
+/release/
 
 # Gradle files
 .gradle/
@@ -95,3 +95,6 @@ mockups/
 
 # Logo source files (generated icons are in res/mipmap-*)
 matedroid-logo*.png
+
+# Local environment configuration
+.env
