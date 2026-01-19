@@ -87,6 +87,7 @@ jobs:
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: alpha
           status: completed
+          whatsNewDirectory: fastlane/metadata/android
 
       - name: Upload to Google Play (Production)
         if: github.event_name == 'release' && env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' && vars.PLAY_STORE_PRODUCTION_ENABLED == 'true'
@@ -99,6 +100,7 @@ jobs:
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: production
           status: completed
+          whatsNewDirectory: fastlane/metadata/android
 
       - name: Upload APKs and AAB as artifacts
         if: github.event_name == 'workflow_dispatch'
