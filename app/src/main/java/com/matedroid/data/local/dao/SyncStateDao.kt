@@ -36,7 +36,7 @@ interface SyncStateDao {
     """)
     suspend fun markSummariesSynced(carId: Int, timestamp: Long)
 
-    // Detail sync progress updates (single item)
+    // Detail sync progress updates
     @Query("""
         UPDATE sync_state
         SET lastDriveDetailId = :driveId,
@@ -52,23 +52,6 @@ interface SyncStateDao {
         WHERE carId = :carId
     """)
     suspend fun updateChargeDetailProgress(carId: Int, chargeId: Int)
-
-    // Detail sync progress updates (batch)
-    @Query("""
-        UPDATE sync_state
-        SET lastDriveDetailId = :lastDriveId,
-            drivesProcessed = drivesProcessed + :count
-        WHERE carId = :carId
-    """)
-    suspend fun updateDriveDetailProgressBatch(carId: Int, lastDriveId: Int, count: Int)
-
-    @Query("""
-        UPDATE sync_state
-        SET lastChargeDetailId = :lastChargeId,
-            chargesProcessed = chargesProcessed + :count
-        WHERE carId = :carId
-    """)
-    suspend fun updateChargeDetailProgressBatch(carId: Int, lastChargeId: Int, count: Int)
 
     // Detail sync completion
     @Query("UPDATE sync_state SET detailsSynced = 1 WHERE carId = :carId")

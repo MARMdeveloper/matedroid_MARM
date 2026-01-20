@@ -207,13 +207,6 @@ fun StatsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Use real-time progress from StateFlow when syncing, DB count otherwise
-            val effectiveSyncProgress = if (uiState.isSyncing && uiState.syncProgress != null) {
-                uiState.syncProgress!!.percentage
-            } else {
-                uiState.deepSyncProgress
-            }
-
             if (uiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -229,7 +222,7 @@ fun StatsScreen(
                 }
                 EmptyState(
                     message = emptyMessage,
-                    syncProgress = effectiveSyncProgress,
+                    syncProgress = uiState.deepSyncProgress,
                     syncPhase = uiState.syncProgress?.phase,
                     isSyncing = uiState.isSyncing
                 )
@@ -238,8 +231,7 @@ fun StatsScreen(
                     stats = uiState.carStats!!,
                     availableYears = uiState.availableYears,
                     selectedYearFilter = uiState.selectedYearFilter,
-                    deepSyncProgress = effectiveSyncProgress,
-                    isSyncing = uiState.isSyncing,
+                    deepSyncProgress = uiState.deepSyncProgress,
                     palette = palette,
                     currencySymbol = uiState.currencySymbol,
                     onYearFilterSelected = { viewModel.setYearFilter(it) },
@@ -342,7 +334,6 @@ private fun StatsContent(
     availableYears: List<Int>,
     selectedYearFilter: YearFilter,
     deepSyncProgress: Float,
-    isSyncing: Boolean,
     palette: CarColorPalette,
     currencySymbol: String,
     onYearFilterSelected: (YearFilter) -> Unit,
@@ -370,7 +361,7 @@ private fun StatsContent(
         }
 
         // Sync progress indicator if deep sync is ongoing
-        if ((deepSyncProgress < 1f && deepSyncProgress > 0f) || isSyncing) {
+        if (deepSyncProgress < 1f && deepSyncProgress > 0f) {
             item {
                 SyncProgressCard(
                     progress = deepSyncProgress,

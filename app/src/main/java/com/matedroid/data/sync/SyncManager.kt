@@ -116,20 +116,6 @@ class SyncManager @Inject constructor(
     }
 
     /**
-     * Update progress for drive detail sync (batch).
-     */
-    suspend fun updateDriveDetailProgressBatch(carId: Int, lastDriveId: Int, count: Int) {
-        syncStateDao.updateDriveDetailProgressBatch(carId, lastDriveId, count)
-
-        val state = syncStateDao.get(carId) ?: return
-        val total = state.totalDrivesToProcess + state.totalChargesToProcess
-        // state.drivesProcessed already includes count after DB update
-        val current = state.drivesProcessed
-
-        updateProgress(carId, SyncPhase.SYNCING_DRIVE_DETAILS, current, total)
-    }
-
-    /**
      * Mark drive details as complete and start charge details.
      */
     suspend fun markDriveDetailsComplete(carId: Int) {
@@ -157,20 +143,6 @@ class SyncManager @Inject constructor(
         val state = syncStateDao.get(carId) ?: return
         val total = state.totalDrivesToProcess + state.totalChargesToProcess
         val current = state.drivesProcessed + state.chargesProcessed + 1
-
-        updateProgress(carId, SyncPhase.SYNCING_CHARGE_DETAILS, current, total)
-    }
-
-    /**
-     * Update progress for charge detail sync (batch).
-     */
-    suspend fun updateChargeDetailProgressBatch(carId: Int, lastChargeId: Int, count: Int) {
-        syncStateDao.updateChargeDetailProgressBatch(carId, lastChargeId, count)
-
-        val state = syncStateDao.get(carId) ?: return
-        val total = state.totalDrivesToProcess + state.totalChargesToProcess
-        // state.chargesProcessed already includes count after DB update
-        val current = state.drivesProcessed + state.chargesProcessed
 
         updateProgress(carId, SyncPhase.SYNCING_CHARGE_DETAILS, current, total)
     }
