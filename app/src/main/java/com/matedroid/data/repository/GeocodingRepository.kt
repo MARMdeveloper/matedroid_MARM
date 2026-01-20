@@ -2,6 +2,14 @@ package com.matedroid.data.repository
 
 import com.matedroid.data.api.NominatimApi
 import com.matedroid.data.api.NominatimAddress
+import com.matedroid.data.local.dao.GeocodeCacheDao
+import com.matedroid.data.local.dao.GeocodeProgressDao
+import com.matedroid.data.local.dao.GeocodeQueueDao
+import com.matedroid.data.local.entity.GeocodeCache
+import com.matedroid.data.local.entity.GeocodeProgress
+import com.matedroid.data.local.entity.GeocodeQueueItem
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -11,16 +19,182 @@ import javax.inject.Singleton
 data class GeocodedLocation(
     val address: String?,
     val countryCode: String?,
-    val countryName: String?
+    val countryName: String?,
+    val regionName: String?,
+    val city: String?
+)
+
+/**
+ * Progress info for geocoding UI display.
+ */
+data class GeocodeProgressInfo(
+    val processed: Int,
+    val total: Int,
+    val percentage: Float
 )
 
 @Singleton
 class GeocodingRepository @Inject constructor(
-    private val nominatimApi: NominatimApi
+    private val nominatimApi: NominatimApi,
+    private val geocodeCacheDao: GeocodeCacheDao,
+    private val geocodeQueueDao: GeocodeQueueDao,
+    private val geocodeProgressDao: GeocodeProgressDao
 ) {
-    // Simple in-memory cache to avoid repeated API calls for the same location
+    companion object {
+        // Grid precision: 0.01° ≈ 1.1km at equator
+        private const val GRID_PRECISION = 100
+    }
+
+    // Legacy in-memory caches (kept for backward compatibility with reverseGeocode)
     private val addressCache = mutableMapOf<String, String>()
     private val locationCache = mutableMapOf<String, GeocodedLocation>()
+
+    /**
+     * Convert coordinate to grid cell.
+     */
+    fun toGridCoord(coord: Double): Int = (coord * GRID_PRECISION).toInt()
+
+    /**
+     * Get cached location data for a grid cell.
+     * Returns null if not cached.
+     */
+    suspend fun getFromCache(lat: Double, lon: Double): GeocodeCache? {
+        val gridLat = toGridCoord(lat)
+        val gridLon = toGridCoord(lon)
+        return geocodeCacheDao.get(gridLat, gridLon)
+    }
+
+    /**
+     * Get the next batch of items to geocode.
+     */
+    suspend fun getNextBatch(limit: Int = 1): List<GeocodeQueueItem> {
+        return geocodeQueueDao.getNextBatch(limit)
+    }
+
+    /**
+     * Enqueue multiple locations for background geocoding.
+     * Filters out already cached locations and tracks progress.
+     */
+    suspend fun enqueueLocationsForCar(
+        carId: Int,
+        locations: List<Pair<Double, Double>>
+    ): Int {
+        val items = locations.map { (lat, lon) ->
+            val gridLat = toGridCoord(lat)
+            val gridLon = toGridCoord(lon)
+            GeocodeQueueItem(
+                gridLat = gridLat,
+                gridLon = gridLon,
+                carId = carId,
+                latitude = lat,
+                longitude = lon,
+                addedAt = System.currentTimeMillis()
+            )
+        }
+
+        // Filter out already cached locations
+        val uncachedItems = items.filter { item ->
+            geocodeCacheDao.get(item.gridLat, item.gridLon) == null
+        }
+
+        if (uncachedItems.isNotEmpty()) {
+            geocodeQueueDao.enqueueAll(uncachedItems)
+
+            // Update progress tracking
+            val progress = geocodeProgressDao.get(carId)
+            if (progress == null) {
+                geocodeProgressDao.upsert(
+                    GeocodeProgress(
+                        carId = carId,
+                        totalLocations = uncachedItems.size,
+                        processedLocations = 0,
+                        lastUpdatedAt = System.currentTimeMillis()
+                    )
+                )
+            } else {
+                geocodeProgressDao.incrementTotal(carId, uncachedItems.size, System.currentTimeMillis())
+            }
+        }
+
+        return uncachedItems.size
+    }
+
+    /**
+     * Perform actual geocoding API call and cache result.
+     * Called by background worker only.
+     */
+    suspend fun geocodeAndCache(item: GeocodeQueueItem): GeocodeCache? {
+        return try {
+            val response = nominatimApi.reverseGeocode(item.latitude, item.longitude)
+            if (!response.isSuccessful) {
+                geocodeQueueDao.markAttempt(item.gridLat, item.gridLon, System.currentTimeMillis())
+                return null
+            }
+
+            val result = response.body()
+            val address = result?.address
+
+            val cache = GeocodeCache(
+                gridLat = item.gridLat,
+                gridLon = item.gridLon,
+                countryCode = address?.countryCode?.uppercase(),
+                countryName = address?.country,
+                regionName = address?.state,
+                city = address?.city
+                    ?: address?.town
+                    ?: address?.village
+                    ?: address?.municipality,
+                cachedAt = System.currentTimeMillis()
+            )
+
+            geocodeCacheDao.upsert(cache)
+            geocodeQueueDao.remove(item.gridLat, item.gridLon)
+
+            cache
+        } catch (e: Exception) {
+            geocodeQueueDao.markAttempt(item.gridLat, item.gridLon, System.currentTimeMillis())
+            null
+        }
+    }
+
+    /**
+     * Mark a location as successfully geocoded (for progress tracking).
+     */
+    suspend fun markGeocoded(carId: Int) {
+        geocodeProgressDao.incrementProcessed(carId, System.currentTimeMillis())
+    }
+
+    /**
+     * Get count of pending geocode requests.
+     */
+    suspend fun getPendingCount(): Int = geocodeQueueDao.countPending()
+
+    /**
+     * Observe geocoding progress for a car.
+     */
+    fun observeGeocodeProgress(carId: Int): Flow<GeocodeProgressInfo?> {
+        return geocodeProgressDao.observe(carId).map { progress ->
+            if (progress == null || progress.totalLocations == 0) {
+                null
+            } else {
+                GeocodeProgressInfo(
+                    processed = progress.processedLocations,
+                    total = progress.totalLocations,
+                    percentage = progress.processedLocations.toFloat() / progress.totalLocations
+                )
+            }
+        }
+    }
+
+    /**
+     * Reset progress tracking for a car (for full resync).
+     */
+    suspend fun resetProgress(carId: Int) {
+        geocodeProgressDao.reset(carId)
+        geocodeQueueDao.clearForCar(carId)
+    }
+
+    // === Legacy methods for backward compatibility ===
 
     suspend fun reverseGeocode(latitude: Double, longitude: Double): String? {
         // Round coordinates to 4 decimal places for caching (~11m accuracy)
@@ -65,7 +239,12 @@ class GeocodingRepository @Inject constructor(
                     address = formatAddress(address)
                         ?: result?.displayName?.split(",")?.take(3)?.joinToString(", "),
                     countryCode = address?.countryCode?.uppercase(),
-                    countryName = address?.country
+                    countryName = address?.country,
+                    regionName = address?.state,
+                    city = address?.city
+                        ?: address?.town
+                        ?: address?.village
+                        ?: address?.municipality
                 )
                 locationCache[cacheKey] = location
                 location

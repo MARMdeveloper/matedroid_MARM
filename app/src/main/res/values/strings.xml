@@ -521,6 +521,12 @@
     <!-- Sync progress completion percentage. %d is the percentage -->
     <string name="stats_sync_complete">%d%% complete</string>
 
+    <!-- Geocode progress card title when location identification is running -->
+    <string name="geocode_progress_title">Identifying Locations</string>
+
+    <!-- Geocode progress status. %1$d is processed count, %2$d is total count -->
+    <string name="geocode_progress_status">%1$d of %2$d locations</string>
+
     <!-- Section: Drives Overview - summary statistics about all drives -->
     <string name="stats_drives_overview">Drives Overview</string>
 

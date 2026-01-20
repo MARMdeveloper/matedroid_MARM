@@ -18,6 +18,8 @@ import com.matedroid.domain.model.GapRecord
 import com.matedroid.domain.model.MaxDistanceBetweenChargesRecord
 import com.matedroid.domain.model.StreakRecord
 import com.matedroid.domain.model.YearFilter
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,7 +31,8 @@ class StatsRepository @Inject constructor(
     private val driveSummaryDao: DriveSummaryDao,
     private val chargeSummaryDao: ChargeSummaryDao,
     private val aggregateDao: AggregateDao,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val geocodingRepository: GeocodingRepository
 ) {
 
     /**
@@ -527,6 +530,14 @@ class StatsRepository @Inject constructor(
             }
         }
         return results.map { it.toCountryRecord() }
+    }
+
+    /**
+     * Observe geocoding progress for a car.
+     * Returns null when geocoding is complete or hasn't started.
+     */
+    fun observeGeocodeProgress(carId: Int): Flow<GeocodeProgressInfo?> {
+        return geocodingRepository.observeGeocodeProgress(carId)
     }
 }
 

@@ -62,10 +62,15 @@ data class DriveDetailAggregate(
     // === Metadata ===
     val positionCount: Int,         // Total positions in this drive
 
-    // === Country (V3) ===
+    // === Location (V3/V4) ===
+    // Coordinates from first position (for geocoding cache lookup)
+    val startLatitude: Double? = null,      // First position latitude (V4)
+    val startLongitude: Double? = null,     // First position longitude (V4)
     // Extracted from reverse geocoding the first position
     val startCountryCode: String? = null,   // ISO 3166-1 alpha-2 (e.g., "IT", "US")
     val startCountryName: String? = null,   // Full name (e.g., "Italy", "United States")
+    val startRegionName: String? = null,    // State/region (e.g., "Lazio", "California") (V4)
+    val startCity: String? = null,          // City/town (e.g., "Rome", "San Francisco") (V4)
 
     // === Future extensibility ===
     // Store experimental data without schema changes

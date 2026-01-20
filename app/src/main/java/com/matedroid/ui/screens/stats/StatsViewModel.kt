@@ -11,6 +11,7 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.model.Currency
+import com.matedroid.data.repository.GeocodeProgressInfo
 import com.matedroid.data.repository.StatsRepository
 import com.matedroid.data.sync.DataSyncWorker
 import com.matedroid.data.sync.SyncLogCollector
@@ -40,6 +41,8 @@ data class StatsUiState(
     val selectedYearFilter: YearFilter = YearFilter.AllTime,
     val deepSyncProgress: Float = 0f,
     val syncProgress: SyncProgress? = null,
+    val geocodeProgress: GeocodeProgressInfo? = null,
+    val isGeocoding: Boolean = false,
     val currencySymbol: String = "€",
     val error: String? = null
 )
@@ -65,6 +68,7 @@ class StatsViewModel @Inject constructor(
     private var carId: Int? = null
     private var syncObserverJob: Job? = null
     private var progressObserverJob: Job? = null
+    private var geocodeProgressJob: Job? = null
 
     init {
         loadSettings()
@@ -83,6 +87,7 @@ class StatsViewModel @Inject constructor(
         loadStats()
         startObservingSyncStatus()
         startObservingProgress(id)
+        startObservingGeocodeProgress(id)
     }
 
     /**
@@ -94,6 +99,24 @@ class StatsViewModel @Inject constructor(
         progressObserverJob = viewModelScope.launch {
             statsRepository.observeDeepSyncProgress(id).collect { progress ->
                 _uiState.update { it.copy(deepSyncProgress = progress) }
+            }
+        }
+    }
+
+    /**
+     * Observe geocoding progress for location identification.
+     * Shows progress bar while locations are being identified in background.
+     */
+    private fun startObservingGeocodeProgress(id: Int) {
+        geocodeProgressJob?.cancel()
+        geocodeProgressJob = viewModelScope.launch {
+            statsRepository.observeGeocodeProgress(id).collect { progress ->
+                _uiState.update {
+                    it.copy(
+                        geocodeProgress = progress,
+                        isGeocoding = progress != null && progress.processed < progress.total
+                    )
+                }
             }
         }
     }

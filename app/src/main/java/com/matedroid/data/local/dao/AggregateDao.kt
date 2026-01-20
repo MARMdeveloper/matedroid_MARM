@@ -377,6 +377,160 @@ interface AggregateDao {
         ORDER BY firstVisitDate ASC
     """)
     suspend fun getCountriesVisitedInRange(carId: Int, startDate: String, endDate: String): List<CountryVisitResult>
+
+    // === Deep Stats: Cities Visited (Drives) ===
+
+    @Query("""
+        SELECT COUNT(DISTINCT startCity) FROM drive_detail_aggregates
+        WHERE carId = :carId AND startCity IS NOT NULL
+    """)
+    suspend fun countUniqueDriveCities(carId: Int): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT a.startCity) FROM drive_detail_aggregates a
+        JOIN drives_summary d ON a.driveId = d.driveId
+        WHERE a.carId = :carId AND a.startCity IS NOT NULL
+        AND d.startDate >= :startDate AND d.startDate < :endDate
+    """)
+    suspend fun countUniqueDriveCitiesInRange(carId: Int, startDate: String, endDate: String): Int
+
+    @Query("""
+        SELECT a.startCity as city, a.startCountryCode as countryCode, COUNT(*) as driveCount
+        FROM drive_detail_aggregates a
+        WHERE a.carId = :carId AND a.startCity IS NOT NULL
+        GROUP BY a.startCity, a.startCountryCode
+        ORDER BY driveCount DESC
+        LIMIT :limit
+    """)
+    suspend fun getTopDriveCities(carId: Int, limit: Int = 5): List<CityDriveCount>
+
+    @Query("""
+        SELECT a.startCity as city, a.startCountryCode as countryCode, COUNT(*) as driveCount
+        FROM drive_detail_aggregates a
+        JOIN drives_summary d ON a.driveId = d.driveId
+        WHERE a.carId = :carId AND a.startCity IS NOT NULL
+        AND d.startDate >= :startDate AND d.startDate < :endDate
+        GROUP BY a.startCity, a.startCountryCode
+        ORDER BY driveCount DESC
+        LIMIT :limit
+    """)
+    suspend fun getTopDriveCitiesInRange(carId: Int, startDate: String, endDate: String, limit: Int = 5): List<CityDriveCount>
+
+    @Query("""
+        SELECT a.startRegionName as region, a.startCountryCode as countryCode, COUNT(*) as driveCount
+        FROM drive_detail_aggregates a
+        WHERE a.carId = :carId AND a.startRegionName IS NOT NULL
+        GROUP BY a.startRegionName, a.startCountryCode
+        ORDER BY driveCount DESC
+    """)
+    suspend fun getDrivesByRegion(carId: Int): List<RegionDriveCount>
+
+    // === Deep Stats: Cities/Countries for Charges ===
+
+    @Query("""
+        SELECT COUNT(DISTINCT countryCode) FROM charge_detail_aggregates
+        WHERE carId = :carId AND countryCode IS NOT NULL
+    """)
+    suspend fun countUniqueChargeCountries(carId: Int): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT city) FROM charge_detail_aggregates
+        WHERE carId = :carId AND city IS NOT NULL
+    """)
+    suspend fun countUniqueChargeCities(carId: Int): Int
+
+    @Query("""
+        SELECT a.city, a.countryCode, COUNT(*) as chargeCount, SUM(c.energyAdded) as totalEnergy
+        FROM charge_detail_aggregates a
+        JOIN charges_summary c ON a.chargeId = c.chargeId
+        WHERE a.carId = :carId AND a.city IS NOT NULL
+        GROUP BY a.city, a.countryCode
+        ORDER BY chargeCount DESC
+        LIMIT :limit
+    """)
+    suspend fun getTopChargeCities(carId: Int, limit: Int = 5): List<CityChargeStats>
+
+    @Query("""
+        SELECT a.countryCode, a.countryName,
+               COUNT(*) as chargeCount,
+               SUM(CASE WHEN a.isFastCharger = 1 THEN 1 ELSE 0 END) as dcCount,
+               SUM(CASE WHEN a.isFastCharger = 0 THEN 1 ELSE 0 END) as acCount
+        FROM charge_detail_aggregates a
+        WHERE a.carId = :carId AND a.countryCode IS NOT NULL
+        GROUP BY a.countryCode
+        ORDER BY chargeCount DESC
+    """)
+    suspend fun getChargeStatsByCountry(carId: Int): List<CountryChargeStats>
+
+    // === Location Update Methods (called by GeocodeWorker) ===
+
+    @Query("""
+        UPDATE drive_detail_aggregates
+        SET startCountryCode = :countryCode,
+            startCountryName = :countryName,
+            startRegionName = :regionName,
+            startCity = :city
+        WHERE carId = :carId
+        AND startLatitude IS NOT NULL
+        AND startLongitude IS NOT NULL
+        AND CAST(startLatitude * 100 AS INT) = :gridLat
+        AND CAST(startLongitude * 100 AS INT) = :gridLon
+        AND startCountryCode IS NULL
+    """)
+    suspend fun updateDriveLocationsInGrid(
+        carId: Int,
+        gridLat: Int,
+        gridLon: Int,
+        countryCode: String?,
+        countryName: String?,
+        regionName: String?,
+        city: String?
+    )
+
+    @Query("""
+        UPDATE charge_detail_aggregates
+        SET countryCode = :countryCode,
+            countryName = :countryName,
+            regionName = :regionName,
+            city = :city
+        WHERE chargeId IN (
+            SELECT c.chargeId FROM charges_summary c
+            JOIN charge_detail_aggregates a ON c.chargeId = a.chargeId
+            WHERE a.carId = :carId
+            AND CAST(c.latitude * 100 AS INT) = :gridLat
+            AND CAST(c.longitude * 100 AS INT) = :gridLon
+            AND a.countryCode IS NULL
+        )
+    """)
+    suspend fun updateChargeLocationsInGrid(
+        carId: Int,
+        gridLat: Int,
+        gridLon: Int,
+        countryCode: String?,
+        countryName: String?,
+        regionName: String?,
+        city: String?
+    )
+
+    // Count drives/charges that need geocoding (have coordinates but no country)
+    @Query("""
+        SELECT COUNT(*) FROM drive_detail_aggregates
+        WHERE carId = :carId
+        AND startLatitude IS NOT NULL
+        AND startLongitude IS NOT NULL
+        AND startCountryCode IS NULL
+    """)
+    suspend fun countDrivesNeedingGeocode(carId: Int): Int
+
+    @Query("""
+        SELECT COUNT(*) FROM charge_detail_aggregates a
+        JOIN charges_summary c ON a.chargeId = c.chargeId
+        WHERE a.carId = :carId
+        AND c.latitude IS NOT NULL
+        AND c.longitude IS NOT NULL
+        AND a.countryCode IS NULL
+    """)
+    suspend fun countChargesNeedingGeocode(carId: Int): Int
 }
 
 /**
@@ -388,4 +542,43 @@ data class CountryVisitResult(
     val firstVisitDate: String,
     val lastVisitDate: String,
     val driveCount: Int
+)
+
+/**
+ * Result of top drive cities query.
+ */
+data class CityDriveCount(
+    val city: String,
+    val countryCode: String?,
+    val driveCount: Int
+)
+
+/**
+ * Result of drives by region query.
+ */
+data class RegionDriveCount(
+    val region: String,
+    val countryCode: String?,
+    val driveCount: Int
+)
+
+/**
+ * Result of top charge cities query.
+ */
+data class CityChargeStats(
+    val city: String,
+    val countryCode: String?,
+    val chargeCount: Int,
+    val totalEnergy: Double
+)
+
+/**
+ * Result of charge stats by country query.
+ */
+data class CountryChargeStats(
+    val countryCode: String,
+    val countryName: String?,
+    val chargeCount: Int,
+    val dcCount: Int,
+    val acCount: Int
 )

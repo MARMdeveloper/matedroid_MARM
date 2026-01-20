@@ -135,6 +135,9 @@ class SyncRepository @Inject constructor(
         val total = unprocessedIds.size
         log("Processing $total drive details for car $carId (batch size: $BATCH_SIZE)")
 
+        // Collect locations for background geocoding
+        val locationsToGeocode = mutableListOf<Pair<Double, Double>>()
+
         // Process in batches
         unprocessedIds.chunked(BATCH_SIZE).forEachIndexed { batchIndex, batch ->
             val processed = batchIndex * BATCH_SIZE
@@ -149,12 +152,16 @@ class SyncRepository @Inject constructor(
                 }.awaitAll()
             }
 
-            // Process results and compute aggregates
-            // TODO: Re-enable country geocoding after implementing background/incremental approach
+            // Process results and compute aggregates (coordinates are stored, geocoding is deferred)
             val aggregates = apiResults.mapNotNull { (driveId, result) ->
                 when (result) {
                     is ApiResult.Success -> {
-                        computeDriveAggregate(carId, result.data, null, null)
+                        val aggregate = computeDriveAggregate(carId, result.data)
+                        // Collect location for background geocoding
+                        if (aggregate.startLatitude != null && aggregate.startLongitude != null) {
+                            locationsToGeocode.add(aggregate.startLatitude to aggregate.startLongitude)
+                        }
+                        aggregate
                     }
                     is ApiResult.Error -> {
                         logError("Drive $driveId failed: ${result.message}")
@@ -182,6 +189,12 @@ class SyncRepository @Inject constructor(
             }
         }
 
+        // Enqueue drive locations for background geocoding
+        if (locationsToGeocode.isNotEmpty()) {
+            val enqueued = geocodingRepository.enqueueLocationsForCar(carId, locationsToGeocode)
+            log("Enqueued $enqueued drive locations for geocoding")
+        }
+
         return true
     }
 
@@ -193,6 +206,9 @@ class SyncRepository @Inject constructor(
         val unprocessedIds = chargeSummaryDao.getUnprocessedChargeIds(carId, SchemaVersion.CURRENT)
         val total = unprocessedIds.size
         log("Processing $total charge details for car $carId (batch size: $BATCH_SIZE)")
+
+        // Collect locations for background geocoding
+        val locationsToGeocode = mutableListOf<Pair<Double, Double>>()
 
         // Process in batches
         unprocessedIds.chunked(BATCH_SIZE).forEachIndexed { batchIndex, batch ->
@@ -215,6 +231,12 @@ class SyncRepository @Inject constructor(
                     is ApiResult.Success -> {
                         val aggregate = computeChargeAggregate(carId, result.data)
                         aggregates.add(aggregate)
+
+                        // Get location from charge summary for geocoding
+                        val summary = chargeSummaryDao.get(chargeId)
+                        if (summary != null && summary.latitude != 0.0 && summary.longitude != 0.0) {
+                            locationsToGeocode.add(summary.latitude to summary.longitude)
+                        }
                     }
                     is ApiResult.Error -> {
                         logError("Charge $chargeId failed: ${result.message}")
@@ -242,17 +264,22 @@ class SyncRepository @Inject constructor(
             }
         }
 
+        // Enqueue charge locations for background geocoding
+        if (locationsToGeocode.isNotEmpty()) {
+            val enqueued = geocodingRepository.enqueueLocationsForCar(carId, locationsToGeocode)
+            log("Enqueued $enqueued charge locations for geocoding")
+        }
+
         return true
     }
 
     /**
      * Compute aggregates from drive detail positions.
+     * Coordinates are stored for background geocoding.
      */
     private fun computeDriveAggregate(
         carId: Int,
-        detail: DriveDetail,
-        countryCode: String? = null,
-        countryName: String? = null
+        detail: DriveDetail
     ): DriveDetailAggregate {
         val positions = detail.positions ?: emptyList()
 
@@ -303,9 +330,15 @@ class SyncRepository @Inject constructor(
             if (pos.isClimateOn) climateOnCount++
         }
 
-        val startElevation = positions.firstOrNull()?.elevation
-        val endElevation = positions.lastOrNull()?.elevation
+        val firstPosition = positions.firstOrNull()
+        val lastPosition = positions.lastOrNull()
+        val startElevation = firstPosition?.elevation
+        val endElevation = lastPosition?.elevation
         val hasElevationData = maxElevation != null
+
+        // Extract start coordinates for geocoding
+        val startLatitude = firstPosition?.latitude
+        val startLongitude = firstPosition?.longitude
 
         return DriveDetailAggregate(
             driveId = detail.driveId,
@@ -332,8 +365,14 @@ class SyncRepository @Inject constructor(
             climateOnPositions = climateOnCount,
             positionCount = positions.size,
 
-            startCountryCode = countryCode,
-            startCountryName = countryName
+            // Store coordinates for background geocoding
+            startLatitude = startLatitude,
+            startLongitude = startLongitude,
+            // Location data will be filled by GeocodeWorker
+            startCountryCode = null,
+            startCountryName = null,
+            startRegionName = null,
+            startCity = null
         )
     }
 

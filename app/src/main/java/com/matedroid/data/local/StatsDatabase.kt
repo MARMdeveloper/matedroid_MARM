@@ -7,11 +7,17 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.matedroid.data.local.dao.AggregateDao
 import com.matedroid.data.local.dao.ChargeSummaryDao
 import com.matedroid.data.local.dao.DriveSummaryDao
+import com.matedroid.data.local.dao.GeocodeCacheDao
+import com.matedroid.data.local.dao.GeocodeProgressDao
+import com.matedroid.data.local.dao.GeocodeQueueDao
 import com.matedroid.data.local.dao.SyncStateDao
 import com.matedroid.data.local.entity.ChargeDetailAggregate
 import com.matedroid.data.local.entity.ChargeSummary
 import com.matedroid.data.local.entity.DriveDetailAggregate
 import com.matedroid.data.local.entity.DriveSummary
+import com.matedroid.data.local.entity.GeocodeCache
+import com.matedroid.data.local.entity.GeocodeProgress
+import com.matedroid.data.local.entity.GeocodeQueueItem
 import com.matedroid.data.local.entity.SyncState
 
 /**
@@ -32,9 +38,12 @@ import com.matedroid.data.local.entity.SyncState
         DriveSummary::class,
         ChargeSummary::class,
         DriveDetailAggregate::class,
-        ChargeDetailAggregate::class
+        ChargeDetailAggregate::class,
+        GeocodeCache::class,
+        GeocodeQueueItem::class,
+        GeocodeProgress::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 abstract class StatsDatabase : RoomDatabase() {
@@ -43,6 +52,9 @@ abstract class StatsDatabase : RoomDatabase() {
     abstract fun driveSummaryDao(): DriveSummaryDao
     abstract fun chargeSummaryDao(): ChargeSummaryDao
     abstract fun aggregateDao(): AggregateDao
+    abstract fun geocodeCacheDao(): GeocodeCacheDao
+    abstract fun geocodeQueueDao(): GeocodeQueueDao
+    abstract fun geocodeProgressDao(): GeocodeProgressDao
 
     companion object {
         const val DATABASE_NAME = "matedroid_stats.db"
@@ -79,6 +91,63 @@ abstract class StatsDatabase : RoomDatabase() {
             }
         }
 
-        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        /** Migration from V4 to V5: Add geocoding cache tables and location fields */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create geocode_cache table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS geocode_cache (
+                        gridLat INTEGER NOT NULL,
+                        gridLon INTEGER NOT NULL,
+                        countryCode TEXT,
+                        countryName TEXT,
+                        regionName TEXT,
+                        city TEXT,
+                        cachedAt INTEGER NOT NULL,
+                        PRIMARY KEY (gridLat, gridLon)
+                    )
+                """)
+
+                // Create geocode_queue table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS geocode_queue (
+                        gridLat INTEGER NOT NULL,
+                        gridLon INTEGER NOT NULL,
+                        carId INTEGER NOT NULL,
+                        latitude REAL NOT NULL,
+                        longitude REAL NOT NULL,
+                        addedAt INTEGER NOT NULL,
+                        attempts INTEGER NOT NULL DEFAULT 0,
+                        lastAttemptAt INTEGER,
+                        PRIMARY KEY (gridLat, gridLon)
+                    )
+                """)
+
+                // Create geocode_progress table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS geocode_progress (
+                        carId INTEGER NOT NULL,
+                        totalLocations INTEGER NOT NULL DEFAULT 0,
+                        processedLocations INTEGER NOT NULL DEFAULT 0,
+                        lastUpdatedAt INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY (carId)
+                    )
+                """)
+
+                // Add coordinate and region/city columns to drive_detail_aggregates
+                db.execSQL("ALTER TABLE drive_detail_aggregates ADD COLUMN startLatitude REAL")
+                db.execSQL("ALTER TABLE drive_detail_aggregates ADD COLUMN startLongitude REAL")
+                db.execSQL("ALTER TABLE drive_detail_aggregates ADD COLUMN startRegionName TEXT")
+                db.execSQL("ALTER TABLE drive_detail_aggregates ADD COLUMN startCity TEXT")
+
+                // Add location columns to charge_detail_aggregates
+                db.execSQL("ALTER TABLE charge_detail_aggregates ADD COLUMN countryCode TEXT")
+                db.execSQL("ALTER TABLE charge_detail_aggregates ADD COLUMN countryName TEXT")
+                db.execSQL("ALTER TABLE charge_detail_aggregates ADD COLUMN regionName TEXT")
+                db.execSQL("ALTER TABLE charge_detail_aggregates ADD COLUMN city TEXT")
+            }
+        }
+
+        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
     }
 }

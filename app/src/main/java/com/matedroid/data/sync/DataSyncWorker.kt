@@ -8,8 +8,13 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.BackoffPolicy
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import java.io.IOException
 import java.net.UnknownHostException
@@ -126,6 +131,8 @@ class DataSyncWorker @AssistedInject constructor(
                 Result.retry()
             } else {
                 log("Sync complete for all cars")
+                // Schedule background geocoding for location data
+                scheduleGeocoding()
                 Result.success()
             }
         } catch (e: Exception) {
@@ -137,6 +144,31 @@ class DataSyncWorker @AssistedInject constructor(
                 Result.failure()
             }
         }
+    }
+
+    /**
+     * Schedule background geocoding worker.
+     * Uses KEEP policy to avoid interrupting running geocoding.
+     */
+    private fun scheduleGeocoding() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val request = OneTimeWorkRequestBuilder<GeocodeWorker>()
+            .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.LINEAR, 1, TimeUnit.MINUTES)
+            .addTag(GeocodeWorker.TAG)
+            .build()
+
+        WorkManager.getInstance(applicationContext)
+            .enqueueUniqueWork(
+                GeocodeWorker.WORK_NAME,
+                ExistingWorkPolicy.KEEP,  // Don't interrupt running geocoding
+                request
+            )
+
+        log("Scheduled geocoding worker")
     }
 
     private fun isNetworkError(message: String?): Boolean {

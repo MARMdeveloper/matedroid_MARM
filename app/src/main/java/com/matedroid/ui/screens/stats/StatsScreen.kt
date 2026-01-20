@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Thermostat
@@ -80,6 +81,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
 import com.matedroid.data.local.entity.DriveSummary
+import com.matedroid.data.repository.GeocodeProgressInfo
 import com.matedroid.domain.model.CarStats
 import com.matedroid.domain.model.DeepStats
 import com.matedroid.domain.model.MaxDistanceBetweenChargesRecord
@@ -232,6 +234,8 @@ fun StatsScreen(
                     availableYears = uiState.availableYears,
                     selectedYearFilter = uiState.selectedYearFilter,
                     deepSyncProgress = uiState.deepSyncProgress,
+                    geocodeProgress = uiState.geocodeProgress,
+                    isGeocoding = uiState.isGeocoding,
                     palette = palette,
                     currencySymbol = uiState.currencySymbol,
                     onYearFilterSelected = { viewModel.setYearFilter(it) },
@@ -334,6 +338,8 @@ private fun StatsContent(
     availableYears: List<Int>,
     selectedYearFilter: YearFilter,
     deepSyncProgress: Float,
+    geocodeProgress: GeocodeProgressInfo?,
+    isGeocoding: Boolean,
     palette: CarColorPalette,
     currencySymbol: String,
     onYearFilterSelected: (YearFilter) -> Unit,
@@ -367,6 +373,16 @@ private fun StatsContent(
                     progress = deepSyncProgress,
                     palette = palette,
                     onClick = onSyncProgressClick
+                )
+            }
+        }
+
+        // Geocode progress indicator if location identification is ongoing
+        if (isGeocoding && geocodeProgress != null) {
+            item {
+                GeocodeProgressCard(
+                    progress = geocodeProgress,
+                    palette = palette
                 )
             }
         }
@@ -504,6 +520,51 @@ private fun SyncProgressCard(
                     text = stringResource(R.string.stats_sync_complete, (progress * 100).toInt()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GeocodeProgressCard(
+    progress: GeocodeProgressInfo,
+    palette: CarColorPalette
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Place,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.geocode_progress_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                LinearProgressIndicator(
+                    progress = { progress.percentage },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = stringResource(R.string.geocode_progress_status, progress.processed, progress.total),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
         }
