@@ -10,6 +10,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import android.util.Log
 import com.matedroid.R
 import com.matedroid.data.local.dao.AggregateDao
 import com.matedroid.data.local.dao.ChargeSummaryDao
@@ -54,6 +55,7 @@ class GeocodeWorker @AssistedInject constructor(
     private var foregroundAvailable = true
 
     override suspend fun doWork(): Result {
+        Log.d(TAG, "=== Starting geocode worker (attempt ${runAttemptCount}) ===")
         log("Starting geocode worker (attempt ${runAttemptCount})")
 
         // Run as foreground service (optional - may fail from background)
@@ -65,14 +67,17 @@ class GeocodeWorker @AssistedInject constructor(
         while (processedCount < MAX_PER_RUN && consecutiveErrors < 5) {
             val batch = geocodingRepository.getNextBatch(1)
             if (batch.isEmpty()) {
+                Log.d(TAG, "Queue empty, geocoding complete")
                 log("Queue empty, geocoding complete")
                 break
             }
 
             val item = batch.first()
+            Log.d(TAG, "Processing grid (${item.gridLat}, ${item.gridLon})")
             val result = geocodingRepository.geocodeAndCache(item)
 
             if (result != null) {
+                Log.d(TAG, "Geocoded: ${result.city}, ${result.countryName}")
                 // Update aggregates that match this grid cell
                 updateAggregatesWithLocation(item.carId, result)
 
@@ -85,10 +90,12 @@ class GeocodeWorker @AssistedInject constructor(
                 // Update notification periodically
                 if (processedCount % 10 == 0) {
                     val remaining = geocodingRepository.getPendingCount()
+                    Log.d(TAG, "Progress: $processedCount processed, $remaining remaining")
                     trySetForeground("Identifying locations... ($remaining remaining)")
                 }
             } else {
                 consecutiveErrors++
+                Log.w(TAG, "Geocoding failed for grid (${item.gridLat}, ${item.gridLon}), error count: $consecutiveErrors")
                 log("Geocoding failed for grid (${item.gridLat}, ${item.gridLon}), error count: $consecutiveErrors")
             }
 
@@ -96,14 +103,17 @@ class GeocodeWorker @AssistedInject constructor(
             delay(RATE_LIMIT_MS)
         }
 
+        Log.d(TAG, "Processed $processedCount locations this run")
         log("Processed $processedCount locations this run")
 
         // Check if there's more work to do
         val remaining = geocodingRepository.getPendingCount()
         return if (remaining > 0) {
+            Log.d(TAG, "$remaining locations remaining, scheduling retry")
             log("$remaining locations remaining, scheduling retry")
             Result.retry()
         } else {
+            Log.d(TAG, "All locations geocoded")
             log("All locations geocoded")
             Result.success()
         }

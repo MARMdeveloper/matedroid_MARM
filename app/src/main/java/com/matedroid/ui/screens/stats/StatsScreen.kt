@@ -384,7 +384,8 @@ private fun StatsContent(
             item {
                 GeocodeProgressCard(
                     progress = geocodeProgress,
-                    palette = palette
+                    palette = palette,
+                    onClick = onSyncProgressClick
                 )
             }
         }
@@ -531,10 +532,19 @@ private fun SyncProgressCard(
 @Composable
 private fun GeocodeProgressCard(
     progress: GeocodeProgressInfo,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    onClick: (() -> Unit)? = null
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiaryContainer
         )
