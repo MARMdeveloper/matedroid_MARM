@@ -15,6 +15,9 @@ interface AggregateDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertDriveAggregate(aggregate: DriveDetailAggregate)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertDriveAggregates(aggregates: List<DriveDetailAggregate>)
+
     @Query("SELECT * FROM drive_detail_aggregates WHERE driveId = :driveId")
     suspend fun getDriveAggregate(driveId: Int): DriveDetailAggregate?
 
@@ -25,6 +28,9 @@ interface AggregateDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertChargeAggregate(aggregate: ChargeDetailAggregate)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertChargeAggregates(aggregates: List<ChargeDetailAggregate>)
 
     @Query("SELECT * FROM charge_detail_aggregates WHERE chargeId = :chargeId")
     suspend fun getChargeAggregate(chargeId: Int): ChargeDetailAggregate?
