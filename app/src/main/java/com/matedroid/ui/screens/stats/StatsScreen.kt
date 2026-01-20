@@ -76,6 +76,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -756,7 +757,7 @@ private fun RecordsCard(
         driveRecords.add(RecordData("📅", labelBusiestDay, stringResource(R.string.format_drives_count, day.count), day.day) { onDayClick(day.day) })
     }
     deepStats?.countriesVisitedCount?.let { count ->
-        driveRecords.add(RecordData("🌍", labelCountriesVisited, stringResource(R.string.format_countries_count, count), "") { onCountriesVisitedClick() })
+        driveRecords.add(RecordData("🌍", labelCountriesVisited, pluralStringResource(R.plurals.format_countries_count, count, count), "") { onCountriesVisitedClick() })
     }
 
     // Category 2: Battery

@@ -699,8 +699,11 @@
     <!-- Top bar title for countries visited screen -->
     <string name="countries_visited_title">Countries Visited</string>
 
-    <!-- Format for number of countries. %d is the count -->
-    <string name="format_countries_count">%d countries</string>
+    <!-- Plural for number of countries. %d is the count -->
+    <plurals name="format_countries_count">
+        <item quantity="one">%d country</item>
+        <item quantity="other">%d countries</item>
+    </plurals>
 
     <!-- Label for first visit date to a country. %s is the formatted date -->
     <string name="country_first_visit">First visit: %s</string>
