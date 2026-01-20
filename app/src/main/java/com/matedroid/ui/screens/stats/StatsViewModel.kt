@@ -64,6 +64,7 @@ class StatsViewModel @Inject constructor(
 
     private var carId: Int? = null
     private var syncObserverJob: Job? = null
+    private var progressObserverJob: Job? = null
 
     init {
         loadSettings()
@@ -81,11 +82,25 @@ class StatsViewModel @Inject constructor(
         carId = id
         loadStats()
         startObservingSyncStatus()
+        startObservingProgress(id)
     }
 
     /**
-     * Observe sync status changes and reload stats when sync progresses.
-     * This ensures the UI updates as new data is synced.
+     * Observe sync progress directly from Room's reactive queries.
+     * This provides real-time updates as aggregates are written to the database.
+     */
+    private fun startObservingProgress(id: Int) {
+        progressObserverJob?.cancel()
+        progressObserverJob = viewModelScope.launch {
+            statsRepository.observeDeepSyncProgress(id).collect { progress ->
+                _uiState.update { it.copy(deepSyncProgress = progress) }
+            }
+        }
+    }
+
+    /**
+     * Observe sync status changes to update isSyncing state.
+     * Progress updates are handled separately by observeDeepSyncProgress Flow.
      */
     private fun startObservingSyncStatus() {
         syncObserverJob?.cancel()
@@ -102,8 +117,8 @@ class StatsViewModel @Inject constructor(
 
                 _uiState.update { it.copy(isSyncing = isSyncing, syncProgress = carProgress) }
 
-                // Reload stats periodically while syncing to show new data
-                if (isSyncing) {
+                // Reload full stats when sync completes (not during sync - too expensive)
+                if (carProgress?.phase == SyncPhase.COMPLETE) {
                     loadStatsInternal()
                 }
             }

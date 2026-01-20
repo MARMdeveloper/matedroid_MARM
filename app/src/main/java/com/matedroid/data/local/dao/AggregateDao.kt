@@ -328,6 +328,13 @@ interface AggregateDao {
     @Query("SELECT COUNT(*) FROM charge_detail_aggregates WHERE carId = :carId")
     suspend fun countChargeAggregates(carId: Int): Int
 
+    // Flow-based counts for real-time progress updates (Room emits on table changes)
+    @Query("SELECT COUNT(*) FROM drive_detail_aggregates WHERE carId = :carId")
+    fun observeDriveAggregateCount(carId: Int): kotlinx.coroutines.flow.Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM charge_detail_aggregates WHERE carId = :carId")
+    fun observeChargeAggregateCount(carId: Int): kotlinx.coroutines.flow.Flow<Int>
+
     // === Deep Stats: Countries Visited ===
 
     // Count unique countries visited

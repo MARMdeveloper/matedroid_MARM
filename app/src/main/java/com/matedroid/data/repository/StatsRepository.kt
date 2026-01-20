@@ -498,6 +498,23 @@ class StatsRepository @Inject constructor(
     }
 
     /**
+     * Observe sync progress as a Flow. Room automatically emits when tables change.
+     * This provides real-time progress updates without relying on StateFlow propagation.
+     */
+    fun observeDeepSyncProgress(carId: Int): kotlinx.coroutines.flow.Flow<Float> {
+        return kotlinx.coroutines.flow.combine(
+            driveSummaryDao.observeCount(carId),
+            chargeSummaryDao.observeCount(carId),
+            aggregateDao.observeDriveAggregateCount(carId),
+            aggregateDao.observeChargeAggregateCount(carId)
+        ) { totalDrives, totalCharges, processedDrives, processedCharges ->
+            val total = totalDrives + totalCharges
+            val processed = processedDrives + processedCharges
+            if (total > 0) processed.toFloat() / total else 0f
+        }
+    }
+
+    /**
      * Get countries visited with aggregated data.
      */
     suspend fun getCountriesVisited(carId: Int, yearFilter: YearFilter): List<CountryRecord> {
