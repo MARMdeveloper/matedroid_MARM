@@ -1263,7 +1263,7 @@ private fun ChargingDetailsRow(
                     color = palette.onSurfaceVariant
                 )
                 // Phases badge
-                val phases = status.chargerPhases
+                val phases = status.chargingDetails?.acPhases
                 if (phases != null && phases > 0) {
                     Box(
                         modifier = Modifier

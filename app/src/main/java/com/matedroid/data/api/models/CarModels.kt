@@ -193,10 +193,20 @@ data class ChargingDetails(
     /**
      * Detect if this is DC charging using Teslamate's logic:
      * DC charging has charger_phases = 0 or null (bypasses onboard charger)
-     * AC charging has charger_phases = 1, 2, or 3
      */
     val isDcCharging: Boolean
         get() = chargerPhases == null || chargerPhases == 0
+    /**
+     * Real number of AC phases:
+     * 1 -> monophase
+     * 2 -> triphase
+     */
+    val acPhases: Int?
+        get() = when (chargerPhases) {
+            1 -> 1
+            2 -> 3
+            else -> 0
+        }
 }
 
 @JsonClass(generateAdapter = true)
