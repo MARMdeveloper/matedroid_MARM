@@ -48,4 +48,16 @@ interface GeocodeQueueDao {
     // Clear all failed items (attempts >= 3)
     @Query("DELETE FROM geocode_queue WHERE attempts >= 3")
     suspend fun clearFailed()
+
+    // Count total items in queue (including failed)
+    @Query("SELECT COUNT(*) FROM geocode_queue")
+    suspend fun countTotal(): Int
+
+    // Count failed items (attempts >= 3)
+    @Query("SELECT COUNT(*) FROM geocode_queue WHERE attempts >= 3")
+    suspend fun countFailed(): Int
+
+    // Reset all failed items to retry them
+    @Query("UPDATE geocode_queue SET attempts = 0, lastAttemptAt = NULL WHERE attempts >= 3")
+    suspend fun resetFailed()
 }

@@ -170,6 +170,37 @@ class GeocodingRepository @Inject constructor(
     suspend fun getPendingCount(): Int = geocodeQueueDao.countPending()
 
     /**
+     * Get count of total items in queue (including failed).
+     */
+    suspend fun getTotalQueueCount(): Int = geocodeQueueDao.countTotal()
+
+    /**
+     * Get count of failed items (attempts >= 3).
+     */
+    suspend fun getFailedCount(): Int = geocodeQueueDao.countFailed()
+
+    /**
+     * Reset all failed items to retry them.
+     */
+    suspend fun resetFailedItems() = geocodeQueueDao.resetFailed()
+
+    /**
+     * Get count of cached geocoded locations.
+     */
+    suspend fun getCachedCount(): Int = geocodeCacheDao.count()
+
+    /**
+     * Sync progress with actual cache count.
+     * Called when queue is empty but progress shows incomplete work.
+     * This fixes stale progress data from interrupted/cleared geocoding.
+     */
+    suspend fun syncProgressWithCache(cachedCount: Int) {
+        // Update all car progress records to match reality
+        // When queue is empty and we have cached items, those are the completed ones
+        geocodeProgressDao.syncWithCache(cachedCount)
+    }
+
+    /**
      * Observe geocoding progress for a car.
      */
     fun observeGeocodeProgress(carId: Int): Flow<GeocodeProgressInfo?> {

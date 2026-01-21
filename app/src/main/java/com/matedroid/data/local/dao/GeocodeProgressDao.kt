@@ -45,4 +45,14 @@ interface GeocodeProgressDao {
     // Delete progress record
     @Query("DELETE FROM geocode_progress WHERE carId = :carId")
     suspend fun delete(carId: Int)
+
+    // Sync progress with actual cache count (fixes stale data)
+    // Sets both total and processed to cachedCount, marking geocoding as complete
+    @Query("""
+        UPDATE geocode_progress
+        SET totalLocations = :cachedCount,
+            processedLocations = :cachedCount,
+            lastUpdatedAt = :timestamp
+    """)
+    suspend fun syncWithCache(cachedCount: Int, timestamp: Long = System.currentTimeMillis())
 }

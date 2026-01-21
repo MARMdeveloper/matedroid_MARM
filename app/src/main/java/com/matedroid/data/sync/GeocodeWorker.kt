@@ -58,6 +58,29 @@ class GeocodeWorker @AssistedInject constructor(
         Log.d(TAG, "=== Starting geocode worker (attempt ${runAttemptCount}) ===")
         log("Starting geocode worker (attempt ${runAttemptCount})")
 
+        // Log queue and cache state for diagnostics
+        val totalQueue = geocodingRepository.getTotalQueueCount()
+        val pendingQueue = geocodingRepository.getPendingCount()
+        val failedQueue = geocodingRepository.getFailedCount()
+        val cachedCount = geocodingRepository.getCachedCount()
+        Log.d(TAG, "Queue state: total=$totalQueue, pending=$pendingQueue, failed=$failedQueue, cached=$cachedCount")
+        log("Queue state: total=$totalQueue, pending=$pendingQueue, failed=$failedQueue, cached=$cachedCount")
+
+        // If there are failed items but no pending items, reset and retry them
+        if (pendingQueue == 0 && failedQueue > 0) {
+            Log.d(TAG, "Resetting $failedQueue failed items to retry")
+            log("Resetting $failedQueue failed items to retry")
+            geocodingRepository.resetFailedItems()
+        }
+
+        // If queue is completely empty but we have cached items, progress should match cache
+        // This handles the case where queue was cleared but progress wasn't updated
+        if (totalQueue == 0 && cachedCount > 0) {
+            geocodingRepository.syncProgressWithCache(cachedCount)
+            Log.d(TAG, "Synced progress with cache count: $cachedCount")
+            log("Synced progress with cache count: $cachedCount")
+        }
+
         // Run as foreground service (optional - may fail from background)
         foregroundAvailable = trySetForeground("Identifying locations...")
 
@@ -109,14 +132,38 @@ class GeocodeWorker @AssistedInject constructor(
         // Check if there's more work to do
         val remaining = geocodingRepository.getPendingCount()
         return if (remaining > 0) {
-            Log.d(TAG, "$remaining locations remaining, scheduling retry")
-            log("$remaining locations remaining, scheduling retry")
-            Result.retry()
+            Log.d(TAG, "$remaining locations remaining, re-enqueuing")
+            log("$remaining locations remaining, re-enqueuing")
+            // Re-enqueue ourselves immediately instead of using retry() to avoid backoff delays
+            scheduleNext()
+            Result.success()
         } else {
             Log.d(TAG, "All locations geocoded")
             log("All locations geocoded")
             Result.success()
         }
+    }
+
+    /**
+     * Schedule the next batch of geocoding work immediately.
+     * Uses REPLACE policy to ensure fresh start without backoff delays.
+     */
+    private fun scheduleNext() {
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+            .build()
+
+        val request = androidx.work.OneTimeWorkRequestBuilder<GeocodeWorker>()
+            .setConstraints(constraints)
+            .addTag(TAG)
+            .build()
+
+        androidx.work.WorkManager.getInstance(applicationContext)
+            .enqueueUniqueWork(
+                WORK_NAME,
+                androidx.work.ExistingWorkPolicy.REPLACE,
+                request
+            )
     }
 
     /**

@@ -164,7 +164,7 @@ class DataSyncWorker @AssistedInject constructor(
         WorkManager.getInstance(applicationContext)
             .enqueueUniqueWork(
                 GeocodeWorker.WORK_NAME,
-                ExistingWorkPolicy.KEEP,  // Don't interrupt running geocoding
+                ExistingWorkPolicy.REPLACE,  // Restart geocoding on each sync
                 request
             )
 
