@@ -521,6 +521,12 @@
     <!-- Sync progress completion percentage. %d is the percentage -->
     <string name="stats_sync_complete">%d%% completato</string>
 
+    <!-- Geocode progress card title when location identification is running -->
+    <string name="geocode_progress_title">Identificazione Località</string>
+
+    <!-- Geocode progress status. %1$d is processed count, %2$d is total count -->
+    <string name="geocode_progress_status">%1$d di %2$d località</string>
+
     <!-- Section: Drives Overview - summary statistics about all drives -->
     <string name="stats_drives_overview">Panoramica Viaggi</string>
 
@@ -577,6 +583,9 @@
 
     <!-- Record: day with most number of drives -->
     <string name="record_busiest_day">Giorno più intenso</string>
+
+    <!-- Record: count of unique countries visited while driving -->
+    <string name="record_countries_visited">Paesi visitati</string>
 
     <!-- Record: charge session with biggest battery percentage gain -->
     <string name="record_biggest_gain">Guadagno maggiore</string>
@@ -685,6 +694,49 @@
 
     <!-- Content description for arrow to view drive details -->
     <string name="view_drive">Vedi viaggio</string>
+
+    <!-- ==================== Countries Visited Screen ==================== -->
+    <!-- Top bar title for countries visited screen -->
+    <string name="countries_visited_title">Paesi Visitati</string>
+
+    <!-- Plural for number of countries. %d is the count -->
+    <plurals name="format_countries_count">
+        <item quantity="one">%d paese</item>
+        <item quantity="other">%d paesi</item>
+    </plurals>
+
+    <!-- Label for first visit date to a country. %s is the formatted date -->
+    <string name="country_first_visit">Prima visita: %s</string>
+
+    <!-- Label for last visit date to a country. %s is the formatted date -->
+    <string name="country_last_visit">Ultima visita: %s</string>
+
+    <!-- Plural for number of drives in a country -->
+    <plurals name="drives_count">
+        <item quantity="one">viaggio</item>
+        <item quantity="other">viaggi</item>
+    </plurals>
+
+    <!-- Plural for number of charges in a country -->
+    <plurals name="charges_count">
+        <item quantity="one">%d ricarica</item>
+        <item quantity="other">%d ricariche</item>
+    </plurals>
+
+    <!-- Sort option: sort by first visit date -->
+    <string name="sort_by_first_visit">Per prima visita</string>
+
+    <!-- Sort option: sort alphabetically by name -->
+    <string name="sort_alphabetically">Alfabeticamente</string>
+
+    <!-- Sort option: sort by number of drives -->
+    <string name="sort_by_drive_count">Per viaggi</string>
+
+    <!-- Empty state when no countries have been recorded -->
+    <string name="no_countries_found">Nessun paese registrato. I dettagli dei viaggi devono prima essere sincronizzati.</string>
+
+    <!-- Content description for sort button -->
+    <string name="sort">Ordina</string>
 
     <!-- ==================== Mileage Screen ==================== -->
     <!-- Top bar title for mileage screen -->

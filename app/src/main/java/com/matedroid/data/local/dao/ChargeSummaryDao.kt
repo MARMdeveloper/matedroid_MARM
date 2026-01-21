@@ -35,6 +35,10 @@ interface ChargeSummaryDao {
     @Query("SELECT COUNT(*) FROM charges_summary WHERE carId = :carId")
     suspend fun count(carId: Int): Int
 
+    // Flow-based count for real-time progress updates
+    @Query("SELECT COUNT(*) FROM charges_summary WHERE carId = :carId")
+    fun observeCount(carId: Int): kotlinx.coroutines.flow.Flow<Int>
+
     @Query("""
         SELECT COUNT(*) FROM charges_summary
         WHERE carId = :carId

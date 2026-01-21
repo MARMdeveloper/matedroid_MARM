@@ -53,6 +53,13 @@ data class ChargeDetailAggregate(
     // === Metadata ===
     val chargePointCount: Int,      // Total data points in this charge
 
+    // === Location (V4) ===
+    // Extracted from charge summary coordinates via geocoding cache
+    val countryCode: String? = null,    // ISO 3166-1 alpha-2 (e.g., "IT", "US")
+    val countryName: String? = null,    // Full name (e.g., "Italy", "United States")
+    val regionName: String? = null,     // State/region (e.g., "Lazio", "California")
+    val city: String? = null,           // City/town (e.g., "Rome", "San Francisco")
+
     // === Future extensibility ===
     val extraJson: String? = null
 )

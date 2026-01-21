@@ -40,10 +40,11 @@ data class SyncState(
  * records with older versions will be reprocessed.
  */
 object SchemaVersion {
-    const val CURRENT = 2
+    const val CURRENT = 4
 
     // Changelog:
     // V1 (initial): elevation, temp extremes, power, climate, charger info
     // V2: startElevation, endElevation for net climb calculation
-    // V3 (future): battery_temp_max, battery_temp_min
+    // V3: startCountryCode, startCountryName from reverse geocoding first position
+    // V4: startRegionName, startCity for drives; countryCode, countryName, regionName, city for charges
 }

@@ -13,10 +13,13 @@ import com.matedroid.domain.model.DriveElevationRecord
 import com.matedroid.domain.model.DriveTempRecord
 import com.matedroid.domain.model.QuickStats
 import com.matedroid.domain.model.BatteryChangeRecord
+import com.matedroid.domain.model.CountryRecord
 import com.matedroid.domain.model.GapRecord
 import com.matedroid.domain.model.MaxDistanceBetweenChargesRecord
 import com.matedroid.domain.model.StreakRecord
 import com.matedroid.domain.model.YearFilter
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,7 +31,8 @@ class StatsRepository @Inject constructor(
     private val driveSummaryDao: DriveSummaryDao,
     private val chargeSummaryDao: ChargeSummaryDao,
     private val aggregateDao: AggregateDao,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val geocodingRepository: GeocodingRepository
 ) {
 
     /**
@@ -329,6 +333,8 @@ class StatsRepository @Inject constructor(
             acChargeEnergyKwh = aggregateDao.sumAcChargeEnergy(carId),
             dcChargeEnergyKwh = aggregateDao.sumDcChargeEnergy(carId),
 
+            countriesVisitedCount = aggregateDao.countUniqueCountries(carId).takeIf { it > 0 },
+
             driveDetailsProcessed = driveCount,
             chargeDetailsProcessed = chargeCount
         )
@@ -434,6 +440,8 @@ class StatsRepository @Inject constructor(
             acChargeEnergyKwh = aggregateDao.sumAcChargeEnergyInRange(carId, startDate, endDate),
             dcChargeEnergyKwh = aggregateDao.sumDcChargeEnergyInRange(carId, startDate, endDate),
 
+            countriesVisitedCount = aggregateDao.countUniqueCountriesInRange(carId, startDate, endDate).takeIf { it > 0 },
+
             driveDetailsProcessed = driveCount,
             chargeDetailsProcessed = chargeCount
         )
@@ -491,7 +499,74 @@ class StatsRepository @Inject constructor(
 
         return if (total > 0) processed.toFloat() / total else 0f
     }
+
+    /**
+     * Observe sync progress as a Flow. Room automatically emits when tables change.
+     * This provides real-time progress updates without relying on StateFlow propagation.
+     */
+    fun observeDeepSyncProgress(carId: Int): kotlinx.coroutines.flow.Flow<Float> {
+        return kotlinx.coroutines.flow.combine(
+            driveSummaryDao.observeCount(carId),
+            chargeSummaryDao.observeCount(carId),
+            aggregateDao.observeDriveAggregateCount(carId),
+            aggregateDao.observeChargeAggregateCount(carId)
+        ) { totalDrives, totalCharges, processedDrives, processedCharges ->
+            val total = totalDrives + totalCharges
+            val processed = processedDrives + processedCharges
+            if (total > 0) processed.toFloat() / total else 0f
+        }
+    }
+
+    /**
+     * Get countries visited with aggregated data.
+     */
+    suspend fun getCountriesVisited(carId: Int, yearFilter: YearFilter): List<CountryRecord> {
+        val results = when (yearFilter) {
+            is YearFilter.AllTime -> aggregateDao.getCountriesVisited(carId)
+            is YearFilter.Year -> {
+                val startDate = "${yearFilter.year}-01-01T00:00:00"
+                val endDate = "${yearFilter.year + 1}-01-01T00:00:00"
+                aggregateDao.getCountriesVisitedInRange(carId, startDate, endDate)
+            }
+        }
+        return results.map { it.toCountryRecord() }
+    }
+
+    /**
+     * Observe geocoding progress for a car.
+     * Returns null when geocoding is complete or hasn't started.
+     */
+    fun observeGeocodeProgress(carId: Int): Flow<GeocodeProgressInfo?> {
+        return geocodingRepository.observeGeocodeProgress(carId)
+    }
 }
+
+/**
+ * Convert ISO 3166-1 alpha-2 country code to flag emoji.
+ * Uses Regional Indicator Symbols to create flag emojis.
+ * Example: "IT" -> "🇮🇹", "US" -> "🇺🇸"
+ */
+fun countryCodeToFlag(countryCode: String): String {
+    if (countryCode.length != 2) return ""
+    val firstChar = countryCode[0].uppercaseChar()
+    val secondChar = countryCode[1].uppercaseChar()
+    // Regional Indicator Symbol Letter A starts at U+1F1E6
+    val first = 0x1F1E6 - 'A'.code + firstChar.code
+    val second = 0x1F1E6 - 'A'.code + secondChar.code
+    return String(intArrayOf(first, second), 0, 2)
+}
+
+private fun com.matedroid.data.local.dao.CountryVisitResult.toCountryRecord() = CountryRecord(
+    countryCode = countryCode,
+    countryName = countryName,
+    flagEmoji = countryCodeToFlag(countryCode),
+    firstVisitDate = firstVisitDate,
+    lastVisitDate = lastVisitDate,
+    driveCount = driveCount,
+    totalDistanceKm = totalDistanceKm,
+    totalChargeEnergyKwh = totalChargeEnergyKwh,
+    chargeCount = chargeCount
+)
 
 private fun com.matedroid.domain.model.SyncPhase.isProcessing(): Boolean {
     return this == com.matedroid.domain.model.SyncPhase.SYNCING_SUMMARIES ||

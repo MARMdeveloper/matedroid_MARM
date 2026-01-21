@@ -6,6 +6,9 @@ import com.matedroid.data.local.StatsDatabase
 import com.matedroid.data.local.dao.AggregateDao
 import com.matedroid.data.local.dao.ChargeSummaryDao
 import com.matedroid.data.local.dao.DriveSummaryDao
+import com.matedroid.data.local.dao.GeocodeCacheDao
+import com.matedroid.data.local.dao.GeocodeProgressDao
+import com.matedroid.data.local.dao.GeocodeQueueDao
 import com.matedroid.data.local.dao.SyncStateDao
 import dagger.Module
 import dagger.Provides
@@ -28,7 +31,8 @@ object DatabaseModule {
             StatsDatabase::class.java,
             StatsDatabase.DATABASE_NAME
         )
-            .fallbackToDestructiveMigration()  // For development; use migrations in production
+            .addMigrations(*StatsDatabase.ALL_MIGRATIONS)
+            .fallbackToDestructiveMigration()  // Fallback for development
             .build()
     }
 
@@ -54,5 +58,23 @@ object DatabaseModule {
     @Singleton
     fun provideAggregateDao(database: StatsDatabase): AggregateDao {
         return database.aggregateDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeocodeCacheDao(database: StatsDatabase): GeocodeCacheDao {
+        return database.geocodeCacheDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeocodeQueueDao(database: StatsDatabase): GeocodeQueueDao {
+        return database.geocodeQueueDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeocodeProgressDao(database: StatsDatabase): GeocodeProgressDao {
+        return database.geocodeProgressDao()
     }
 }

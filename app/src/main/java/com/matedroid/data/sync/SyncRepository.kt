@@ -13,7 +13,11 @@ import com.matedroid.data.local.entity.DriveDetailAggregate
 import com.matedroid.data.local.entity.DriveSummary
 import com.matedroid.data.local.entity.SchemaVersion
 import com.matedroid.data.repository.ApiResult
+import com.matedroid.data.repository.GeocodingRepository
 import com.matedroid.data.repository.TeslamateRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,11 +32,13 @@ class SyncRepository @Inject constructor(
     private val chargeSummaryDao: ChargeSummaryDao,
     private val aggregateDao: AggregateDao,
     private val syncManager: SyncManager,
-    private val logCollector: SyncLogCollector
+    private val logCollector: SyncLogCollector,
+    private val geocodingRepository: GeocodingRepository
 ) {
     companion object {
         private const val TAG = "SyncRepository"
-        private const val THROTTLE_DELAY_MS = 100L  // Delay between API calls
+        private const val THROTTLE_DELAY_MS = 10L  // Reduced from 100ms
+        private const val BATCH_SIZE = 10  // Number of concurrent API calls
     }
 
     private fun log(message: String) = logCollector.log(TAG, message)
@@ -79,6 +85,9 @@ class SyncRepository @Inject constructor(
             return false
         }
 
+        // Re-enqueue any locations that need geocoding (in case queue was cleared)
+        reEnqueueLocationsForGeocoding(carId)
+
         syncManager.markSyncComplete(carId)
         log("Sync complete for car $carId")
         return true
@@ -121,31 +130,72 @@ class SyncRepository @Inject constructor(
     }
 
     /**
-     * Sync drive details (Deep Stats - elevation, temperature extremes).
-     * Slow operation - 1 API call per unprocessed drive.
+     * Sync drive details (Deep Stats - elevation, temperature extremes, country).
+     * Processes drives in parallel batches for improved performance.
      */
     suspend fun syncDriveDetails(carId: Int): Boolean {
         val unprocessedIds = driveSummaryDao.getUnprocessedDriveIds(carId, SchemaVersion.CURRENT)
         val total = unprocessedIds.size
-        log("Processing $total drive details for car $carId")
+        log("Processing $total drive details for car $carId (batch size: $BATCH_SIZE)")
 
-        unprocessedIds.forEachIndexed { index, driveId ->
-            val remaining = total - index - 1
-            when (val result = teslamateRepository.getDriveDetail(carId, driveId)) {
-                is ApiResult.Success -> {
-                    val aggregate = computeDriveAggregate(carId, result.data)
-                    aggregateDao.upsertDriveAggregate(aggregate)
-                    syncManager.updateDriveDetailProgress(carId, driveId)
-                    log("Drive $driveId synced ($remaining remaining)")
-                }
-                is ApiResult.Error -> {
-                    logError("Drive $driveId failed: ${result.message} ($remaining remaining)")
-                    // Continue with next drive instead of failing entirely
+        // Collect locations for background geocoding
+        val locationsToGeocode = mutableListOf<Pair<Double, Double>>()
+
+        // Process in batches
+        unprocessedIds.chunked(BATCH_SIZE).forEachIndexed { batchIndex, batch ->
+            val processed = batchIndex * BATCH_SIZE
+            val remaining = total - processed - batch.size
+
+            // Fetch all drives in this batch concurrently
+            val apiResults = coroutineScope {
+                batch.map { driveId ->
+                    async {
+                        driveId to teslamateRepository.getDriveDetail(carId, driveId)
+                    }
+                }.awaitAll()
+            }
+
+            // Process results and compute aggregates (coordinates are stored, geocoding is deferred)
+            val aggregates = apiResults.mapNotNull { (driveId, result) ->
+                when (result) {
+                    is ApiResult.Success -> {
+                        val aggregate = computeDriveAggregate(carId, result.data)
+                        // Collect location for background geocoding
+                        if (aggregate.startLatitude != null && aggregate.startLongitude != null) {
+                            locationsToGeocode.add(aggregate.startLatitude to aggregate.startLongitude)
+                        }
+                        aggregate
+                    }
+                    is ApiResult.Error -> {
+                        logError("Drive $driveId failed: ${result.message}")
+                        null
+                    }
                 }
             }
 
-            // Throttle to avoid overwhelming the API
-            delay(THROTTLE_DELAY_MS)
+            // Batch write all successful aggregates
+            if (aggregates.isNotEmpty()) {
+                aggregateDao.upsertDriveAggregates(aggregates)
+            }
+
+            // Update progress once per batch (last drive ID in batch)
+            val lastDriveId = batch.lastOrNull()
+            if (lastDriveId != null) {
+                syncManager.updateDriveDetailProgress(carId, lastDriveId)
+            }
+
+            log("Batch ${batchIndex + 1}: ${aggregates.size}/${batch.size} drives synced ($remaining remaining)")
+
+            // Small delay between batches to avoid overwhelming the API
+            if (remaining > 0) {
+                delay(THROTTLE_DELAY_MS)
+            }
+        }
+
+        // Enqueue drive locations for background geocoding
+        if (locationsToGeocode.isNotEmpty()) {
+            val enqueued = geocodingRepository.enqueueLocationsForCar(carId, locationsToGeocode)
+            log("Enqueued $enqueued drive locations for geocoding")
         }
 
         return true
@@ -153,30 +203,74 @@ class SyncRepository @Inject constructor(
 
     /**
      * Sync charge details (Deep Stats - AC/DC ratio, max power).
-     * Slow operation - 1 API call per unprocessed charge.
+     * Processes charges in parallel batches for improved performance.
      */
     suspend fun syncChargeDetails(carId: Int): Boolean {
         val unprocessedIds = chargeSummaryDao.getUnprocessedChargeIds(carId, SchemaVersion.CURRENT)
         val total = unprocessedIds.size
-        log("Processing $total charge details for car $carId")
+        log("Processing $total charge details for car $carId (batch size: $BATCH_SIZE)")
 
-        unprocessedIds.forEachIndexed { index, chargeId ->
-            val remaining = total - index - 1
-            when (val result = teslamateRepository.getChargeDetail(carId, chargeId)) {
-                is ApiResult.Success -> {
-                    val aggregate = computeChargeAggregate(carId, result.data)
-                    aggregateDao.upsertChargeAggregate(aggregate)
-                    syncManager.updateChargeDetailProgress(carId, chargeId)
-                    log("Charge $chargeId synced ($remaining remaining)")
-                }
-                is ApiResult.Error -> {
-                    logError("Charge $chargeId failed: ${result.message} ($remaining remaining)")
-                    // Continue with next charge instead of failing entirely
+        // Collect locations for background geocoding
+        val locationsToGeocode = mutableListOf<Pair<Double, Double>>()
+
+        // Process in batches
+        unprocessedIds.chunked(BATCH_SIZE).forEachIndexed { batchIndex, batch ->
+            val processed = batchIndex * BATCH_SIZE
+            val remaining = total - processed - batch.size
+
+            // Fetch all charges in this batch concurrently
+            val results = coroutineScope {
+                batch.map { chargeId ->
+                    async {
+                        chargeId to teslamateRepository.getChargeDetail(carId, chargeId)
+                    }
+                }.awaitAll()
+            }
+
+            // Process results and collect successful aggregates
+            val aggregates = mutableListOf<ChargeDetailAggregate>()
+            for ((chargeId, result) in results) {
+                when (result) {
+                    is ApiResult.Success -> {
+                        val aggregate = computeChargeAggregate(carId, result.data)
+                        aggregates.add(aggregate)
+
+                        // Get location from charge summary for geocoding
+                        val summary = chargeSummaryDao.get(chargeId)
+                        if (summary != null && summary.latitude != 0.0 && summary.longitude != 0.0) {
+                            locationsToGeocode.add(summary.latitude to summary.longitude)
+                        }
+                    }
+                    is ApiResult.Error -> {
+                        logError("Charge $chargeId failed: ${result.message}")
+                        // Continue with other charges instead of failing entirely
+                    }
                 }
             }
 
-            // Throttle to avoid overwhelming the API
-            delay(THROTTLE_DELAY_MS)
+            // Batch write all successful aggregates
+            if (aggregates.isNotEmpty()) {
+                aggregateDao.upsertChargeAggregates(aggregates)
+            }
+
+            // Update progress once per batch (last charge ID in batch)
+            val lastChargeId = batch.lastOrNull()
+            if (lastChargeId != null) {
+                syncManager.updateChargeDetailProgress(carId, lastChargeId)
+            }
+
+            log("Batch ${batchIndex + 1}: ${aggregates.size}/${batch.size} charges synced ($remaining remaining)")
+
+            // Small delay between batches to avoid overwhelming the API
+            if (remaining > 0) {
+                delay(THROTTLE_DELAY_MS)
+            }
+        }
+
+        // Enqueue charge locations for background geocoding
+        if (locationsToGeocode.isNotEmpty()) {
+            val enqueued = geocodingRepository.enqueueLocationsForCar(carId, locationsToGeocode)
+            log("Enqueued $enqueued charge locations for geocoding")
         }
 
         return true
@@ -184,37 +278,70 @@ class SyncRepository @Inject constructor(
 
     /**
      * Compute aggregates from drive detail positions.
+     * Coordinates are stored for background geocoding.
      */
-    private fun computeDriveAggregate(carId: Int, detail: DriveDetail): DriveDetailAggregate {
+    private fun computeDriveAggregate(
+        carId: Int,
+        detail: DriveDetail
+    ): DriveDetailAggregate {
         val positions = detail.positions ?: emptyList()
 
-        // Elevation stats
-        val elevations = positions.mapNotNull { it.elevation }
-        val hasElevationData = elevations.isNotEmpty()
-
-        // First and last elevations for net climb calculation
-        val startElevation = positions.firstOrNull()?.elevation
-        val endElevation = positions.lastOrNull()?.elevation
-
+        // Single pass over positions for all stats
+        var maxElevation: Int? = null
+        var minElevation: Int? = null
+        var maxInsideTemp: Double? = null
+        var minInsideTemp: Double? = null
+        var maxOutsideTemp: Double? = null
+        var minOutsideTemp: Double? = null
+        var maxPower: Int? = null
+        var minPower: Int? = null
+        var climateOnCount = 0
         var elevationGain = 0
         var elevationLoss = 0
-        if (elevations.size > 1) {
-            for (i in 1 until elevations.size) {
-                val diff = elevations[i] - elevations[i - 1]
-                if (diff > 0) elevationGain += diff
-                else elevationLoss += -diff
+        var prevElevation: Int? = null
+
+        for (pos in positions) {
+            // Elevation
+            pos.elevation?.let { elev ->
+                maxElevation = maxOf(maxElevation ?: elev, elev)
+                minElevation = minOf(minElevation ?: elev, elev)
+                prevElevation?.let { prev ->
+                    val diff = elev - prev
+                    if (diff > 0) elevationGain += diff
+                    else elevationLoss += -diff
+                }
+                prevElevation = elev
             }
+
+            // Temperature
+            pos.insideTemp?.let { temp ->
+                maxInsideTemp = maxOf(maxInsideTemp ?: temp, temp)
+                minInsideTemp = minOf(minInsideTemp ?: temp, temp)
+            }
+            pos.outsideTemp?.let { temp ->
+                maxOutsideTemp = maxOf(maxOutsideTemp ?: temp, temp)
+                minOutsideTemp = minOf(minOutsideTemp ?: temp, temp)
+            }
+
+            // Power
+            pos.power?.let { pwr ->
+                maxPower = maxOf(maxPower ?: pwr, pwr)
+                minPower = minOf(minPower ?: pwr, pwr)
+            }
+
+            // Climate
+            if (pos.isClimateOn) climateOnCount++
         }
 
-        // Temperature stats
-        val insideTemps = positions.mapNotNull { it.insideTemp }
-        val outsideTemps = positions.mapNotNull { it.outsideTemp }
+        val firstPosition = positions.firstOrNull()
+        val lastPosition = positions.lastOrNull()
+        val startElevation = firstPosition?.elevation
+        val endElevation = lastPosition?.elevation
+        val hasElevationData = maxElevation != null
 
-        // Power stats
-        val powers = positions.mapNotNull { it.power }
-
-        // Climate usage
-        val climateOnCount = positions.count { it.isClimateOn }
+        // Extract start coordinates for geocoding
+        val startLatitude = firstPosition?.latitude
+        val startLongitude = firstPosition?.longitude
 
         return DriveDetailAggregate(
             driveId = detail.driveId,
@@ -222,24 +349,33 @@ class SyncRepository @Inject constructor(
             schemaVersion = SchemaVersion.CURRENT,
             computedAt = System.currentTimeMillis(),
 
-            maxElevation = elevations.maxOrNull(),
-            minElevation = elevations.minOrNull(),
+            maxElevation = maxElevation,
+            minElevation = minElevation,
             startElevation = startElevation,
             endElevation = endElevation,
             elevationGain = if (hasElevationData) elevationGain else null,
             elevationLoss = if (hasElevationData) elevationLoss else null,
             hasElevationData = hasElevationData,
 
-            maxInsideTemp = insideTemps.maxOrNull(),
-            minInsideTemp = insideTemps.minOrNull(),
-            maxOutsideTemp = outsideTemps.maxOrNull(),
-            minOutsideTemp = outsideTemps.minOrNull(),
+            maxInsideTemp = maxInsideTemp,
+            minInsideTemp = minInsideTemp,
+            maxOutsideTemp = maxOutsideTemp,
+            minOutsideTemp = minOutsideTemp,
 
-            maxPower = powers.maxOrNull(),
-            minPower = powers.minOrNull(),
+            maxPower = maxPower,
+            minPower = minPower,
 
             climateOnPositions = climateOnCount,
-            positionCount = positions.size
+            positionCount = positions.size,
+
+            // Store coordinates for background geocoding
+            startLatitude = startLatitude,
+            startLongitude = startLongitude,
+            // Location data will be filled by GeocodeWorker
+            startCountryCode = null,
+            startCountryName = null,
+            startRegionName = null,
+            startCity = null
         )
     }
 
@@ -253,19 +389,39 @@ class SyncRepository @Inject constructor(
         val firstWithCharger = points.firstOrNull { it.chargerDetails != null }
         val chargerDetails = firstWithCharger?.chargerDetails
 
-        // Power stats
-        val powers = points.mapNotNull { it.chargerPower }
-        val voltages = points.mapNotNull { it.chargerVoltage }
-        val currents = points.mapNotNull { it.chargerCurrent }
+        // Single pass for all stats
+        var maxPower: Int? = null
+        var maxVoltage: Int? = null
+        var maxCurrent: Int? = null
+        var maxOutsideTemp: Double? = null
+        var minOutsideTemp: Double? = null
+        val phaseVotes = mutableMapOf<Int, Int>()
 
-        // Temperature stats
-        val temps = points.mapNotNull { it.outsideTemp }
+        for (point in points) {
+            point.chargerPower?.let { pwr ->
+                maxPower = maxOf(maxPower ?: pwr, pwr)
+            }
+            point.chargerVoltage?.let { volt ->
+                maxVoltage = maxOf(maxVoltage ?: volt, volt)
+            }
+            point.chargerCurrent?.let { curr ->
+                maxCurrent = maxOf(maxCurrent ?: curr, curr)
+            }
+            point.outsideTemp?.let { temp ->
+                maxOutsideTemp = maxOf(maxOutsideTemp ?: temp, temp)
+                minOutsideTemp = minOf(minOutsideTemp ?: temp, temp)
+            }
+            point.chargerDetails?.chargerPhases?.let { phases ->
+                if (phases > 0) {
+                    phaseVotes[phases] = (phaseVotes[phases] ?: 0) + 1
+                }
+            }
+        }
 
         // Determine if DC charger using Teslamate's logic:
         // DC charging has charger_phases = 0 or null (bypasses onboard charger)
         // AC charging has charger_phases = 1, 2, or 3
-        val phases = points.mapNotNull { it.chargerDetails?.chargerPhases }
-        val modePhases = phases.filter { it > 0 }.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
+        val modePhases = phaseVotes.maxByOrNull { it.value }?.key
         val isFastCharger = modePhases == null  // No non-zero phases means DC
 
         return ChargeDetailAggregate(
@@ -278,16 +434,88 @@ class SyncRepository @Inject constructor(
             fastChargerBrand = chargerDetails?.fastChargerBrand?.takeIf { it != "<invalid>" },
             connectorType = chargerDetails?.fastChargerType,
 
-            maxChargerPower = powers.maxOrNull(),
-            maxChargerVoltage = voltages.maxOrNull(),
-            maxChargerCurrent = currents.maxOrNull(),
+            maxChargerPower = maxPower,
+            maxChargerVoltage = maxVoltage,
+            maxChargerCurrent = maxCurrent,
             chargerPhases = chargerDetails?.chargerPhases,
 
-            maxOutsideTemp = temps.maxOrNull(),
-            minOutsideTemp = temps.minOrNull(),
+            maxOutsideTemp = maxOutsideTemp,
+            minOutsideTemp = minOutsideTemp,
 
             chargePointCount = points.size
         )
+    }
+
+    /**
+     * Re-enqueue locations from existing aggregates that still need geocoding.
+     * Also applies any cached geocode data to aggregates that weren't updated.
+     * Returns the number of unique locations enqueued.
+     */
+    suspend fun reEnqueueLocationsForGeocoding(carId: Int): Int {
+        val driveLocations = aggregateDao.getDriveLocationsNeedingGeocode(carId)
+            .mapNotNull { it.toLatLon() }
+        val chargeLocations = aggregateDao.getChargeLocationsNeedingGeocode(carId)
+            .mapNotNull { it.toLatLon() }
+
+        val allLocations = driveLocations + chargeLocations
+        log("Found ${driveLocations.size} drive + ${chargeLocations.size} charge locations needing geocode")
+
+        if (allLocations.isEmpty()) {
+            log("No locations need geocoding")
+            return 0
+        }
+
+        // First, apply any cached geocode data to aggregates
+        val applied = applyCachedGeocodeData(carId, allLocations)
+        if (applied > 0) {
+            log("Applied cached geocode data to $applied locations")
+        }
+
+        // Then enqueue any still-uncached locations
+        val enqueued = geocodingRepository.enqueueLocationsForCar(carId, allLocations)
+        log("Re-enqueued $enqueued unique locations for geocoding")
+        return enqueued
+    }
+
+    /**
+     * Apply cached geocode data to drive/charge aggregates.
+     * This handles the case where geocoding completed but aggregates weren't updated.
+     */
+    private suspend fun applyCachedGeocodeData(carId: Int, locations: List<Pair<Double, Double>>): Int {
+        var appliedCount = 0
+        val uniqueGridCells = locations
+            .map { (lat, lon) ->
+                geocodingRepository.toGridCoord(lat) to geocodingRepository.toGridCoord(lon)
+            }
+            .distinct()
+
+        for ((gridLat, gridLon) in uniqueGridCells) {
+            val cached = geocodingRepository.getFromCacheByGrid(gridLat, gridLon)
+            if (cached != null) {
+                // Update drive aggregates in this grid cell
+                aggregateDao.updateDriveLocationsInGrid(
+                    carId = carId,
+                    gridLat = gridLat,
+                    gridLon = gridLon,
+                    countryCode = cached.countryCode,
+                    countryName = cached.countryName,
+                    regionName = cached.regionName,
+                    city = cached.city
+                )
+                // Update charge aggregates in this grid cell
+                aggregateDao.updateChargeLocationsInGrid(
+                    carId = carId,
+                    gridLat = gridLat,
+                    gridLon = gridLon,
+                    countryCode = cached.countryCode,
+                    countryName = cached.countryName,
+                    regionName = cached.regionName,
+                    city = cached.city
+                )
+                appliedCount++
+            }
+        }
+        return appliedCount
     }
 }
 
