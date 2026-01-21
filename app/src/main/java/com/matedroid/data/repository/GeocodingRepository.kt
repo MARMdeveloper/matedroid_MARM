@@ -73,7 +73,7 @@ class GeocodingRepository @Inject constructor(
 
     /**
      * Enqueue multiple locations for background geocoding.
-     * Filters out already cached locations and tracks progress.
+     * Filters out already cached locations and deduplicates by grid cell.
      */
     suspend fun enqueueLocationsForCar(
         carId: Int,
@@ -92,15 +92,18 @@ class GeocodingRepository @Inject constructor(
             )
         }
 
+        // Deduplicate by grid cell (same location = same grid)
+        val uniqueItems = items.distinctBy { it.gridLat to it.gridLon }
+
         // Filter out already cached locations
-        val uncachedItems = items.filter { item ->
+        val uncachedItems = uniqueItems.filter { item ->
             geocodeCacheDao.get(item.gridLat, item.gridLon) == null
         }
 
         if (uncachedItems.isNotEmpty()) {
             geocodeQueueDao.enqueueAll(uncachedItems)
 
-            // Update progress tracking
+            // Update progress tracking with actual unique count
             val progress = geocodeProgressDao.get(carId)
             if (progress == null) {
                 geocodeProgressDao.upsert(
