@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Stats for Nerds**: New "Countries Visited" record showing unique countries visited with your Tesla
+- **Countries Visited**: Detail screen with country flag, name, first/last visit dates, drive count, total distance, energy charged, and charge count
+- **Countries Visited**: Sorting options by first visit date, alphabetically, or by drive count
+- **Geocoding**: Background location identification using OpenStreetMap Nominatim with rate limiting and caching
+
+### Fixed
+- **Stats for Nerds**: Deep sync progress bar now properly disappears when sync completes
+
 ## [0.11.3] - 2026-01-20
 
 ### Added
