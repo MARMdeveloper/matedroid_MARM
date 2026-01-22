@@ -265,6 +265,7 @@
     <string name="battery">Batteria</string>
 
     <!-- Date filter chips -->
+    <string name="filter_today">Oggi</string>
     <string name="filter_last_7_days">Ultimi 7 giorni</string>
     <string name="filter_last_30_days">Ultimi 30 giorni</string>
     <string name="filter_last_90_days">Ultimi 90 giorni</string>

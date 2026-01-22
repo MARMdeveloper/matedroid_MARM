@@ -28,6 +28,7 @@ enum class ChartGranularity {
 }
 
 enum class DateFilter(val label: String, val days: Long?) {
+    LAST_1_DAY("Today", 1),
     LAST_7_DAYS("Last 7 days", 7),
     LAST_30_DAYS("Last 30 days", 30),
     LAST_90_DAYS("Last 90 days", 90),

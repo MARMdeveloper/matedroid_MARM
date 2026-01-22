@@ -267,6 +267,7 @@ private fun DrivesContent(
 @Composable
 private fun getDateFilterLabel(filter: DriveDateFilter): String {
     return when (filter) {
+        DriveDateFilter.LAST_1_DAY -> stringResource(R.string.filter_today)
         DriveDateFilter.LAST_7_DAYS -> stringResource(R.string.filter_last_7_days)
         DriveDateFilter.LAST_30_DAYS -> stringResource(R.string.filter_last_30_days)
         DriveDateFilter.LAST_90_DAYS -> stringResource(R.string.filter_last_90_days)
