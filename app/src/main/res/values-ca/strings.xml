@@ -265,6 +265,7 @@
     <string name="battery">Bateria</string>
 
     <!-- Date filter chips -->
+    <string name="filter_today">Avui</string>
     <string name="filter_last_7_days">Últims 7 dies</string>
     <string name="filter_last_30_days">Últims 30 dies</string>
     <string name="filter_last_90_days">Últims 90 dies</string>
