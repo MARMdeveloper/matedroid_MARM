@@ -283,21 +283,25 @@
     <string name="filter_road_trip_mi">Viatge llarg (&gt; 60 mi)</string>
 
     <!-- Chart titles - drives per period -->
+    <string name="chart_drives_per_hour">Viatges per hora</string>
     <string name="chart_drives_per_day">Viatges per dia</string>
     <string name="chart_drives_per_week">Viatges per setmana</string>
     <string name="chart_drives_per_month">Viatges per mes</string>
 
     <!-- Chart titles - driving time per period -->
+    <string name="chart_time_per_hour">Temps de conducció per hora</string>
     <string name="chart_time_per_day">Temps de conducció per dia</string>
     <string name="chart_time_per_week">Temps de conducció per setmana</string>
     <string name="chart_time_per_month">Temps de conducció per mes</string>
 
     <!-- Chart titles - distance per period -->
+    <string name="chart_distance_per_hour">Distància per hora</string>
     <string name="chart_distance_per_day">Distància per dia</string>
     <string name="chart_distance_per_week">Distància per setmana</string>
     <string name="chart_distance_per_month">Distància per mes</string>
 
     <!-- Chart titles - top speed per period -->
+    <string name="chart_speed_per_hour">Velocitat màx per hora</string>
     <string name="chart_speed_per_day">Velocitat màx per dia</string>
     <string name="chart_speed_per_week">Velocitat màx per setmana</string>
     <string name="chart_speed_per_month">Velocitat màx per mes</string>
@@ -374,16 +378,19 @@
     <string name="edit">Edita</string>
 
     <!-- Chart titles - energy per period -->
+    <string name="chart_energy_per_hour">Energia per hora</string>
     <string name="chart_energy_per_day">Energia per dia</string>
     <string name="chart_energy_per_week">Energia per setmana</string>
     <string name="chart_energy_per_month">Energia per mes</string>
 
     <!-- Chart titles - cost per period -->
+    <string name="chart_cost_per_hour">Cost per hora</string>
     <string name="chart_cost_per_day">Cost per dia</string>
     <string name="chart_cost_per_week">Cost per setmana</string>
     <string name="chart_cost_per_month">Cost per mes</string>
 
     <!-- Chart titles - charges count per period -->
+    <string name="chart_charges_per_hour">Càrregues per hora</string>
     <string name="chart_charges_per_day">Càrregues per dia</string>
     <string name="chart_charges_per_week">Càrregues per setmana</string>
     <string name="chart_charges_per_month">Càrregues per mes</string>

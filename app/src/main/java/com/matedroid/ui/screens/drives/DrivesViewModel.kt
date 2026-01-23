@@ -1,5 +1,6 @@
 package com.matedroid.ui.screens.drives
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.DriveData
@@ -7,6 +8,7 @@ import com.matedroid.data.api.models.Units
 import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
+import com.matedroid.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +17,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -23,7 +27,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 enum class DriveChartGranularity {
-    DAILY, WEEKLY, MONTHLY
+    HOURLY, DAILY, WEEKLY, MONTHLY
 }
 
 enum class DriveDistanceFilter(
@@ -55,12 +59,13 @@ data class DriveChartData(
     val sortKey: Long
 )
 
-enum class DriveDateFilter(val label: String, val days: Long?) {
-    LAST_7_DAYS("Last 7 days", 7),
-    LAST_30_DAYS("Last 30 days", 30),
-    LAST_90_DAYS("Last 90 days", 90),
-    LAST_YEAR("Last year", 365),
-    ALL_TIME("All time", null)
+enum class DriveDateFilter(@get:StringRes val labelRes: Int, val days: Long?) {
+    TODAY(R.string.filter_today, 0),
+    LAST_7_DAYS(R.string.filter_last_7_days, 7),
+    LAST_30_DAYS(R.string.filter_last_30_days, 30),
+    LAST_90_DAYS(R.string.filter_last_90_days, 90),
+    LAST_YEAR(R.string.filter_last_year, 365),
+    ALL_TIME(R.string.filter_all_time, null)
 }
 
 data class DrivesUiState(
@@ -265,6 +270,7 @@ class DrivesViewModel @Inject constructor(
         if (startDate == null || endDate == null) return DriveChartGranularity.MONTHLY
         val days = ChronoUnit.DAYS.between(startDate, endDate)
         return when {
+            days <= 1L -> DriveChartGranularity.HOURLY
             days <= 30 -> DriveChartGranularity.DAILY
             days <= 90 -> DriveChartGranularity.WEEKLY
             else -> DriveChartGranularity.MONTHLY
@@ -281,8 +287,14 @@ class DrivesViewModel @Inject constructor(
             .mapNotNull { drive ->
                 drive.startDate?.let { dateStr ->
                     try {
-                        val date = LocalDate.parse(dateStr, formatter)
+                        // We use LocalDateTime so as not to lose time information
+                        val dateTime = LocalDateTime.parse(dateStr, formatter)
+                        val date = dateTime.toLocalDate()
                         val (label, sortKey) = when (granularity) {
+                            DriveChartGranularity.HOURLY -> {
+                                // "24H" format for the graph axis in hours and sorted from 00:00
+                                dateTime.format(DateTimeFormatter.ofPattern("HH:00")) to dateTime.toEpochSecond(ZoneOffset.UTC)
+                            }
                             DriveChartGranularity.DAILY -> {
                                 val dayLabel = date.format(DateTimeFormatter.ofPattern("d/M"))
                                 dayLabel to date.toEpochDay()

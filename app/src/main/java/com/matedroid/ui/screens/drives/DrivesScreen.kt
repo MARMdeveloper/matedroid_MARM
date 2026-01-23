@@ -264,17 +264,6 @@ private fun DrivesContent(
     }
 }
 
-@Composable
-private fun getDateFilterLabel(filter: DriveDateFilter): String {
-    return when (filter) {
-        DriveDateFilter.LAST_7_DAYS -> stringResource(R.string.filter_last_7_days)
-        DriveDateFilter.LAST_30_DAYS -> stringResource(R.string.filter_last_30_days)
-        DriveDateFilter.LAST_90_DAYS -> stringResource(R.string.filter_last_90_days)
-        DriveDateFilter.LAST_YEAR -> stringResource(R.string.filter_last_year)
-        DriveDateFilter.ALL_TIME -> stringResource(R.string.filter_all_time)
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DateFilterChips(
@@ -289,7 +278,7 @@ private fun DateFilterChips(
             FilterChip(
                 selected = filter == selectedFilter,
                 onClick = { onFilterSelected(filter) },
-                label = { Text(getDateFilterLabel(filter)) },
+                label = { Text(stringResource(filter.labelRes)) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = palette.surface,
                     selectedLabelColor = palette.onSurface
@@ -713,21 +702,25 @@ private fun DrivesChartPage(
 
     val (title, icon) = when (chartType) {
         DrivesChartType.COUNT -> when (granularity) {
+            DriveChartGranularity.HOURLY -> stringResource(R.string.chart_drives_per_hour)
             DriveChartGranularity.DAILY -> stringResource(R.string.chart_drives_per_day)
             DriveChartGranularity.WEEKLY -> stringResource(R.string.chart_drives_per_week)
             DriveChartGranularity.MONTHLY -> stringResource(R.string.chart_drives_per_month)
         } to Icons.Default.DirectionsCar
         DrivesChartType.TIME -> when (granularity) {
+            DriveChartGranularity.HOURLY -> stringResource(R.string.chart_time_per_hour)
             DriveChartGranularity.DAILY -> stringResource(R.string.chart_time_per_day)
             DriveChartGranularity.WEEKLY -> stringResource(R.string.chart_time_per_week)
             DriveChartGranularity.MONTHLY -> stringResource(R.string.chart_time_per_month)
         } to Icons.Default.Timer
         DrivesChartType.DISTANCE -> when (granularity) {
+            DriveChartGranularity.HOURLY -> stringResource(R.string.chart_distance_per_hour)
             DriveChartGranularity.DAILY -> stringResource(R.string.chart_distance_per_day)
             DriveChartGranularity.WEEKLY -> stringResource(R.string.chart_distance_per_week)
             DriveChartGranularity.MONTHLY -> stringResource(R.string.chart_distance_per_month)
         } to CustomIcons.SteeringWheel
         DrivesChartType.TOP_SPEED -> when (granularity) {
+            DriveChartGranularity.HOURLY -> stringResource(R.string.chart_speed_per_hour)
             DriveChartGranularity.DAILY -> stringResource(R.string.chart_speed_per_day)
             DriveChartGranularity.WEEKLY -> stringResource(R.string.chart_speed_per_week)
             DriveChartGranularity.MONTHLY -> stringResource(R.string.chart_speed_per_month)

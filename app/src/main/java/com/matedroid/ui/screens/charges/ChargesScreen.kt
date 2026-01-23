@@ -296,24 +296,13 @@ private fun DateFilterChips(
             FilterChip(
                 selected = filter == selectedFilter,
                 onClick = { onFilterSelected(filter) },
-                label = { Text(getDateFilterLabel(filter)) },
+                label = { Text(stringResource(filter.labelRes)) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = palette.surface,
                     selectedLabelColor = palette.onSurface
                 )
             )
         }
-    }
-}
-
-@Composable
-private fun getDateFilterLabel(filter: DateFilter): String {
-    return when (filter) {
-        DateFilter.LAST_7_DAYS -> stringResource(R.string.filter_last_7_days)
-        DateFilter.LAST_30_DAYS -> stringResource(R.string.filter_last_30_days)
-        DateFilter.LAST_90_DAYS -> stringResource(R.string.filter_last_90_days)
-        DateFilter.LAST_YEAR -> stringResource(R.string.filter_last_year)
-        DateFilter.ALL_TIME -> stringResource(R.string.filter_all_time)
     }
 }
 
@@ -767,16 +756,19 @@ private fun ChargesChartPage(
 ) {
     val title = when (chartType) {
         ChargesChartType.ENERGY -> when (granularity) {
+            ChartGranularity.HOURLY -> stringResource(R.string.chart_energy_per_hour)
             ChartGranularity.DAILY -> stringResource(R.string.chart_energy_per_day)
             ChartGranularity.WEEKLY -> stringResource(R.string.chart_energy_per_week)
             ChartGranularity.MONTHLY -> stringResource(R.string.chart_energy_per_month)
         }
         ChargesChartType.COST -> when (granularity) {
+            ChartGranularity.HOURLY -> stringResource(R.string.chart_cost_per_hour)
             ChartGranularity.DAILY -> stringResource(R.string.chart_cost_per_day)
             ChartGranularity.WEEKLY -> stringResource(R.string.chart_cost_per_week)
             ChartGranularity.MONTHLY -> stringResource(R.string.chart_cost_per_month)
         }
         ChargesChartType.COUNT -> when (granularity) {
+            ChartGranularity.HOURLY -> stringResource(R.string.chart_charges_per_hour)
             ChartGranularity.DAILY -> stringResource(R.string.chart_charges_per_day)
             ChartGranularity.WEEKLY -> stringResource(R.string.chart_charges_per_week)
             ChartGranularity.MONTHLY -> stringResource(R.string.chart_charges_per_month)

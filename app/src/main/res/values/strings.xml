@@ -283,21 +283,25 @@
     <string name="filter_road_trip_mi">Road trip (&gt; 60 mi)</string>
 
     <!-- Chart titles - drives per period -->
+    <string name="chart_drives_per_hour">Drives per Hour</string>
     <string name="chart_drives_per_day">Drives per Day</string>
     <string name="chart_drives_per_week">Drives per Week</string>
     <string name="chart_drives_per_month">Drives per Month</string>
 
     <!-- Chart titles - driving time per period -->
+    <string name="chart_time_per_hour">Driving time per Hour</string>
     <string name="chart_time_per_day">Driving time per Day</string>
     <string name="chart_time_per_week">Driving time per Week</string>
     <string name="chart_time_per_month">Driving time per Month</string>
 
     <!-- Chart titles - distance per period -->
+    <string name="chart_distance_per_hour">Distance per Hour</string>
     <string name="chart_distance_per_day">Distance per Day</string>
     <string name="chart_distance_per_week">Distance per Week</string>
     <string name="chart_distance_per_month">Distance per Month</string>
 
     <!-- Chart titles - top speed per period -->
+    <string name="chart_speed_per_hour">Top speed per Hour</string>
     <string name="chart_speed_per_day">Top speed per Day</string>
     <string name="chart_speed_per_week">Top speed per Week</string>
     <string name="chart_speed_per_month">Top speed per Month</string>
@@ -374,16 +378,19 @@
     <string name="edit">Edit</string>
 
     <!-- Chart titles - energy per period -->
+    <string name="chart_energy_per_hour">Energy per Hour</string>
     <string name="chart_energy_per_day">Energy per Day</string>
     <string name="chart_energy_per_week">Energy per Week</string>
     <string name="chart_energy_per_month">Energy per Month</string>
 
     <!-- Chart titles - cost per period -->
+    <string name="chart_cost_per_hour">Cost per Hour</string>
     <string name="chart_cost_per_day">Cost per Day</string>
     <string name="chart_cost_per_week">Cost per Week</string>
     <string name="chart_cost_per_month">Cost per Month</string>
 
     <!-- Chart titles - charges count per period -->
+    <string name="chart_charges_per_hour">Charges per Hour</string>
     <string name="chart_charges_per_day">Charges per Day</string>
     <string name="chart_charges_per_week">Charges per Week</string>
     <string name="chart_charges_per_month">Charges per Month</string>
@@ -900,4 +907,5 @@
 
     <!-- Weather condition: thunderstorm -->
     <string name="weather_thunderstorm">Thunderstorm</string>
+
 </resources>
