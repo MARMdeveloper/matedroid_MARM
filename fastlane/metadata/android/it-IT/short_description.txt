@@ -1,0 +1,1 @@
+Visualizza i dati della tua Tesla dalla tua istanza Teslamate self-hosted

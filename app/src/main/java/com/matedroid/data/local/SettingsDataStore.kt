@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -22,7 +23,8 @@ data class AppSettings(
     val acceptInvalidCerts: Boolean = false,
     val currencyCode: String = "EUR",
     val showShortDrivesCharges: Boolean = false,
-    val teslamateBaseUrl: String = ""
+    val teslamateBaseUrl: String = "",
+    val lastSelectedCarId: Int? = null
 ) {
     val isConfigured: Boolean
         get() = serverUrl.isNotBlank()
@@ -42,6 +44,7 @@ class SettingsDataStore @Inject constructor(
     private val currencyCodeKey = stringPreferencesKey("currency_code")
     private val showShortDrivesChargesKey = booleanPreferencesKey("show_short_drives_charges")
     private val teslamateBaseUrlKey = stringPreferencesKey("teslamate_base_url")
+    private val lastSelectedCarIdKey = intPreferencesKey("last_selected_car_id")
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { preferences ->
         AppSettings(
@@ -51,7 +54,8 @@ class SettingsDataStore @Inject constructor(
             acceptInvalidCerts = preferences[acceptInvalidCertsKey] ?: false,
             currencyCode = preferences[currencyCodeKey] ?: "EUR",
             showShortDrivesCharges = preferences[showShortDrivesChargesKey] ?: false,
-            teslamateBaseUrl = preferences[teslamateBaseUrlKey] ?: ""
+            teslamateBaseUrl = preferences[teslamateBaseUrlKey] ?: "",
+            lastSelectedCarId = preferences[lastSelectedCarIdKey]
         )
     }
 
@@ -90,6 +94,12 @@ class SettingsDataStore @Inject constructor(
     suspend fun saveTeslamateBaseUrl(url: String) {
         context.dataStore.edit { preferences ->
             preferences[teslamateBaseUrlKey] = url
+        }
+    }
+
+    suspend fun saveLastSelectedCarId(carId: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[lastSelectedCarIdKey] = carId
         }
     }
 

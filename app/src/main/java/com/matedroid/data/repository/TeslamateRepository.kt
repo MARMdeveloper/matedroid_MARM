@@ -15,6 +15,8 @@ import com.matedroid.data.local.AppSettings
 import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.di.TeslamateApiFactory
 import kotlinx.coroutines.flow.first
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonEncodingException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -24,7 +26,11 @@ import javax.net.ssl.SSLException
 
 sealed class ApiResult<out T> {
     data class Success<T>(val data: T) : ApiResult<T>()
-    data class Error(val message: String, val code: Int? = null) : ApiResult<Nothing>()
+    data class Error(
+        val message: String,
+        val code: Int? = null,
+        val details: String? = null
+    ) : ApiResult<Nothing>()
 }
 
 data class CarStatusWithUnits(
@@ -42,6 +48,17 @@ private fun Throwable.isNetworkError(): Boolean {
             this is UnknownHostException ||
             this is SSLException ||
             this is java.io.IOException && message?.contains("connection", ignoreCase = true) == true
+}
+
+/**
+ * Checks if an exception is a JSON parsing error.
+ * These errors indicate the server returned something that isn't valid JSON
+ * or doesn't match the expected schema.
+ */
+private fun Throwable.isJsonParsingError(): Boolean {
+    return this is JsonDataException ||
+            this is JsonEncodingException ||
+            (this is java.io.IOException && message?.contains("JsonReader", ignoreCase = true) == true)
 }
 
 @Singleton
@@ -91,9 +108,19 @@ class TeslamateRepository @Inject constructor(
                 null // Will try secondary
             } else {
                 // Not a network error or no secondary server, return the error
-                return when (e) {
-                    is javax.net.ssl.SSLHandshakeException ->
+                return when {
+                    e is javax.net.ssl.SSLHandshakeException ->
                         ApiResult.Error("SSL certificate error. Enable 'Accept invalid certificates' for self-signed certs.")
+                    e.isJsonParsingError() ->
+                        ApiResult.Error(
+                            message = "Invalid response from server",
+                            details = "The server returned an unexpected response that could not be parsed.\n\n" +
+                                    "This usually means:\n" +
+                                    "• The API URL might be incorrect\n" +
+                                    "• The server is returning an error page\n" +
+                                    "• TeslaMate API is not properly configured\n\n" +
+                                    "Technical details: ${e.message}"
+                        )
                     else -> ApiResult.Error(e.message ?: "Connection failed")
                 }
             }
@@ -122,9 +149,15 @@ class TeslamateRepository @Inject constructor(
             } catch (e: Exception) {
                 Log.d(TAG, "Secondary server also failed: ${e.message}")
                 // Both servers failed, return a combined error message
-                when (e) {
-                    is javax.net.ssl.SSLHandshakeException ->
+                when {
+                    e is javax.net.ssl.SSLHandshakeException ->
                         ApiResult.Error("Both servers failed. SSL certificate error on secondary server.")
+                    e.isJsonParsingError() ->
+                        ApiResult.Error(
+                            message = "Invalid response from secondary server",
+                            details = "The secondary server returned an unexpected response.\n\n" +
+                                    "Technical details: ${e.message}"
+                        )
                     else -> ApiResult.Error("Both servers unreachable: ${e.message}")
                 }
             }

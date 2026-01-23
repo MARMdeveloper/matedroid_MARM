@@ -18,8 +18,10 @@ import com.matedroid.ui.screens.drives.DriveDetailScreen
 import com.matedroid.ui.screens.drives.DrivesScreen
 import com.matedroid.ui.screens.mileage.MileageScreen
 import com.matedroid.ui.screens.settings.SettingsScreen
+import com.matedroid.ui.screens.stats.CountriesVisitedScreen
 import com.matedroid.ui.screens.stats.StatsScreen
 import com.matedroid.ui.screens.updates.SoftwareVersionsScreen
+import com.matedroid.domain.model.YearFilter
 
 sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
@@ -100,6 +102,18 @@ sealed class Screen(val route: String) {
                 "stats/$carId?exteriorColor=$exteriorColor"
             } else {
                 "stats/$carId"
+            }
+        }
+    }
+    data object CountriesVisited : Screen("stats/{carId}/countries?exteriorColor={exteriorColor}&year={year}") {
+        fun createRoute(carId: Int, exteriorColor: String? = null, year: Int? = null): String {
+            val params = mutableListOf<String>()
+            if (exteriorColor != null) params.add("exteriorColor=$exteriorColor")
+            if (year != null) params.add("year=$year")
+            return if (params.isNotEmpty()) {
+                "stats/$carId/countries?${params.joinToString("&")}"
+            } else {
+                "stats/$carId/countries"
             }
         }
     }
@@ -359,7 +373,38 @@ fun NavGraph(
                 },
                 onNavigateToDayDetail = { targetDay ->
                     navController.navigate(Screen.Mileage.createRoute(carId, exteriorColor, targetDay))
+                },
+                onNavigateToCountriesVisited = { year ->
+                    navController.navigate(Screen.CountriesVisited.createRoute(carId, exteriorColor, year))
                 }
+            )
+        }
+
+        composable(
+            route = Screen.CountriesVisited.route,
+            arguments = listOf(
+                navArgument("carId") { type = NavType.IntType },
+                navArgument("exteriorColor") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("year") {
+                    type = NavType.IntType
+                    defaultValue = -1 // -1 means AllTime
+                }
+            )
+        ) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
+            val exteriorColor = backStackEntry.arguments?.getString("exteriorColor")
+            val year = backStackEntry.arguments?.getInt("year")?.takeIf { it > 0 }
+            val yearFilter = if (year != null) YearFilter.Year(year) else YearFilter.AllTime
+
+            CountriesVisitedScreen(
+                carId = carId,
+                yearFilter = yearFilter,
+                exteriorColor = exteriorColor,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

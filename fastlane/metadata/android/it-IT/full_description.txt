@@ -1,0 +1,35 @@
+Prendi il controllo dei dati della tua Tesla con MateDroid, l'app companion per Teslamate che mette la cronologia delle tue guide e ricariche direttamente in tasca.
+
+<b>I Tuoi Dati, Il Tuo Server, La Tua Privacy</b>
+
+MateDroid si connette esclusivamente alla tua istanza Teslamate self-hosted. Nessun servizio cloud, nessun account, nessun tracciamento. I dati della tua Tesla non passano mai dai nostri server perché non esistono. Così dovrebbe funzionare la privacy.
+
+<b>Bello a Colpo d'Occhio</b>
+
+Visualizza lo stato in tempo reale della tua Tesla su una dashboard accattivante con un modello 3D che corrisponde al colore e ai cerchi reali della tua auto. L'intero tema dell'app si adatta al colore del tuo veicolo, creando un'esperienza personalizzata sia in modalità chiara che scura.
+
+<b>Tutto Quello Che Vuoi Sapere</b>
+
+• <b>Dashboard Live</b> - Batteria, autonomia, stato di ricarica, clima, pressione pneumatici e molto altro
+• <b>Cronologia Viaggi</b> - Ogni viaggio mappato con statistiche di efficienza, profili altimetrici e condizioni meteo lungo il percorso
+• <b>Sessioni di Ricarica</b> - Monitora dove ricarichi, quanta energia aggiungi, costi e curve di ricarica
+• <b>Salute Batteria</b> - Monitora il degrado nel tempo con visualizzazioni chiare
+• <b>Statistiche per Smanettoni</b> - Tocca l'auto per statistiche approfondite: record, estremi, rapporti ricarica AC vs DC e chicche nascoste
+
+<b>Funziona Offline</b>
+
+MateDroid sincronizza i tuoi dati localmente così puoi consultare i tuoi viaggi e ricariche anche senza connessione internet. Perfetto per controllare la cronologia dei viaggi mentre sei in viaggio.
+
+<b>Requisiti</b>
+
+Questa app richiede un'installazione funzionante di Teslamate + TeslamateApi:
+• Teslamate: github.com/adriankumpf/teslamate
+• TeslamateApi: github.com/tobiasehlert/teslamateapi
+
+Se stai già usando Teslamate, sei a un solo deployment dell'API dall'usare MateDroid.
+
+<b>Gratuito e Open Source</b>
+
+MateDroid è gratuito al 100% senza pubblicità, acquisti in-app o livelli premium. Il codice sorgente completo è disponibile su GitHub sotto licenza GPL-3.0. Contributi benvenuti!
+
+github.com/vide/matedroid

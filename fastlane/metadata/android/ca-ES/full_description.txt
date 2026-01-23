@@ -1,0 +1,35 @@
+Pren el control de les dades del teu Tesla amb MateDroid, l'app complementària per a Teslamate que posa el teu historial de conducció i càrrega directament a la teva butxaca.
+
+<b>Les Teves Dades, El Teu Servidor, La Teva Privacitat</b>
+
+MateDroid es connecta exclusivament a la teva instància Teslamate autoallotjada. Sense serveis al núvol, sense comptes, sense rastreig. Les dades del teu Tesla mai passen pels nostres servidors perquè no existeixen. Així és com hauria de funcionar la privacitat.
+
+<b>Bonic a Primera Vista</b>
+
+Mira l'estat en temps real del teu Tesla en un tauler impressionant amb un model 3D que coincideix amb el color i les llandes reals del teu cotxe. Tot el tema de l'app s'adapta al color del teu vehicle, creant una experiència personalitzada tant en mode clar com fosc.
+
+<b>Tot El Que Vols Saber</b>
+
+• <b>Tauler en Directe</b> - Bateria, autonomia, estat de càrrega, clima, pressió dels pneumàtics i més
+• <b>Historial de Viatges</b> - Cada viatge mapat amb estadístiques d'eficiència, perfils d'elevació i condicions meteorològiques pel camí
+• <b>Sessions de Càrrega</b> - Registra on carregues, quanta energia afegeixes, costos i corbes de càrrega
+• <b>Salut de la Bateria</b> - Monitoritza la degradació amb visualitzacions clares
+• <b>Estadístiques per a Curiosos</b> - Toca el cotxe per a estadístiques detallades: rècords, extrems, ràtios de càrrega AC vs DC i joies ocultes
+
+<b>Funciona Sense Connexió</b>
+
+MateDroid sincronitza les teves dades localment perquè puguis consultar els teus viatges i càrregues fins i tot sense connexió a internet. Perfecte per revisar l'historial de viatges mentre ets de ruta.
+
+<b>Requisits</b>
+
+Aquesta app requereix una instal·lació funcional de Teslamate + TeslamateApi:
+• Teslamate: github.com/adriankumpf/teslamate
+• TeslamateApi: github.com/tobiasehlert/teslamateapi
+
+Si ja estàs utilitzant Teslamate, estàs a només un desplegament d'API d'utilitzar MateDroid.
+
+<b>Gratuït i Open Source</b>
+
+MateDroid és 100% gratuït sense anuncis, compres in-app ni nivells premium. El codi font complet està disponible a GitHub sota la llicència GPL-3.0. Contribucions benvingudes!
+
+github.com/vide/matedroid

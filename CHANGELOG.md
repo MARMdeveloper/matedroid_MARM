@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Stats for Nerds**: New "Countries Visited" record showing unique countries visited with your Tesla
+- **Countries Visited**: Detail screen with country flag, name, first/last visit dates, drive count, total distance, energy charged, and charge count
+- **Countries Visited**: Sorting options by first visit date, alphabetically, or by drive count
+- **Geocoding**: Background location identification using OpenStreetMap Nominatim with rate limiting and caching
+
+### Fixed
+- **Stats for Nerds**: Deep sync progress bar now properly disappears when sync completes
+
+## [0.11.3] - 2026-01-20
+
+### Added
+- **Dashboard**: Remember last selected car for users with multiple vehicles
+- **Settings**: "Report an issue" link below version number opens GitHub issues page
+- **Error Handling**: "Show details" button on API errors displays diagnostic information for troubleshooting
+
+### Changed
+- **Build**: Updated Hilt from 2.53.1 to 2.56
+
+### Fixed
+- **Tests**: Resolved memory consumption issues in unit tests
+
+## [0.11.2] - 2026-01-19
+
+### Fixed
+- **CI/CD**: Google Play releases now include changelog in "What's New" section
+
 ## [0.11.1] - 2026-01-19
 
 ### Fixed
@@ -248,7 +275,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v0.11.1...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v0.11.3...HEAD
+[0.11.3]: https://github.com/vide/matedroid/compare/v0.11.2...v0.11.3
+[0.11.2]: https://github.com/vide/matedroid/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/vide/matedroid/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/vide/matedroid/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/vide/matedroid/compare/v0.9.4...v0.10.0

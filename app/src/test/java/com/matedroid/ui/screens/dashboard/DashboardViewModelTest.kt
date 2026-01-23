@@ -1,22 +1,30 @@
 package com.matedroid.ui.screens.dashboard
 
+import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.BatteryDetails
 import com.matedroid.data.api.models.CarData
 import com.matedroid.data.api.models.CarStatus
 import com.matedroid.data.api.models.CarStatusDetails
 import com.matedroid.data.api.models.ChargingDetails
 import com.matedroid.data.api.models.Units
+import com.matedroid.data.local.AppSettings
+import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.CarStatusWithUnits
 import com.matedroid.data.repository.GeocodingRepository
 import com.matedroid.data.repository.TeslamateRepository
+import kotlinx.coroutines.flow.flowOf
+import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -33,7 +41,8 @@ class DashboardViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var repository: TeslamateRepository
     private lateinit var geocodingRepository: GeocodingRepository
-    private lateinit var viewModel: DashboardViewModel
+    private lateinit var settingsDataStore: SettingsDataStore
+    private var viewModel: DashboardViewModel? = null
 
     private val testCar = CarData(
         carId = 1,
@@ -64,31 +73,48 @@ class DashboardViewModelTest {
         Dispatchers.setMain(testDispatcher)
         repository = mockk()
         geocodingRepository = mockk()
+        settingsDataStore = mockk()
+        // Default: no previously selected car
+        every { settingsDataStore.settings } returns flowOf(AppSettings())
+        coEvery { settingsDataStore.saveLastSelectedCarId(any()) } returns Unit
     }
 
     @After
     fun tearDown() {
+        cancelViewModelCoroutines()
+        viewModel = null
         Dispatchers.resetMain()
+        clearAllMocks()
     }
 
     private fun createViewModel(): DashboardViewModel {
-        return DashboardViewModel(repository, geocodingRepository)
+        return DashboardViewModel(repository, geocodingRepository, settingsDataStore)
+    }
+
+    /**
+     * Helper to cancel ViewModel coroutines before test assertions.
+     * This prevents the auto-refresh infinite loop from running forever.
+     */
+    private fun cancelViewModelCoroutines() {
+        viewModel?.viewModelScope?.coroutineContext?.cancelChildren()
     }
 
     @Test
     fun `loadCars fetches cars and selects first one`() = runTest {
         coEvery { repository.getCars() } returns ApiResult.Success(listOf(testCar))
         coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatusWithUnits)
-        coEvery { repository.getCharges(1, null, null) } returns ApiResult.Success(emptyList())
-        coEvery { repository.getDrives(1, null, null) } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+        // Run only currently scheduled coroutines, not future delayed ones
+        runCurrent()
 
-        assertFalse(viewModel.uiState.value.isLoading)
-        assertEquals(1, viewModel.uiState.value.cars.size)
-        assertEquals(1, viewModel.uiState.value.selectedCarId)
-        assertEquals(testStatus, viewModel.uiState.value.carStatus)
+        // Cancel auto-refresh before assertions
+        cancelViewModelCoroutines()
+
+        assertFalse(viewModel!!.uiState.value.isLoading)
+        assertEquals(1, viewModel!!.uiState.value.cars.size)
+        assertEquals(1, viewModel!!.uiState.value.selectedCarId)
+        assertEquals(testStatus, viewModel!!.uiState.value.carStatus)
     }
 
     @Test
@@ -96,11 +122,12 @@ class DashboardViewModelTest {
         coEvery { repository.getCars() } returns ApiResult.Error("Network error")
 
         viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
+        cancelViewModelCoroutines()
 
-        assertFalse(viewModel.uiState.value.isLoading)
-        assertEquals("Network error", viewModel.uiState.value.error)
-        assertTrue(viewModel.uiState.value.cars.isEmpty())
+        assertFalse(viewModel!!.uiState.value.isLoading)
+        assertEquals("Network error", viewModel!!.uiState.value.error)
+        assertTrue(viewModel!!.uiState.value.cars.isEmpty())
     }
 
     @Test
@@ -108,11 +135,12 @@ class DashboardViewModelTest {
         coEvery { repository.getCars() } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
+        cancelViewModelCoroutines()
 
-        assertFalse(viewModel.uiState.value.isLoading)
-        assertTrue(viewModel.uiState.value.cars.isEmpty())
-        assertNull(viewModel.uiState.value.selectedCarId)
+        assertFalse(viewModel!!.uiState.value.isLoading)
+        assertTrue(viewModel!!.uiState.value.cars.isEmpty())
+        assertNull(viewModel!!.uiState.value.selectedCarId)
     }
 
     @Test
@@ -125,30 +153,29 @@ class DashboardViewModelTest {
         coEvery { repository.getCars() } returns ApiResult.Success(listOf(car1, car2))
         coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatusWithUnits)
         coEvery { repository.getCarStatus(2) } returns ApiResult.Success(status2WithUnits)
-        coEvery { repository.getCharges(any(), null, null) } returns ApiResult.Success(emptyList())
-        coEvery { repository.getDrives(any(), null, null) } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
-        assertEquals(1, viewModel.uiState.value.selectedCarId)
+        assertEquals(1, viewModel!!.uiState.value.selectedCarId)
 
-        viewModel.selectCar(2)
-        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel!!.selectCar(2)
+        runCurrent()
 
-        assertEquals(2, viewModel.uiState.value.selectedCarId)
-        assertEquals("Car 2", viewModel.uiState.value.carStatus?.displayName)
+        // Cancel auto-refresh before assertions
+        cancelViewModelCoroutines()
+
+        assertEquals(2, viewModel!!.uiState.value.selectedCarId)
+        assertEquals("Car 2", viewModel!!.uiState.value.carStatus?.displayName)
     }
 
     @Test
     fun `refresh reloads car status`() = runTest {
         coEvery { repository.getCars() } returns ApiResult.Success(listOf(testCar))
         coEvery { repository.getCarStatus(1) } returns ApiResult.Success(testStatusWithUnits)
-        coEvery { repository.getCharges(1, null, null) } returns ApiResult.Success(emptyList())
-        coEvery { repository.getDrives(1, null, null) } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
         val updatedStatus = testStatus.copy(
             batteryDetails = BatteryDetails(batteryLevel = 80, ratedBatteryRange = 300.0)
@@ -156,13 +183,18 @@ class DashboardViewModelTest {
         val updatedStatusWithUnits = CarStatusWithUnits(status = updatedStatus, units = Units())
         coEvery { repository.getCarStatus(1) } returns ApiResult.Success(updatedStatusWithUnits)
 
-        viewModel.refresh()
-        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel!!.refresh()
+        runCurrent()
 
-        assertFalse(viewModel.uiState.value.isRefreshing)
-        assertEquals(80, viewModel.uiState.value.carStatus?.batteryLevel)
+        // Cancel auto-refresh before assertions
+        cancelViewModelCoroutines()
 
-        coVerify(exactly = 2) { repository.getCarStatus(1) }
+        assertFalse(viewModel!!.uiState.value.isRefreshing)
+        assertEquals(80, viewModel!!.uiState.value.carStatus?.batteryLevel)
+
+        // Using atLeast = 2 because the auto-refresh mechanism may trigger
+        // additional getCarStatus calls before cancelViewModelCoroutines() runs.
+        coVerify(atLeast = 2) { repository.getCarStatus(1) }
     }
 
     @Test
@@ -170,10 +202,12 @@ class DashboardViewModelTest {
         coEvery { repository.getCars() } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
 
-        viewModel.refresh()
-        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel!!.refresh()
+        runCurrent()
+
+        cancelViewModelCoroutines()
 
         coVerify(exactly = 0) { repository.getCarStatus(any()) }
     }
@@ -183,26 +217,26 @@ class DashboardViewModelTest {
         coEvery { repository.getCars() } returns ApiResult.Error("Test error")
 
         viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
+        cancelViewModelCoroutines()
 
-        assertEquals("Test error", viewModel.uiState.value.error)
+        assertEquals("Test error", viewModel!!.uiState.value.error)
 
-        viewModel.clearError()
+        viewModel!!.clearError()
 
-        assertNull(viewModel.uiState.value.error)
+        assertNull(viewModel!!.uiState.value.error)
     }
 
     @Test
     fun `status error is shown when status fetch fails`() = runTest {
         coEvery { repository.getCars() } returns ApiResult.Success(listOf(testCar))
         coEvery { repository.getCarStatus(1) } returns ApiResult.Error("Status error")
-        coEvery { repository.getCharges(1, null, null) } returns ApiResult.Success(emptyList())
-        coEvery { repository.getDrives(1, null, null) } returns ApiResult.Success(emptyList())
 
         viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent()
+        cancelViewModelCoroutines()
 
-        assertEquals("Status error", viewModel.uiState.value.error)
-        assertNull(viewModel.uiState.value.carStatus)
+        assertEquals("Status error", viewModel!!.uiState.value.error)
+        assertNull(viewModel!!.uiState.value.carStatus)
     }
 }

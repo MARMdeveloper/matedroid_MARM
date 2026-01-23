@@ -25,11 +25,14 @@
 ## F-Droid and Fastlane
 
 * The app is published on F-Droid, which builds from source.
-* Fastlane metadata is stored in `fastlane/metadata/android/en-US/`:
-  - `title.txt`, `short_description.txt`, `full_description.txt` for app store listing
-  - `changelogs/<versionCode>.txt` for each release (e.g., `12.txt` for versionCode 12)
-  - `images/icon.png` (512x512) and `images/phoneScreenshots/` for visuals
-* When releasing a new version, create a new changelog file matching the versionCode in `app/build.gradle.kts`.
+* Fastlane metadata is stored in `fastlane/metadata/android/` with locale subdirectories:
+  - `en-US/` (English), `it-IT/` (Italian), `es-ES/` (Spanish), `ca-ES/` (Catalan)
+  - Each locale contains: `title.txt`, `short_description.txt`, `full_description.txt`, and `changelogs/`
+  - `changelogs/<versionCode>.txt` for each release (e.g., `24.txt` for versionCode 24)
+  - Images are only in `en-US/images/` (icon.png, phoneScreenshots/)
+* When releasing a new version:
+  - Create changelog files in ALL locale directories matching the versionCode
+  - The `/release` skill handles this automatically, including translations
 * The F-Droid build recipe is stored in `fdroid/com.matedroid.yml` (reference copy; actual recipe lives in fdroiddata repo).
 
 ## Localization

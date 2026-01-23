@@ -299,7 +299,10 @@ fun DashboardScreen(
                     EmptyContent()
                 }
                 uiState.error != null -> {
-                    ErrorContent(message = uiState.error!!)
+                    ErrorContent(
+                        message = uiState.error!!,
+                        details = uiState.errorDetails
+                    )
                 }
                 else -> {
                     // Car status still loading after cars loaded
@@ -352,23 +355,60 @@ private fun EmptyContent() {
 }
 
 @Composable
-private fun ErrorContent(message: String) {
+private fun ErrorContent(
+    message: String,
+    details: String? = null
+) {
+    var showDetailsDialog by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        ) {
             Text(
                 text = stringResource(R.string.error_loading_data),
                 style = MaterialTheme.typography.titleMedium,
                 color = StatusError
             )
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            if (details != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                TextButton(onClick = { showDetailsDialog = true }) {
+                    Text(stringResource(R.string.error_show_details))
+                }
+            }
         }
+    }
+
+    if (showDetailsDialog && details != null) {
+        AlertDialog(
+            onDismissRequest = { showDetailsDialog = false },
+            title = { Text(stringResource(R.string.error_details_title)) },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = details,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDetailsDialog = false }) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        )
     }
 }
 
@@ -729,6 +769,7 @@ private fun StatusIndicatorsRow(
     val isDriving = status.state?.lowercase() == "driving"
     val isAwake = isOnline || isCharging || isDriving
     val isAsleep = status.state?.lowercase() in listOf("asleep", "suspended")
+    val isOffline = status.state?.lowercase() == "offline"
     val isLocked = status.locked == true
 
     Column(modifier = modifier) {
@@ -752,6 +793,14 @@ private fun StatusIndicatorsRow(
                         val sleepTime = formatTimeFromTimestamp(status.stateSince, yesterdayStr)
                         if (sleepTime != null) {
                             stringResource(R.string.asleep_since, sleepTime)
+                        } else {
+                            status.state?.replaceFirstChar { it.uppercase() } ?: stringResource(R.string.unknown)
+                        }
+                    }
+                    isOffline -> {
+                        val offlineTime = formatTimeFromTimestamp(status.stateSince, yesterdayStr)
+                        if (offlineTime != null) {
+                            stringResource(R.string.offline_since, offlineTime)
                         } else {
                             status.state?.replaceFirstChar { it.uppercase() } ?: stringResource(R.string.unknown)
                         }
@@ -887,8 +936,8 @@ private fun StatusIndicatorsRow(
             }
         }
 
-        // Show sleep duration when asleep
-        if (isAsleep) {
+        // Show duration when asleep or offline
+        if (isAsleep || isOffline) {
             val sleepDuration = formatDurationSince(status.stateSince)
             if (sleepDuration != null) {
                 Spacer(modifier = Modifier.height(4.dp))

@@ -1,0 +1,1 @@
+Visualitza les dades del teu Tesla des de la teva instància Teslamate autoallotjada

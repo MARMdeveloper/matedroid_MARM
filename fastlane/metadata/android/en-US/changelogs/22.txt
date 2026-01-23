@@ -1,0 +1,4 @@
+Release notes now appear in Google Play! Previous releases had an empty "What's New" section due to a configuration issue.
+
+Fixed:
+- Google Play releases now include changelog in "What's New" section

@@ -1,0 +1,35 @@
+Toma el control de los datos de tu Tesla con MateDroid, la app complementaria para Teslamate que pone tu historial de conducción y carga directamente en tu bolsillo.
+
+<b>Tus Datos, Tu Servidor, Tu Privacidad</b>
+
+MateDroid se conecta exclusivamente a tu instancia Teslamate autoalojada. Sin servicios en la nube, sin cuentas, sin rastreo. Los datos de tu Tesla nunca pasan por nuestros servidores porque no existen. Así es como debería funcionar la privacidad.
+
+<b>Hermoso a Primera Vista</b>
+
+Mira el estado en tiempo real de tu Tesla en un panel impresionante con un modelo 3D que coincide con el color y las llantas reales de tu coche. Todo el tema de la app se adapta al color de tu vehículo, creando una experiencia personalizada tanto en modo claro como oscuro.
+
+<b>Todo Lo Que Quieres Saber</b>
+
+• <b>Panel en Vivo</b> - Batería, autonomía, estado de carga, clima, presión de neumáticos y más
+• <b>Historial de Viajes</b> - Cada viaje mapeado con estadísticas de eficiencia, perfiles de elevación y condiciones climáticas en el camino
+• <b>Sesiones de Carga</b> - Registra dónde cargas, cuánta energía añades, costos y curvas de carga
+• <b>Salud de la Batería</b> - Monitoriza la degradación con visualizaciones claras
+• <b>Estadísticas para Curiosos</b> - Toca el coche para estadísticas detalladas: récords, extremos, ratios de carga AC vs DC y joyas ocultas
+
+<b>Funciona Sin Conexión</b>
+
+MateDroid sincroniza tus datos localmente para que puedas consultar tus viajes y cargas incluso sin conexión a internet. Perfecto para revisar el historial de viajes mientras estás en ruta.
+
+<b>Requisitos</b>
+
+Esta app requiere una instalación funcional de Teslamate + TeslamateApi:
+• Teslamate: github.com/adriankumpf/teslamate
+• TeslamateApi: github.com/tobiasehlert/teslamateapi
+
+Si ya estás usando Teslamate, estás a solo un despliegue de API de usar MateDroid.
+
+<b>Gratuito y Open Source</b>
+
+MateDroid es 100% gratuito sin anuncios, compras in-app ni niveles premium. El código fuente completo está disponible en GitHub bajo la licencia GPL-3.0. ¡Contribuciones bienvenidas!
+
+github.com/vide/matedroid

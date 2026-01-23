@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Thermostat
@@ -75,11 +76,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
 import com.matedroid.data.local.entity.DriveSummary
+import com.matedroid.data.repository.GeocodeProgressInfo
 import com.matedroid.domain.model.CarStats
 import com.matedroid.domain.model.DeepStats
 import com.matedroid.domain.model.MaxDistanceBetweenChargesRecord
@@ -99,6 +102,7 @@ fun StatsScreen(
     onNavigateToDriveDetail: (Int) -> Unit = {},
     onNavigateToChargeDetail: (Int) -> Unit = {},
     onNavigateToDayDetail: (String) -> Unit = {},
+    onNavigateToCountriesVisited: (Int?) -> Unit = {}, // year (null for all time)
     viewModel: StatsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -231,12 +235,16 @@ fun StatsScreen(
                     availableYears = uiState.availableYears,
                     selectedYearFilter = uiState.selectedYearFilter,
                     deepSyncProgress = uiState.deepSyncProgress,
+                    isSyncing = uiState.isSyncing,
+                    geocodeProgress = uiState.geocodeProgress,
+                    isGeocoding = uiState.isGeocoding,
                     palette = palette,
                     currencySymbol = uiState.currencySymbol,
                     onYearFilterSelected = { viewModel.setYearFilter(it) },
                     onNavigateToDriveDetail = onNavigateToDriveDetail,
                     onNavigateToChargeDetail = onNavigateToChargeDetail,
                     onNavigateToDayDetail = onNavigateToDayDetail,
+                    onNavigateToCountriesVisited = onNavigateToCountriesVisited,
                     onRangeRecordClick = { rangeRecordToShow = it },
                     onGapRecordClick = { gapDays, fromDate, toDate, title ->
                         gapRecordToShow = GapRecordInfo(gapDays, fromDate, toDate, title)
@@ -332,12 +340,16 @@ private fun StatsContent(
     availableYears: List<Int>,
     selectedYearFilter: YearFilter,
     deepSyncProgress: Float,
+    isSyncing: Boolean,
+    geocodeProgress: GeocodeProgressInfo?,
+    isGeocoding: Boolean,
     palette: CarColorPalette,
     currencySymbol: String,
     onYearFilterSelected: (YearFilter) -> Unit,
     onNavigateToDriveDetail: (Int) -> Unit,
     onNavigateToChargeDetail: (Int) -> Unit,
     onNavigateToDayDetail: (String) -> Unit,
+    onNavigateToCountriesVisited: (Int?) -> Unit, // year (null for all time)
     onRangeRecordClick: (MaxDistanceBetweenChargesRecord) -> Unit,
     onGapRecordClick: (Double, String, String, String) -> Unit,
     onSyncProgressClick: (() -> Unit)? = null
@@ -357,11 +369,22 @@ private fun StatsContent(
             )
         }
 
-        // Sync progress indicator if deep sync is ongoing
-        if (deepSyncProgress < 1f && deepSyncProgress > 0f) {
+        // Sync progress indicator if deep sync is actively running
+        if (isSyncing && deepSyncProgress < 1f && deepSyncProgress > 0f) {
             item {
                 SyncProgressCard(
                     progress = deepSyncProgress,
+                    palette = palette,
+                    onClick = onSyncProgressClick
+                )
+            }
+        }
+
+        // Geocode progress indicator if location identification is ongoing
+        if (isGeocoding && geocodeProgress != null) {
+            item {
+                GeocodeProgressCard(
+                    progress = geocodeProgress,
                     palette = palette,
                     onClick = onSyncProgressClick
                 )
@@ -378,6 +401,10 @@ private fun StatsContent(
                 onDriveClick = onNavigateToDriveDetail,
                 onChargeClick = onNavigateToChargeDetail,
                 onDayClick = onNavigateToDayDetail,
+                onCountriesVisitedClick = {
+                    val year = (selectedYearFilter as? YearFilter.Year)?.year
+                    onNavigateToCountriesVisited(year)
+                },
                 onRangeRecordClick = onRangeRecordClick,
                 onGapRecordClick = onGapRecordClick
             )
@@ -497,6 +524,60 @@ private fun SyncProgressCard(
                     text = stringResource(R.string.stats_sync_complete, (progress * 100).toInt()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GeocodeProgressCard(
+    progress: GeocodeProgressInfo,
+    palette: CarColorPalette,
+    onClick: (() -> Unit)? = null
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Place,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.geocode_progress_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                LinearProgressIndicator(
+                    progress = { progress.percentage },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = stringResource(R.string.geocode_progress_status, progress.processed, progress.total),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
         }
@@ -624,6 +705,7 @@ private fun RecordsCard(
     onDriveClick: (Int) -> Unit,
     onChargeClick: (Int) -> Unit,
     onDayClick: (String) -> Unit,
+    onCountriesVisitedClick: () -> Unit,
     onRangeRecordClick: (MaxDistanceBetweenChargesRecord) -> Unit,
     onGapRecordClick: (Double, String, String, String) -> Unit // gapDays, fromDate, toDate, title
 ) {
@@ -633,6 +715,7 @@ private fun RecordsCard(
     val labelMostEfficient = stringResource(R.string.record_most_efficient)
     val labelLongestStreak = stringResource(R.string.record_longest_streak)
     val labelBusiestDay = stringResource(R.string.record_busiest_day)
+    val labelCountriesVisited = stringResource(R.string.record_countries_visited)
     val labelBiggestGain = stringResource(R.string.record_biggest_gain)
     val labelBiggestDrain = stringResource(R.string.record_biggest_drain)
     val labelBiggestCharge = stringResource(R.string.record_biggest_charge)
@@ -652,7 +735,7 @@ private fun RecordsCard(
     val categoryDrives = stringResource(R.string.stats_category_drives)
     val categoryBattery = stringResource(R.string.stats_category_battery)
     val categoryWeather = stringResource(R.string.stats_category_weather)
-    val categoryDistances = stringResource(R.string.stats_category_distances)
+    val categoryMisc = stringResource(R.string.stats_category_misc)
     val gapTypeCharging = stringResource(R.string.gap_type_charging)
     val gapTypeDriving = stringResource(R.string.gap_type_driving)
 
@@ -668,10 +751,13 @@ private fun RecordsCard(
         driveRecords.add(RecordData("🌱", labelMostEfficient, "%.0f Wh/km".format(drive.efficiency ?: 0.0), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
     }
     quickStats.longestDrivingStreak?.let { streak ->
-        driveRecords.add(RecordData("🔥", labelLongestStreak, stringResource(R.string.format_days, streak.streakDays), "${streak.startDate} → ${streak.endDate}", null))
+        driveRecords.add(RecordData("🔥", labelLongestStreak, stringResource(R.string.format_days_count, streak.streakDays), "${streak.startDate} → ${streak.endDate}", null))
     }
     quickStats.busiestDay?.let { day ->
         driveRecords.add(RecordData("📅", labelBusiestDay, stringResource(R.string.format_drives_count, day.count), day.day) { onDayClick(day.day) })
+    }
+    deepStats?.countriesVisitedCount?.let { count ->
+        driveRecords.add(RecordData("🌍", labelCountriesVisited, pluralStringResource(R.plurals.format_countries_count, count, count), "") { onCountriesVisitedClick() })
     }
 
     // Category 2: Battery
@@ -722,19 +808,19 @@ private fun RecordsCard(
         weatherRecords.add(RecordData("❄️", labelColdestCharge, "%.1f°C".format(record.tempC), record.date?.take(10) ?: "") { onChargeClick(record.chargeId) })
     }
 
-    // Category 4: Distances & Gaps
-    val distanceRecords = mutableListOf<RecordData>()
+    // Category 4: Miscelaneous
+    val miscRecords = mutableListOf<RecordData>()
     quickStats.maxDistanceBetweenCharges?.let { record ->
-        distanceRecords.add(RecordData("🔋", labelLongestRange, "%.1f km".format(record.distance), "${record.fromDate.take(10)} → ${record.toDate.take(10)}") { onRangeRecordClick(record) })
+        miscRecords.add(RecordData("🔋", labelLongestRange, "%.1f km".format(record.distance), "${record.fromDate.take(10)} → ${record.toDate.take(10)}") { onRangeRecordClick(record) })
     }
     quickStats.longestGapWithoutCharging?.let { gap ->
-        distanceRecords.add(RecordData("⏰", labelNoCharging, "%.1f days".format(gap.gapDays), "${gap.fromDate.take(10)} → ${gap.toDate.take(10)}") { onGapRecordClick(gap.gapDays, gap.fromDate, gap.toDate, gapTypeCharging) })
+        miscRecords.add(RecordData("⏰", labelNoCharging, stringResource(R.string.format_days, gap.gapDays), "${gap.fromDate.take(10)} → ${gap.toDate.take(10)}") { onGapRecordClick(gap.gapDays, gap.fromDate, gap.toDate, gapTypeCharging) })
     }
     quickStats.longestGapWithoutDriving?.let { gap ->
-        distanceRecords.add(RecordData("🅿️", labelNoDriving, "%.1f days".format(gap.gapDays), "${gap.fromDate.take(10)} → ${gap.toDate.take(10)}") { onGapRecordClick(gap.gapDays, gap.fromDate, gap.toDate, gapTypeDriving) })
+        miscRecords.add(RecordData("🅿️", labelNoDriving, stringResource(R.string.format_days, gap.gapDays), "${gap.fromDate.take(10)} → ${gap.toDate.take(10)}") { onGapRecordClick(gap.gapDays, gap.fromDate, gap.toDate, gapTypeDriving) })
     }
     quickStats.mostDistanceDay?.let { day ->
-        distanceRecords.add(RecordData("🛣️", labelMostDistanceDay, "%.1f km".format(day.totalDistance), day.day) { onDayClick(day.day) })
+        miscRecords.add(RecordData("🛣️", labelMostDistanceDay, "%.1f km".format(day.totalDistance), day.day) { onDayClick(day.day) })
     }
 
     // Build list of all categories with their records
@@ -743,7 +829,7 @@ private fun RecordsCard(
     if (driveRecords.isNotEmpty()) allCategories.add(CategoryData(categoryDrives, "🚗", driveRecords))
     if (batteryRecords.isNotEmpty()) allCategories.add(CategoryData(categoryBattery, "🔋", batteryRecords))
     if (weatherRecords.isNotEmpty()) allCategories.add(CategoryData(categoryWeather, "🌡️", weatherRecords))
-    if (distanceRecords.isNotEmpty()) allCategories.add(CategoryData(categoryDistances, "📍", distanceRecords))
+    if (miscRecords.isNotEmpty()) allCategories.add(CategoryData(categoryMisc, "📍", miscRecords))
 
     // Don't render anything if no categories
     if (allCategories.isEmpty()) return
@@ -1329,7 +1415,7 @@ private fun GapRecordDialog(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "%.1f days".format(gapDays),
+                            text = stringResource(R.string.format_days, gapDays),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = palette.accent

@@ -59,6 +59,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -638,13 +639,23 @@ private fun SettingsContent(
             }
         }
 
-        // Version number at bottom
+        // Version number and issue link at bottom
         Spacer(modifier = Modifier.height(48.dp))
         Text(
             text = "v${com.matedroid.BuildConfig.VERSION_NAME}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        val uriHandler = LocalUriHandler.current
+        Text(
+            text = stringResource(R.string.settings_report_issue),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .clickable { uriHandler.openUri("https://github.com/vide/matedroid/issues") }
         )
         Spacer(modifier = Modifier.height(16.dp))
     }

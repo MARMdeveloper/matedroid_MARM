@@ -136,14 +136,45 @@ See [ASSETS.md](ASSETS.md) for detailed documentation on Tesla compositor APIs, 
 
 ### Releasing
 
-Releases are automated via GitHub Actions. When a release is published, the workflow builds the APK and attaches it to the release.
+Releases are automated via GitHub Actions. When a release is published, the workflow builds the APK and attaches it to the release, and deploys to Google Play.
+
+The recommended way to create releases is using the `/release` skill in Claude Code, which automates:
+1. Version bumping in `app/build.gradle.kts` (versionCode and versionName)
+2. Updating `CHANGELOG.md` with the release date
+3. Creating Fastlane changelogs in all supported languages
+4. Committing, tagging, and pushing
+5. Creating the GitHub release
+
+#### Fastlane Metadata
+
+The Play Store listing is managed through Fastlane metadata in `fastlane/metadata/android/`:
+
+```
+fastlane/metadata/android/
+├── en-US/           # English (default)
+│   ├── title.txt
+│   ├── short_description.txt
+│   ├── full_description.txt
+│   └── changelogs/
+│       └── {versionCode}.txt
+├── it-IT/           # Italian
+├── es-ES/           # Spanish
+└── ca-ES/           # Catalan
+```
+
+Each release requires a changelog file named `{versionCode}.txt` (e.g., `24.txt`) in all locale directories. The `/release` skill automatically creates translated changelogs for all supported languages.
+
+#### Manual Release
+
+If releasing manually:
 
 ```bash
 # 1. Update version in app/build.gradle.kts (versionCode and versionName)
 # 2. Update CHANGELOG.md with release notes
-# 3. Commit and push
+# 3. Create changelogs in fastlane/metadata/android/{locale}/changelogs/{versionCode}.txt
+# 4. Commit and push
 
-# 4. Create a release with GitHub CLI
+# 5. Create a release with GitHub CLI
 gh release create v0.5.0 --generate-notes
 
 # Or create a draft release to edit notes first

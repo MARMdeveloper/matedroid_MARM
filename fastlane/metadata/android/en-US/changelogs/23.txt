@@ -1,0 +1,9 @@
+Multi-car users rejoice! The app now remembers your last selected vehicle. Plus, easier troubleshooting with detailed error messages and a quick link to report issues.
+
+Added:
+- Remember last selected car when reopening the app
+- "Report an issue" link in Settings
+- "Show details" button on API errors for troubleshooting
+
+Fixed:
+- Test memory consumption issues

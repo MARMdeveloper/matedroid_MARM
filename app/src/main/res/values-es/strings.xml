@@ -39,6 +39,12 @@
     <!-- Error state: title when data loading fails -->
     <string name="error_loading_data">Error al cargar datos</string>
 
+    <!-- Error details: button to show technical error details -->
+    <string name="error_show_details">Mostrar detalles</string>
+
+    <!-- Error details: dialog title -->
+    <string name="error_details_title">Detalles del Error</string>
+
     <!-- Vehicle state shown when locked -->
     <string name="locked">Bloqueado</string>
 
@@ -80,6 +86,9 @@
 
     <!-- Tooltip shown when car is asleep, %s is the time when it went to sleep -->
     <string name="asleep_since">Dormido desde %s</string>
+
+    <!-- Tooltip shown when car is offline, %s is the time when it went offline -->
+    <string name="offline_since">Sin conexión desde %s</string>
 
     <!-- Word for yesterday used in timestamps -->
     <string name="yesterday">ayer</string>
@@ -224,6 +233,9 @@
     <string name="settings_primary_server">Servidor principal</string>
     <string name="settings_secondary_server">Servidor secundario</string>
     <string name="settings_connected">Conectado</string>
+
+    <!-- Link to GitHub issues page shown below version number -->
+    <string name="settings_report_issue">Reportar un problema</string>
 
     <!-- ==================== Drives Screen ==================== -->
     <!-- Top bar title -->
@@ -509,6 +521,12 @@
     <!-- Sync progress completion percentage. %d is the percentage -->
     <string name="stats_sync_complete">%d%% completado</string>
 
+    <!-- Geocode progress card title when location identification is running -->
+    <string name="geocode_progress_title">Identificando Ubicaciones</string>
+
+    <!-- Geocode progress status. %1$d is processed count, %2$d is total count -->
+    <string name="geocode_progress_status">%1$d de %2$d ubicaciones</string>
+
     <!-- Section: Drives Overview - summary statistics about all drives -->
     <string name="stats_drives_overview">Resumen de Viajes</string>
 
@@ -549,7 +567,7 @@
     <string name="stats_category_weather">Clima y Altitud</string>
 
     <!-- Record category: distance and gap records -->
-    <string name="stats_category_distances">Distancias</string>
+    <string name="stats_category_misc">Otros</string>
 
     <!-- Record: longest single drive by distance -->
     <string name="record_longest_drive">Viaje más largo</string>
@@ -565,6 +583,9 @@
 
     <!-- Record: day with most number of drives -->
     <string name="record_busiest_day">Día más activo</string>
+
+    <!-- Record: count of unique countries visited while driving -->
+    <string name="record_countries_visited">Países visitados</string>
 
     <!-- Record: charge session with biggest battery percentage gain -->
     <string name="record_biggest_gain">Mayor ganancia</string>
@@ -615,7 +636,7 @@
     <string name="record_most_distance_day">Día con más km</string>
 
     <!-- Format for streak duration. %d is number of days -->
-    <string name="format_days">%d días</string>
+    <string name="format_days">%.1f días</string>
 
     <!-- Format for number of drives. %d is the count -->
     <string name="format_drives_count">%d viajes</string>
@@ -673,6 +694,49 @@
 
     <!-- Content description for arrow to view drive details -->
     <string name="view_drive">Ver viaje</string>
+
+    <!-- ==================== Countries Visited Screen ==================== -->
+    <!-- Top bar title for countries visited screen -->
+    <string name="countries_visited_title">Países Visitados</string>
+
+    <!-- Plural for number of countries. %d is the count -->
+    <plurals name="format_countries_count">
+        <item quantity="one">%d país</item>
+        <item quantity="other">%d países</item>
+    </plurals>
+
+    <!-- Label showing first visit date. %s is the formatted date -->
+    <string name="country_first_visit">Primera visita: %s</string>
+
+    <!-- Label showing last visit date. %s is the formatted date -->
+    <string name="country_last_visit">Última visita: %s</string>
+
+    <!-- Plural for number of drives in a country -->
+    <plurals name="drives_count">
+        <item quantity="one">%d viaje</item>
+        <item quantity="other">%d viajes</item>
+    </plurals>
+
+    <!-- Plural for number of charges in a country -->
+    <plurals name="charges_count">
+        <item quantity="one">%d carga</item>
+        <item quantity="other">%d cargas</item>
+    </plurals>
+
+    <!-- Sort option: by first visit date (chronological) -->
+    <string name="sort_by_first_visit">Por primera visita</string>
+
+    <!-- Sort option: alphabetically by country name -->
+    <string name="sort_alphabetically">Alfabéticamente</string>
+
+    <!-- Sort option: by number of drives -->
+    <string name="sort_by_drive_count">Por viajes</string>
+
+    <!-- Empty state when no countries have been recorded yet -->
+    <string name="no_countries_found">No hay países registrados aún…</string>
+
+    <!-- Label for sort dropdown/menu -->
+    <string name="sort">Ordenar</string>
 
     <!-- ==================== Mileage Screen ==================== -->
     <!-- Top bar title for mileage screen -->
