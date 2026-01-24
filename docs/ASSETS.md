@@ -117,7 +117,7 @@ https://static-assets.tesla.com/configurator/compositor?context=design_studio_2&
 |--------------------------------------------|-----------------|------------|--------------|
 | `Black`, `SolidBlack` | `PBSB` | Solid Black | All |
 | `ObsidianBlack` | `PMBL` | Obsidian Black Metallic | Legacy M3 |
-| `MidnightSilver`, `MidnightSilverMetallic` | `PMNG` | Midnight Silver Metallic | Legacy |
+| `MidnightSilver`, `MidnightSilverMetallic`, `SteelGrey` | `PMNG` | Midnight Silver Metallic | Legacy |
 | `Silver`, `SilverMetallic` | `PMSS` | Silver Metallic | Legacy M3 |
 | `White`, `PearlWhite`, `PearlWhiteMultiCoat` | `PPSW` | Pearl White Multi-Coat | All |
 | `DeepBlue`, `DeepBlueMetallic`, `Blue` | `PPSB` | Deep Blue Metallic | All except Juniper |
@@ -166,7 +166,14 @@ https://static-assets.tesla.com/configurator/compositor?context=design_studio_2&
 | `Helix20*` | - | `WY20A` | 20" Helix 2.0 (Juniper MY Premium) |
 | `Glider18*`, `Nova18*` | `W38A` | - | 18" Glider/Nova (Highland M3) |
 
-**Note**: TeslamateAPI may append suffixes like `CapKit`, `Cover`, etc. The mapping strips these.
+**Model S/X Wheels**:
+
+| TeslamateAPI Pattern | Code | Description |
+|---------------------|------|-------------|
+| `Tempest19*` | `WT19` | Model S 19" Tempest |
+| `Cyberstream20*`, `Slipstream20*` | `WX20` | Model X 20" wheels |
+
+**Note**: TeslamateAPI may append suffixes like `CapKit`, `Cover`, `Carbon`, etc. The mapping strips these.
 
 ### Wheel Availability by Model Variant
 

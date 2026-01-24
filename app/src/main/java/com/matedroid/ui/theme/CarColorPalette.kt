@@ -15,23 +15,23 @@ data class CarColorPalette(
     val progressTrack: Color
 )
 
-// Default palette (used when no car color is available)
+// Default palette (used when no car color is available) - uses white car palette
 val DefaultLightPalette = CarColorPalette(
-    surface = Color(0xFFFFDAD6),           // Current primaryContainer light
-    accent = Color(0xFFE31937),             // Tesla red
-    accentDim = Color(0xFFE31937).copy(alpha = 0.3f),
-    onSurface = Color(0xFF410002),          // Current onPrimaryContainer light
-    onSurfaceVariant = Color(0xFF410002).copy(alpha = 0.7f),
-    progressTrack = Color(0xFF410002).copy(alpha = 0.1f)
+    surface = Color(0xFFF5F3F0),
+    accent = Color(0xFF8B7355),
+    accentDim = Color(0xFF8B7355).copy(alpha = 0.3f),
+    onSurface = Color(0xFF2A2520),
+    onSurfaceVariant = Color(0xFF2A2520).copy(alpha = 0.7f),
+    progressTrack = Color(0xFF2A2520).copy(alpha = 0.1f)
 )
 
 val DefaultDarkPalette = CarColorPalette(
-    surface = Color(0xFFE31937),            // Current primaryContainer dark
-    accent = Color(0xFFFFB4AB),
-    accentDim = Color(0xFFFFB4AB).copy(alpha = 0.3f),
-    onSurface = Color.White,
-    onSurfaceVariant = Color.White.copy(alpha = 0.7f),
-    progressTrack = Color.White.copy(alpha = 0.1f)
+    surface = Color(0xFF1E2530),
+    accent = Color(0xFF8BAEE8),
+    accentDim = Color(0xFF8BAEE8).copy(alpha = 0.3f),
+    onSurface = Color(0xFFE8EEF8),
+    onSurfaceVariant = Color(0xFFE8EEF8).copy(alpha = 0.7f),
+    progressTrack = Color(0xFFE8EEF8).copy(alpha = 0.1f)
 )
 
 // Car-specific palettes
@@ -218,7 +218,7 @@ object CarColorPalettes {
             colorKey.contains("black") || colorKey == "pbsb" || colorKey == "pmbl" ->
                 if (darkTheme) blackDarkPalette else blackLightPalette
 
-            colorKey.contains("midnightsilver") || colorKey == "pmng" ->
+            colorKey.contains("midnightsilver") || colorKey.contains("steelgrey") || colorKey == "pmng" ->
                 if (darkTheme) midnightSilverDarkPalette else midnightSilverLightPalette
 
             colorKey.contains("silver") || colorKey == "pmss" ->

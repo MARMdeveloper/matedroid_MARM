@@ -31,6 +31,7 @@ object CarImageResolver {
         "obsidianblack" to "PMBL",
         "midnightsilver" to "PMNG",
         "midnightsilvermetallic" to "PMNG",
+        "steelgrey" to "PMNG",  // Older Model S/X name for similar grey
         "silver" to "PMSS",
         "silvermetallic" to "PMSS",
         "white" to "PPSW",
@@ -154,6 +155,7 @@ object CarImageResolver {
     // Model X wheels
     private val WHEEL_PATTERNS_MX = listOf(
         "cyberstream20" to "WX20",
+        "slipstream20" to "WX20",  // Older Model X wheel option
         "20" to "WX20"
     )
 
