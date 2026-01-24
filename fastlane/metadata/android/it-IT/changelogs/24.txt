@@ -1,0 +1,13 @@
+A tutti piace viaggiare, e con questa versione puoi finalmente ammirare tutti i tuoi viaggi nel mondo dal telefono! Sincronizzazione iniziale 5 volte più veloce, avvisi pressione gomme e tante correzioni.
+
+Aggiunto:
+- Paesi Visitati: esplora dove hai guidato con mappe interattive, statistiche per paese e regione
+- Notifiche Pressione Gomme: ricevi avvisi quando una gomma ha pressione bassa
+- Filtro Oggi per viaggi e ricariche
+- Model X colore SteelGrey e cerchi Slipstream
+
+Modificato:
+- Sincronizzazione iniziale 5 volte più veloce
+
+Corretto:
+- Conteggio fasi ricarica AC, tempo offline, traduzioni

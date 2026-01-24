@@ -1,0 +1,13 @@
+A todos nos gusta viajar, y con esta version puedes admirar todos tus viajes por el mundo desde tu telefono! Sincronizacion inicial 5 veces mas rapida, alertas de presion de neumaticos y muchas correcciones.
+
+Agregado:
+- Paises Visitados: explora donde has conducido con mapas interactivos, estadisticas por pais y region
+- Notificaciones de Presion: recibe alertas cuando un neumatico tiene baja presion
+- Filtro Hoy para viajes y cargas
+- Model X color SteelGrey y llantas Slipstream
+
+Cambiado:
+- Sincronizacion inicial 5 veces mas rapida
+
+Corregido:
+- Conteo de fases AC, tiempo offline, traducciones

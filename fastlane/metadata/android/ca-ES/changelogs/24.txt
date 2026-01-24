@@ -1,0 +1,13 @@
+A tothom li agrada viatjar, i amb aquesta versio pots admirar tots els teus viatges pel mon des del telefon! Sincronitzacio inicial 5 vegades mes rapida, alertes de pressio dels pneumatics i moltes correccions.
+
+Afegit:
+- Paisos Visitats: explora on has conduit amb mapes interactius, estadistiques per pais i regio
+- Notificacions de Pressio: rep alertes quan un pneumatic te baixa pressio
+- Filtre Avui per viatges i carregues
+- Model X color SteelGrey i llantes Slipstream
+
+Canviat:
+- Sincronitzacio inicial 5 vegades mes rapida
+
+Corregit:
+- Recompte de fases AC, temps offline, traduccions
