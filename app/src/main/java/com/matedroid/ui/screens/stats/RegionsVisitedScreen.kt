@@ -1,7 +1,6 @@
 package com.matedroid.ui.screens.stats
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.EvStation
@@ -58,20 +56,24 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
 import com.matedroid.domain.model.CountryRecord
+import com.matedroid.domain.model.RegionRecord
 import com.matedroid.domain.model.YearFilter
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CountriesVisitedScreen(
+fun RegionsVisitedScreen(
     carId: Int,
+    countryCode: String,
+    countryName: String,
     yearFilter: YearFilter,
     exteriorColor: String? = null,
     onNavigateBack: () -> Unit,
-    onNavigateToRegions: (countryCode: String, countryName: String) -> Unit,
-    viewModel: CountriesVisitedViewModel = hiltViewModel()
+    viewModel: RegionsVisitedViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDarkTheme = isSystemInDarkTheme()
@@ -80,14 +82,14 @@ fun CountriesVisitedScreen(
     }
     var showSortMenu by remember { mutableStateOf(false) }
 
-    LaunchedEffect(carId, yearFilter) {
-        viewModel.loadCountries(carId, yearFilter)
+    LaunchedEffect(carId, countryCode, yearFilter) {
+        viewModel.loadRegions(carId, countryCode, yearFilter)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.countries_visited_title)) },
+                title = { Text(stringResource(R.string.regions_visited_title, countryName)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -111,42 +113,42 @@ fun CountriesVisitedScreen(
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.sort_by_first_visit)) },
                                 onClick = {
-                                    viewModel.setSortOrder(CountrySortOrder.FIRST_VISIT)
+                                    viewModel.setSortOrder(RegionSortOrder.FIRST_VISIT)
                                     showSortMenu = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.sort_alphabetically)) },
                                 onClick = {
-                                    viewModel.setSortOrder(CountrySortOrder.ALPHABETICAL)
+                                    viewModel.setSortOrder(RegionSortOrder.ALPHABETICAL)
                                     showSortMenu = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.sort_by_drive_count)) },
                                 onClick = {
-                                    viewModel.setSortOrder(CountrySortOrder.DRIVE_COUNT)
+                                    viewModel.setSortOrder(RegionSortOrder.DRIVE_COUNT)
                                     showSortMenu = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.sort_by_distance)) },
                                 onClick = {
-                                    viewModel.setSortOrder(CountrySortOrder.DISTANCE)
+                                    viewModel.setSortOrder(RegionSortOrder.DISTANCE)
                                     showSortMenu = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.sort_by_energy)) },
                                 onClick = {
-                                    viewModel.setSortOrder(CountrySortOrder.ENERGY)
+                                    viewModel.setSortOrder(RegionSortOrder.ENERGY)
                                     showSortMenu = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.sort_by_charges)) },
                                 onClick = {
-                                    viewModel.setSortOrder(CountrySortOrder.CHARGES)
+                                    viewModel.setSortOrder(RegionSortOrder.CHARGES)
                                     showSortMenu = false
                                 }
                             )
@@ -173,14 +175,14 @@ fun CountriesVisitedScreen(
                         color = palette.accent
                     )
                 }
-                uiState.countries.isEmpty() -> {
+                uiState.regions.isEmpty() && uiState.countryRecord == null -> {
                     EmptyState(palette = palette)
                 }
                 else -> {
-                    CountriesList(
-                        countries = uiState.countries,
-                        palette = palette,
-                        onCountryClick = onNavigateToRegions
+                    RegionsContent(
+                        countryRecord = uiState.countryRecord,
+                        regions = uiState.regions,
+                        palette = palette
                     )
                 }
             }
@@ -189,33 +191,38 @@ fun CountriesVisitedScreen(
 }
 
 @Composable
-private fun CountriesList(
-    countries: List<CountryRecord>,
-    palette: CarColorPalette,
-    onCountryClick: (countryCode: String, countryName: String) -> Unit
+private fun RegionsContent(
+    countryRecord: CountryRecord?,
+    regions: List<RegionRecord>,
+    palette: CarColorPalette
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(countries, key = { it.countryCode }) { country ->
-            val localizedName = getLocalizedCountryName(country.countryCode)
-            CountryCard(
-                country = country,
-                localizedName = localizedName,
-                palette = palette,
-                onClick = { onCountryClick(country.countryCode, localizedName) }
-            )
+        // Header card with country summary
+        countryRecord?.let { country ->
+            item(key = "header") {
+                CountrySummaryCard(
+                    country = country,
+                    localizedName = getLocalizedCountryName(country.countryCode),
+                    palette = palette
+                )
+            }
+        }
+
+        // Region cards
+        items(regions, key = { it.regionName }) { region ->
+            RegionCard(region = region, palette = palette)
         }
     }
 }
 
 @Composable
-private fun CountryCard(
+private fun CountrySummaryCard(
     country: CountryRecord,
     localizedName: String,
-    palette: CarColorPalette,
-    onClick: () -> Unit
+    palette: CarColorPalette
 ) {
     val cardShape = RoundedCornerShape(20.dp)
 
@@ -229,13 +236,13 @@ private fun CountryCard(
             )
             .clip(cardShape)
             .background(palette.surface)
-            .clickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            // Header row with flag and country name
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -248,7 +255,7 @@ private fun CountryCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Country name - larger and more prominent
+                // Country name
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = localizedName,
@@ -259,9 +266,7 @@ private fun CountryCard(
                 }
 
                 // Drive count
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = country.driveCount.toString(),
                         style = MaterialTheme.typography.titleLarge,
@@ -278,24 +283,32 @@ private fun CountryCard(
                         color = palette.onSurfaceVariant
                     )
                 }
+            }
 
-                // Chevron arrow
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = stringResource(R.string.view_details),
-                    tint = palette.onSurfaceVariant,
-                    modifier = Modifier.size(28.dp)
+            // First and last visit dates
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.country_first_visit, formatDate(country.firstVisitDate)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = palette.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.country_last_visit, formatDate(country.lastVisitDate)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = palette.onSurfaceVariant
                 )
             }
 
-            // Stats row in subtle chips
+            // Stats row in chips
             Spacer(modifier = Modifier.height(14.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Distance chip
                 StatChip(
                     icon = Icons.Default.Route,
                     value = "%.0f km".format(country.totalDistanceKm),
@@ -303,7 +316,6 @@ private fun CountryCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                // Energy chip
                 StatChip(
                     icon = Icons.Default.ElectricBolt,
                     value = if (country.totalChargeEnergyKwh > 999) {
@@ -315,13 +327,109 @@ private fun CountryCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                // Charges chip
                 StatChip(
                     icon = Icons.Default.EvStation,
                     value = pluralStringResource(
                         R.plurals.charges_count,
                         country.chargeCount,
                         country.chargeCount
+                    ),
+                    palette = palette,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RegionCard(
+    region: RegionRecord,
+    palette: CarColorPalette
+) {
+    val cardShape = RoundedCornerShape(16.dp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 2.dp,
+                shape = cardShape,
+                spotColor = palette.onSurface.copy(alpha = 0.08f)
+            )
+            .clip(cardShape)
+            .background(palette.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Region name
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = region.regionName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = palette.onSurface
+                    )
+                }
+
+                // Drive count
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = region.driveCount.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.accent
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = pluralStringResource(
+                            R.plurals.drives_count,
+                            region.driveCount,
+                            region.driveCount
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = palette.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Stats row
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatChip(
+                    icon = Icons.Default.Route,
+                    value = "%.0f km".format(region.totalDistanceKm),
+                    palette = palette,
+                    modifier = Modifier.weight(1f)
+                )
+
+                StatChip(
+                    icon = Icons.Default.ElectricBolt,
+                    value = if (region.totalChargeEnergyKwh > 999) {
+                        "%.1f MWh".format(region.totalChargeEnergyKwh / 1000)
+                    } else {
+                        "%.0f kWh".format(region.totalChargeEnergyKwh)
+                    },
+                    palette = palette,
+                    modifier = Modifier.weight(1f)
+                )
+
+                StatChip(
+                    icon = Icons.Default.EvStation,
+                    value = pluralStringResource(
+                        R.plurals.charges_count,
+                        region.chargeCount,
+                        region.chargeCount
                     ),
                     palette = palette,
                     modifier = Modifier.weight(1f)
@@ -374,11 +482,27 @@ private fun EmptyState(palette: CarColorPalette) {
             modifier = Modifier.padding(32.dp)
         ) {
             Text(
-                text = stringResource(R.string.no_countries_found),
+                text = stringResource(R.string.no_regions_found),
                 style = MaterialTheme.typography.bodyLarge,
                 color = palette.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+private fun formatDate(dateStr: String): String {
+    return try {
+        val inputFormatter = DateTimeFormatter.ISO_DATE_TIME
+        val outputFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
+        val dateTime = LocalDateTime.parse(dateStr, inputFormatter)
+        dateTime.format(outputFormatter)
+    } catch (e: Exception) {
+        // Fallback: try parsing just the date portion
+        try {
+            dateStr.take(10)
+        } catch (e2: Exception) {
+            dateStr
         }
     }
 }

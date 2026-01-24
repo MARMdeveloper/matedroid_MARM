@@ -733,11 +733,36 @@
     <!-- Sort option: by number of drives -->
     <string name="sort_by_drive_count">Per viatges</string>
 
+    <!-- Sort option: sort by total distance -->
+    <string name="sort_by_distance">Per distància</string>
+
+    <!-- Sort option: sort by total energy charged -->
+    <string name="sort_by_energy">Per energia</string>
+
+    <!-- Sort option: sort by number of charges -->
+    <string name="sort_by_charges">Per càrregues</string>
+
     <!-- Empty state when no countries have been recorded yet -->
     <string name="no_countries_found">No hi ha països registrats encara…</string>
 
     <!-- Label for sort dropdown/menu -->
     <string name="sort">Ordena</string>
+
+    <!-- ==================== Regions Visited Screen ==================== -->
+    <!-- Top bar title for regions visited screen. %s is the country name -->
+    <string name="regions_visited_title">Regions a %s</string>
+
+    <!-- Plural for number of regions. %d is the count -->
+    <plurals name="format_regions_count">
+        <item quantity="one">%d regió</item>
+        <item quantity="other">%d regions</item>
+    </plurals>
+
+    <!-- Empty state when no regions have been recorded -->
+    <string name="no_regions_found">No hi ha regions registrades.</string>
+
+    <!-- Header card title showing country totals -->
+    <string name="regions_country_summary">Resum del País</string>
 
     <!-- ==================== Mileage Screen ==================== -->
     <!-- Top bar title for mileage screen -->
@@ -901,4 +926,31 @@
 
     <!-- Weather condition: thunderstorm -->
     <string name="weather_thunderstorm">Tempesta</string>
+
+    <!-- ==================== Tire Pressure Notifications ==================== -->
+    <!-- Notification channel name for tire pressure alerts -->
+    <string name="tpms_channel_name">Alertes de Pressió dels Pneumàtics</string>
+
+    <!-- Notification channel description -->
+    <string name="tpms_channel_description">Alertes quan la pressió dels pneumàtics és baixa</string>
+
+    <!-- Notification title when tire pressure warning is detected -->
+    <string name="tpms_notification_title">Avís de Pressió dels Pneumàtics</string>
+
+    <!-- Notification body when tires have low pressure. %1$s is car name, %2$s is comma-separated tire list -->
+    <string name="tpms_notification_body">%1$s: Pressió baixa a %2$s</string>
+
+    <!-- Notification body when all tires are back to normal. %s is car name -->
+    <string name="tpms_notification_cleared">%s: Tots els pneumàtics normals</string>
+
+    <!-- Full tire position names for notifications -->
+    <string name="tire_fl_full">Davanter Esquerre</string>
+    <string name="tire_fr_full">Davanter Dret</string>
+    <string name="tire_rl_full">Posterior Esquerre</string>
+    <string name="tire_rr_full">Posterior Dret</string>
+
+    <!-- Debug buttons for TPMS testing -->
+    <string name="debug_tpms_simulate_warning">Simula Avís TPMS</string>
+    <string name="debug_tpms_clear_state">Esborra Estat TPMS</string>
+    <string name="debug_tpms_run_now">Run TPMS Check Now</string>
 </resources>

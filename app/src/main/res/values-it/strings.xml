@@ -733,11 +733,36 @@
     <!-- Sort option: sort by number of drives -->
     <string name="sort_by_drive_count">Per viaggi</string>
 
+    <!-- Sort option: sort by total distance -->
+    <string name="sort_by_distance">Per distanza</string>
+
+    <!-- Sort option: sort by total energy charged -->
+    <string name="sort_by_energy">Per energia</string>
+
+    <!-- Sort option: sort by number of charges -->
+    <string name="sort_by_charges">Per ricariche</string>
+
     <!-- Empty state when no countries have been recorded -->
     <string name="no_countries_found">Nessun paese registrato. I dettagli dei viaggi devono prima essere sincronizzati.</string>
 
     <!-- Content description for sort button -->
     <string name="sort">Ordina</string>
+
+    <!-- ==================== Regions Visited Screen ==================== -->
+    <!-- Top bar title for regions visited screen. %s is the country name -->
+    <string name="regions_visited_title">Regioni in %s</string>
+
+    <!-- Plural for number of regions. %d is the count -->
+    <plurals name="format_regions_count">
+        <item quantity="one">%d regione</item>
+        <item quantity="other">%d regioni</item>
+    </plurals>
+
+    <!-- Empty state when no regions have been recorded -->
+    <string name="no_regions_found">Nessuna regione registrata.</string>
+
+    <!-- Header card title showing country totals -->
+    <string name="regions_country_summary">Riepilogo Paese</string>
 
     <!-- ==================== Mileage Screen ==================== -->
     <!-- Top bar title for mileage screen -->
@@ -901,4 +926,31 @@
 
     <!-- Weather condition: thunderstorm -->
     <string name="weather_thunderstorm">Temporale</string>
+
+    <!-- ==================== Tire Pressure Notifications ==================== -->
+    <!-- Notification channel name for tire pressure alerts -->
+    <string name="tpms_channel_name">Avvisi Pressione Pneumatici</string>
+
+    <!-- Notification channel description -->
+    <string name="tpms_channel_description">Avvisi quando la pressione degli pneumatici è bassa</string>
+
+    <!-- Notification title when tire pressure warning is detected -->
+    <string name="tpms_notification_title">Avviso Pressione Pneumatici</string>
+
+    <!-- Notification body when tires have low pressure. %1$s is car name, %2$s is comma-separated tire list -->
+    <string name="tpms_notification_body">%1$s: Pressione bassa su %2$s</string>
+
+    <!-- Notification body when all tires are back to normal. %s is car name -->
+    <string name="tpms_notification_cleared">%s: Tutti gli pneumatici normali</string>
+
+    <!-- Full tire position names for notifications -->
+    <string name="tire_fl_full">Anteriore Sinistro</string>
+    <string name="tire_fr_full">Anteriore Destro</string>
+    <string name="tire_rl_full">Posteriore Sinistro</string>
+    <string name="tire_rr_full">Posteriore Destro</string>
+
+    <!-- Debug buttons for TPMS testing -->
+    <string name="debug_tpms_simulate_warning">Simula Avviso TPMS</string>
+    <string name="debug_tpms_clear_state">Cancella Stato TPMS</string>
+    <string name="debug_tpms_run_now">Run TPMS Check Now</string>
 </resources>

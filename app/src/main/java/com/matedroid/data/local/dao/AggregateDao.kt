@@ -328,12 +328,26 @@ interface AggregateDao {
     @Query("SELECT COUNT(*) FROM charge_detail_aggregates WHERE carId = :carId")
     suspend fun countChargeAggregates(carId: Int): Int
 
+    // Schema-version-aware counts (only count aggregates with current schema)
+    @Query("SELECT COUNT(*) FROM drive_detail_aggregates WHERE carId = :carId AND schemaVersion >= :minVersion")
+    suspend fun countDriveAggregatesWithSchema(carId: Int, minVersion: Int): Int
+
+    @Query("SELECT COUNT(*) FROM charge_detail_aggregates WHERE carId = :carId AND schemaVersion >= :minVersion")
+    suspend fun countChargeAggregatesWithSchema(carId: Int, minVersion: Int): Int
+
     // Flow-based counts for real-time progress updates (Room emits on table changes)
     @Query("SELECT COUNT(*) FROM drive_detail_aggregates WHERE carId = :carId")
     fun observeDriveAggregateCount(carId: Int): kotlinx.coroutines.flow.Flow<Int>
 
     @Query("SELECT COUNT(*) FROM charge_detail_aggregates WHERE carId = :carId")
     fun observeChargeAggregateCount(carId: Int): kotlinx.coroutines.flow.Flow<Int>
+
+    // Schema-version-aware Flow counts (for accurate progress during schema migrations)
+    @Query("SELECT COUNT(*) FROM drive_detail_aggregates WHERE carId = :carId AND schemaVersion >= :minVersion")
+    fun observeDriveAggregateCountWithSchema(carId: Int, minVersion: Int): kotlinx.coroutines.flow.Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM charge_detail_aggregates WHERE carId = :carId AND schemaVersion >= :minVersion")
+    fun observeChargeAggregateCountWithSchema(carId: Int, minVersion: Int): kotlinx.coroutines.flow.Flow<Int>
 
     // === Deep Stats: Countries Visited ===
 
@@ -414,6 +428,78 @@ interface AggregateDao {
         ORDER BY drive_stats.firstVisitDate ASC
     """)
     suspend fun getCountriesVisitedInRange(carId: Int, startDate: String, endDate: String): List<CountryVisitResult>
+
+    // === Deep Stats: Regions Visited (within a country) ===
+
+    // Get regions visited within a specific country with aggregated data
+    @Query("""
+        SELECT
+            drive_stats.regionName,
+            drive_stats.countryCode,
+            drive_stats.firstVisitDate,
+            drive_stats.lastVisitDate,
+            drive_stats.driveCount,
+            drive_stats.totalDistanceKm,
+            COALESCE(charge_stats.totalChargeEnergyKwh, 0.0) as totalChargeEnergyKwh,
+            COALESCE(charge_stats.chargeCount, 0) as chargeCount
+        FROM (
+            SELECT a.startRegionName as regionName, a.startCountryCode as countryCode,
+                   MIN(d.startDate) as firstVisitDate, MAX(d.startDate) as lastVisitDate,
+                   COUNT(*) as driveCount, SUM(d.distance) as totalDistanceKm
+            FROM drive_detail_aggregates a
+            JOIN drives_summary d ON a.driveId = d.driveId
+            WHERE a.carId = :carId AND a.startCountryCode = :countryCode AND a.startRegionName IS NOT NULL
+            GROUP BY a.startRegionName
+        ) drive_stats
+        LEFT JOIN (
+            SELECT ca.regionName, SUM(cs.energyAdded) as totalChargeEnergyKwh, COUNT(*) as chargeCount
+            FROM charge_detail_aggregates ca
+            JOIN charges_summary cs ON ca.chargeId = cs.chargeId
+            WHERE ca.carId = :carId AND ca.countryCode = :countryCode AND ca.regionName IS NOT NULL
+            GROUP BY ca.regionName
+        ) charge_stats ON drive_stats.regionName = charge_stats.regionName
+        ORDER BY drive_stats.firstVisitDate ASC
+    """)
+    suspend fun getRegionsVisited(carId: Int, countryCode: String): List<RegionVisitResult>
+
+    @Query("""
+        SELECT
+            drive_stats.regionName,
+            drive_stats.countryCode,
+            drive_stats.firstVisitDate,
+            drive_stats.lastVisitDate,
+            drive_stats.driveCount,
+            drive_stats.totalDistanceKm,
+            COALESCE(charge_stats.totalChargeEnergyKwh, 0.0) as totalChargeEnergyKwh,
+            COALESCE(charge_stats.chargeCount, 0) as chargeCount
+        FROM (
+            SELECT a.startRegionName as regionName, a.startCountryCode as countryCode,
+                   MIN(d.startDate) as firstVisitDate, MAX(d.startDate) as lastVisitDate,
+                   COUNT(*) as driveCount, SUM(d.distance) as totalDistanceKm
+            FROM drive_detail_aggregates a
+            JOIN drives_summary d ON a.driveId = d.driveId
+            WHERE a.carId = :carId AND a.startCountryCode = :countryCode AND a.startRegionName IS NOT NULL
+            AND d.startDate >= :startDate AND d.startDate < :endDate
+            GROUP BY a.startRegionName
+        ) drive_stats
+        LEFT JOIN (
+            SELECT ca.regionName, SUM(cs.energyAdded) as totalChargeEnergyKwh, COUNT(*) as chargeCount
+            FROM charge_detail_aggregates ca
+            JOIN charges_summary cs ON ca.chargeId = cs.chargeId
+            WHERE ca.carId = :carId AND ca.countryCode = :countryCode AND ca.regionName IS NOT NULL
+            AND cs.startDate >= :startDate AND cs.startDate < :endDate
+            GROUP BY ca.regionName
+        ) charge_stats ON drive_stats.regionName = charge_stats.regionName
+        ORDER BY drive_stats.firstVisitDate ASC
+    """)
+    suspend fun getRegionsVisitedInRange(carId: Int, countryCode: String, startDate: String, endDate: String): List<RegionVisitResult>
+
+    // Count unique regions in a country
+    @Query("""
+        SELECT COUNT(DISTINCT startRegionName) FROM drive_detail_aggregates
+        WHERE carId = :carId AND startCountryCode = :countryCode AND startRegionName IS NOT NULL
+    """)
+    suspend fun countUniqueRegions(carId: Int, countryCode: String): Int
 
     // === Deep Stats: Cities Visited (Drives) ===
 
@@ -571,7 +657,7 @@ interface AggregateDao {
 
     // Get coordinates of drives that need geocoding (have coordinates but no country)
     @Query("""
-        SELECT startLatitude, startLongitude FROM drive_detail_aggregates
+        SELECT startLatitude AS latitude, startLongitude AS longitude FROM drive_detail_aggregates
         WHERE carId = :carId
         AND startLatitude IS NOT NULL
         AND startLongitude IS NOT NULL
@@ -595,16 +681,10 @@ interface AggregateDao {
  * Simple lat/lon result for geocoding queries.
  */
 data class LatLonResult(
-    val startLatitude: Double?,
-    val startLongitude: Double?,
-    val latitude: Double? = null,
-    val longitude: Double? = null
+    val latitude: Double,
+    val longitude: Double
 ) {
-    fun toLatLon(): Pair<Double, Double>? {
-        val lat = startLatitude ?: latitude
-        val lon = startLongitude ?: longitude
-        return if (lat != null && lon != null) lat to lon else null
-    }
+    fun toLatLon(): Pair<Double, Double> = latitude to longitude
 }
 
 /**
@@ -658,4 +738,18 @@ data class CountryChargeStats(
     val chargeCount: Int,
     val dcCount: Int,
     val acCount: Int
+)
+
+/**
+ * Result of a region visit aggregation query.
+ */
+data class RegionVisitResult(
+    val regionName: String,
+    val countryCode: String,
+    val firstVisitDate: String,
+    val lastVisitDate: String,
+    val driveCount: Int,
+    val totalDistanceKm: Double,
+    val totalChargeEnergyKwh: Double,
+    val chargeCount: Int
 )

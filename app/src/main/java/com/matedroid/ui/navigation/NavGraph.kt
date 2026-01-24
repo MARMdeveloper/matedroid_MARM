@@ -19,7 +19,11 @@ import com.matedroid.ui.screens.drives.DrivesScreen
 import com.matedroid.ui.screens.mileage.MileageScreen
 import com.matedroid.ui.screens.settings.SettingsScreen
 import com.matedroid.ui.screens.stats.CountriesVisitedScreen
+import com.matedroid.ui.screens.stats.RegionsVisitedScreen
 import com.matedroid.ui.screens.stats.StatsScreen
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import com.matedroid.ui.screens.updates.SoftwareVersionsScreen
 import com.matedroid.domain.model.YearFilter
 
@@ -115,6 +119,16 @@ sealed class Screen(val route: String) {
             } else {
                 "stats/$carId/countries"
             }
+        }
+    }
+    data object RegionsVisited : Screen("stats/{carId}/countries/{countryCode}/regions?exteriorColor={exteriorColor}&year={year}&countryName={countryName}") {
+        fun createRoute(carId: Int, countryCode: String, countryName: String, exteriorColor: String? = null, year: Int? = null): String {
+            val encodedName = URLEncoder.encode(countryName, StandardCharsets.UTF_8.toString())
+            val params = mutableListOf<String>()
+            if (exteriorColor != null) params.add("exteriorColor=$exteriorColor")
+            if (year != null) params.add("year=$year")
+            params.add("countryName=$encodedName")
+            return "stats/$carId/countries/$countryCode/regions?${params.joinToString("&")}"
         }
     }
 }
@@ -402,6 +416,48 @@ fun NavGraph(
 
             CountriesVisitedScreen(
                 carId = carId,
+                yearFilter = yearFilter,
+                exteriorColor = exteriorColor,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToRegions = { countryCode, countryName ->
+                    navController.navigate(Screen.RegionsVisited.createRoute(carId, countryCode, countryName, exteriorColor, year))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.RegionsVisited.route,
+            arguments = listOf(
+                navArgument("carId") { type = NavType.IntType },
+                navArgument("countryCode") { type = NavType.StringType },
+                navArgument("exteriorColor") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("year") {
+                    type = NavType.IntType
+                    defaultValue = -1 // -1 means AllTime
+                },
+                navArgument("countryName") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
+            val countryCode = backStackEntry.arguments?.getString("countryCode") ?: return@composable
+            val exteriorColor = backStackEntry.arguments?.getString("exteriorColor")
+            val year = backStackEntry.arguments?.getInt("year")?.takeIf { it > 0 }
+            val yearFilter = if (year != null) YearFilter.Year(year) else YearFilter.AllTime
+            val countryName = backStackEntry.arguments?.getString("countryName")?.let {
+                URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
+            } ?: countryCode
+
+            RegionsVisitedScreen(
+                carId = carId,
+                countryCode = countryCode,
+                countryName = countryName,
                 yearFilter = yearFilter,
                 exteriorColor = exteriorColor,
                 onNavigateBack = { navController.popBackStack() }

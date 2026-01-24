@@ -227,3 +227,17 @@ data class CountryRecord(
     val totalChargeEnergyKwh: Double, // Total kWh charged in this country
     val chargeCount: Int            // Number of charges in this country
 )
+
+/**
+ * Record for a region/state visited within a country.
+ */
+data class RegionRecord(
+    val regionName: String,         // Region/state name (e.g., "Lazio", "California")
+    val countryCode: String,        // Parent country ISO code
+    val firstVisitDate: String,     // ISO date of first drive
+    val lastVisitDate: String,      // ISO date of most recent drive
+    val driveCount: Int,            // Number of drives in this region
+    val totalDistanceKm: Double,    // Total km driven in this region
+    val totalChargeEnergyKwh: Double, // Total kWh charged in this region
+    val chargeCount: Int            // Number of charges in this region
+)

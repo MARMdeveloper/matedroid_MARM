@@ -78,19 +78,22 @@ class SyncManager @Inject constructor(
         val unprocessedCharges = chargeSummaryDao.countUnprocessedCharges(carId, SchemaVersion.CURRENT)
 
         val state = syncStateDao.get(carId)
+        val hasItemsToProcess = unprocessedDrives > 0 || unprocessedCharges > 0
         if (state != null) {
             syncStateDao.upsert(
                 state.copy(
                     totalDrivesToProcess = unprocessedDrives,
                     totalChargesToProcess = unprocessedCharges,
                     drivesProcessed = 0,
-                    chargesProcessed = 0
+                    chargesProcessed = 0,
+                    // Reset detailsSynced if there are items to process (e.g., schema change)
+                    detailsSynced = if (hasItemsToProcess) false else state.detailsSynced
                 )
             )
         }
 
         // If nothing to process, mark as complete
-        if (unprocessedDrives == 0 && unprocessedCharges == 0) {
+        if (!hasItemsToProcess) {
             markSyncComplete(carId)
         } else {
             updateProgress(

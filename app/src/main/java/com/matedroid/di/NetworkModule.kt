@@ -1,6 +1,7 @@
 package com.matedroid.di
 
 import android.annotation.SuppressLint
+import com.matedroid.BuildConfig
 import com.matedroid.data.api.NominatimApi
 import com.matedroid.data.api.OpenMeteoApi
 import com.matedroid.data.api.TeslamateApi
@@ -148,10 +149,6 @@ class TeslamateApiFactory(
     }
 
     private fun createOkHttpClient(apiToken: String, acceptInvalidCerts: Boolean): OkHttpClient {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-
         val builder = OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val request = if (apiToken.isNotBlank()) {
@@ -163,10 +160,18 @@ class TeslamateApiFactory(
                 }
                 chain.proceed(request)
             }
-            .addInterceptor(loggingInterceptor)
             .connectTimeout(1, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+
+        // Only add logging in debug builds, and use HEADERS level to avoid OOM
+        // with large response bodies (drive details can be 15MB+)
+        if (BuildConfig.DEBUG) {
+            val loggingInterceptor = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.HEADERS
+            }
+            builder.addInterceptor(loggingInterceptor)
+        }
 
         if (acceptInvalidCerts) {
             configureInsecureTls(builder)

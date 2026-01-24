@@ -191,7 +191,7 @@ class ChargeDetailViewModel @Inject constructor(
     /**
      * Detect if this is a DC charge using Teslamate's logic:
      * DC charging has charger_phases = 0 or null (bypasses onboard charger)
-     * AC charging has charger_phases = 1, 2, or 3
+     * AC charging has charger_phases = 1 or 2 (for triphasic line)
      */
     private fun detectDcCharge(detail: ChargeDetail): Boolean {
         val points = detail.chargePoints ?: return false

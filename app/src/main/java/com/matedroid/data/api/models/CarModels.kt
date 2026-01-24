@@ -97,7 +97,8 @@ data class CarStatus(
     val chargeEnergyAdded: Double? get() = chargingDetails?.chargeEnergyAdded
     val chargeLimitSoc: Int? get() = chargingDetails?.chargeLimitSoc
     val chargerPower: Int? get() = chargingDetails?.chargerPower
-    val chargerPhases: Int? get() = chargingDetails?.chargerPhases
+    //val chargerPhases: Int? get() = chargingDetails?.chargerPhases
+    val acPhases: Int? get() = chargingDetails?.acPhases
     val chargerActualCurrent: Int? get() = chargingDetails?.chargerActualCurrent
     val chargeCurrentRequestMax: Int? get() = chargingDetails?.chargeCurrentRequestMax
     val isDcCharging: Boolean get() = chargingDetails?.isDcCharging ?: false
@@ -193,10 +194,20 @@ data class ChargingDetails(
     /**
      * Detect if this is DC charging using Teslamate's logic:
      * DC charging has charger_phases = 0 or null (bypasses onboard charger)
-     * AC charging has charger_phases = 1, 2, or 3
      */
     val isDcCharging: Boolean
         get() = chargerPhases == null || chargerPhases == 0
+    /**
+     * Actual number of AC phases:
+     * 1 -> monophase
+     * 2 -> triphase
+     */
+    val acPhases: Int?
+        get() = when (chargerPhases) {
+            1 -> 1
+            2, 3 -> 3
+            else -> null
+        }
 }
 
 @JsonClass(generateAdapter = true)

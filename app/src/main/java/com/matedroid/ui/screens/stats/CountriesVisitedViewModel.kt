@@ -19,7 +19,10 @@ import javax.inject.Inject
 enum class CountrySortOrder {
     FIRST_VISIT,    // Chronological by first visit date (default)
     ALPHABETICAL,   // A-Z by country name
-    DRIVE_COUNT     // Most drives first
+    DRIVE_COUNT,    // Most drives first
+    DISTANCE,       // Most distance first
+    ENERGY,         // Most energy charged first
+    CHARGES         // Most charges first
 }
 
 data class CountriesVisitedUiState(
@@ -82,6 +85,9 @@ class CountriesVisitedViewModel @Inject constructor(
             CountrySortOrder.FIRST_VISIT -> countries.sortedBy { it.firstVisitDate }
             CountrySortOrder.ALPHABETICAL -> countries.sortedBy { it.countryName }
             CountrySortOrder.DRIVE_COUNT -> countries.sortedByDescending { it.driveCount }
+            CountrySortOrder.DISTANCE -> countries.sortedByDescending { it.totalDistanceKm }
+            CountrySortOrder.ENERGY -> countries.sortedByDescending { it.totalChargeEnergyKwh }
+            CountrySortOrder.CHARGES -> countries.sortedByDescending { it.chargeCount }
         }
     }
 }
