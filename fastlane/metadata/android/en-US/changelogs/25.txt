@@ -1,0 +1,5 @@
+Your app icon now adapts to your device theme! On Android 13+, the MateDroid icon can match your system's monochrome or themed icon style. Tire pressure notifications also got a new dedicated icon.
+
+Added:
+- Monochrome/themed app icon support for Android 13+
+- Dedicated notification icon for tire pressure alerts

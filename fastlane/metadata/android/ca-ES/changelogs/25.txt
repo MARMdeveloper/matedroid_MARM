@@ -1,0 +1,5 @@
+La icona de l'app ara s'adapta al tema del teu dispositiu! A Android 13+, la icona de MateDroid pot seguir l'estil monocromàtic o temàtic del sistema. Les notificacions de pressió dels pneumàtics també tenen una nova icona dedicada.
+
+Afegit:
+- Suport d'icona monocromàtica/temàtica per a Android 13+
+- Icona dedicada per a les notificacions de pressió dels pneumàtics
