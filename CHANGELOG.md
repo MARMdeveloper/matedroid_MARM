@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-01-24
+
+### Added
+- **App Icon**: Monochrome/themed icon support for Android 13+ (contributed by [@MARMdeveloper](https://github.com/MARMdeveloper))
+- **Notifications**: Dedicated notification icon for tire pressure alerts (contributed by [@MARMdeveloper](https://github.com/MARMdeveloper))
+
 ## [0.12.0] - 2026-01-24
 
 ### Added
@@ -299,7 +305,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/vide/matedroid/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/vide/matedroid/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/vide/matedroid/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/vide/matedroid/compare/v0.11.1...v0.11.2
