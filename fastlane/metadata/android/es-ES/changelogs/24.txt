@@ -1,0 +1,13 @@
+Te gusta viajar? Ahora puedes explorar todos tus viajes por el mundo desde tu telefono! Sync 5x mas rapida y alertas de presion.
+
+Agregado:
+- Paises Visitados: mapas interactivos con estadisticas por pais/region
+- Notificaciones de Presion de Neumaticos
+- Filtro Hoy para viajes/cargas
+- Model X SteelGrey + llantas Slipstream
+
+Cambiado:
+- Sync inicial 5x mas rapida
+
+Corregido:
+- Fases AC, tiempo offline, traducciones

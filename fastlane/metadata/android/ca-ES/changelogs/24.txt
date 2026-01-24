@@ -1,0 +1,13 @@
+T'agrada viatjar? Ara pots explorar tots els teus viatges pel mon des del telefon! Sync 5x mes rapida i alertes de pressio.
+
+Afegit:
+- Paisos Visitats: mapes interactius amb estadistiques per pais/regio
+- Notificacions de Pressio dels Pneumatics
+- Filtre Avui per viatges/carregues
+- Model X SteelGrey + llantes Slipstream
+
+Canviat:
+- Sync inicial 5x mes rapida
+
+Corregit:
+- Fases AC, temps offline, traduccions

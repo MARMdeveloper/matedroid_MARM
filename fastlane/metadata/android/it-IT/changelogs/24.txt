@@ -1,0 +1,13 @@
+Ami viaggiare? Ora puoi esplorare tutti i tuoi viaggi nel mondo dal telefono! Sync 5x più veloce e avvisi pressione gomme.
+
+Aggiunto:
+- Paesi Visitati: mappe interattive con statistiche per paese/regione
+- Notifiche Pressione Gomme
+- Filtro Oggi per viaggi/ricariche
+- Model X SteelGrey + cerchi Slipstream
+
+Modificato:
+- Sync iniziale 5x più veloce
+
+Corretto:
+- Fasi AC, tempo offline, traduzioni

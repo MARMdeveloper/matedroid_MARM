@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-01-24
+
 ### Added
 - **Tire Pressure Notifications**: Background monitoring with alerts when any tire enters or exits a warning state
   - Uses Teslamate API's TPMS warning flags for detection
@@ -24,13 +26,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tappable legend to filter by AC or DC charge type
   - Year filter chips to view data from specific years
 - **Geocoding**: Background location identification using OpenStreetMap Nominatim with rate limiting and caching
+- **Drives/Charges**: "Today" filter option to quickly view today's activity
+- **Model X**: Added SteelGrey color and Slipstream wheel support
 
 ### Changed
 - **Stats Sync**: Faster detail sync with parallel batch processing (10 concurrent API calls)
 - **Stats Sync**: Progress bar now accurately reflects reprocessing progress when app updates require data migration
+- **Stats for Nerds**: Energy now displays in MWh when exceeding 999 kWh
 
 ### Fixed
 - **Stats for Nerds**: Deep sync progress bar now properly disappears when sync completes
+- **Dashboard**: AC charging now shows actual number of phases instead of always showing 3
+- **Dashboard**: Show offline time duration when car has been offline
+- Various translation fixes
 
 ## [0.11.3] - 2026-01-20
 
@@ -291,7 +299,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v0.11.3...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/vide/matedroid/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/vide/matedroid/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/vide/matedroid/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/vide/matedroid/compare/v0.11.0...v0.11.1
