@@ -782,8 +782,12 @@ private fun DrivesChartPage(
             DrivesChartType.TOP_SPEED -> { v -> "${v.toInt()} $speedUnit" }
         }
 
-        // Show max ~6 labels to avoid crowding
-        val labelInterval = ((barData.size + 5) / 6).coerceAtLeast(1)
+        // Set number of labels to display
+        val labelInterval = when {
+            barData.size <= 7 -> 1  // Show all for Today and last 7 days
+            barData.size <= 30 -> 3 // Show 1 label every 3 bars for lsat 30 days
+            else -> ((barData.size + 5) / 6).coerceAtLeast(1)
+        }
 
         InteractiveBarChart(
             data = barData,

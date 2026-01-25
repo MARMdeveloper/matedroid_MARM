@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -112,35 +113,26 @@ class DrivesViewModel @Inject constructor(
     }
 
     fun setCarId(id: Int) {
-        if (carId == id && isInitialized) {
-            // Already initialized with this car, don't reload
-            return
-        }
+        if (carId == id && isInitialized) return
         carId = id
         loadUnits(id)
-
-        // Only apply default filter on first initialization
         if (!isInitialized) {
             isInitialized = true
-            applyDateFilterEnum(_uiState.value.dateFilter)
+            setDateFilter(_uiState.value.dateFilter)
         }
     }
 
     fun setDateFilter(filter: DriveDateFilter) {
-        _uiState.update { it.copy(dateFilter = filter) }
-        applyDateFilterEnum(filter)
-    }
-
-    private fun applyDateFilterEnum(filter: DriveDateFilter) {
-        if (filter.days != null) {
-            val endDate = LocalDate.now()
-            val startDate = endDate.minusDays(filter.days)
-            _uiState.update { it.copy(startDate = startDate, endDate = endDate) }
-            loadDrives(startDate, endDate)
-        } else {
-            _uiState.update { it.copy(startDate = null, endDate = null) }
-            loadDrives(null, null)
+        val endDate = LocalDate.now()
+        val startDate = filter.days?.let { days ->
+            if (days > 0) endDate.minusDays(days - 1) else endDate
         }
+        _uiState.update { it.copy(
+            dateFilter = filter,
+            startDate = startDate,
+            endDate = if (filter.days != null) endDate else null
+        )}
+        loadDrives(startDate, if (filter.days != null) endDate else null)
     }
 
     fun saveScrollPosition(index: Int, offset: Int) {
@@ -251,7 +243,7 @@ class DrivesViewModel @Inject constructor(
 
         // Calculate summary and chart data from filtered drives
         val summary = calculateSummary(drivesForStats)
-        val chartData = calculateChartData(drivesForStats, granularity)
+        val chartData = calculateChartData(drivesForStats, granularity, state.startDate)
 
         _uiState.update {
             it.copy(
@@ -274,50 +266,77 @@ class DrivesViewModel @Inject constructor(
         }
     }
 
-    private fun calculateChartData(drives: List<DriveData>, granularity: DriveChartGranularity): List<DriveChartData> {
+    private fun calculateChartData(drives: List<DriveData>, granularity: DriveChartGranularity, startDate: LocalDate?): List<DriveChartData> {
         if (drives.isEmpty()) return emptyList()
 
         val formatter = DateTimeFormatter.ISO_DATE_TIME
         val weekFields = WeekFields.of(Locale.getDefault())
 
-        return drives
-            .mapNotNull { drive ->
+        //  Group the charges by day
+        val drivesByDay = drives.mapNotNull { drive ->
+            drive.startDate?.let {
+                try {
+                    val date = LocalDateTime.parse(it, formatter).toLocalDate()
+                    date.toEpochDay() to drive
+                } catch (e: Exception) { null }
+            }
+        }.groupBy({ it.first }, { it.second })
+
+        return if (granularity == DriveChartGranularity.DAILY) {
+            // DAILY ranges (today, last 7 and last 30 days
+            // If not startDate (All Time), get the first trip, or today
+            val start = startDate ?: (drivesByDay.keys.minOrNull()?.let { LocalDate.ofEpochDay(it) } ?: LocalDate.now())
+            val end = LocalDate.now()
+            val result = mutableListOf<DriveChartData>()
+            var current = start
+            while (!current.isAfter(end)) {
+                val key = current.toEpochDay()
+                val drivesInDay = drivesByDay[key] ?: emptyList()
+                result.add(
+                    createChartPoint(
+                        label = current.format(DateTimeFormatter.ofPattern("d/M")),
+                        sortKey = key,
+                        drives = drivesInDay
+                    )
+                )
+                current = current.plusDays(1)
+            }
+            result
+        } else {
+            // WEEKLY and MONTHLY ranges
+            drives.mapNotNull { drive ->
                 drive.startDate?.let { dateStr ->
                     try {
-                        val date = LocalDate.parse(dateStr, formatter)
+                        val date = LocalDateTime.parse(dateStr, formatter).toLocalDate()
                         val (label, sortKey) = when (granularity) {
-                            DriveChartGranularity.DAILY -> {
-                                val dayLabel = date.format(DateTimeFormatter.ofPattern("d/M"))
-                                dayLabel to date.toEpochDay()
-                            }
                             DriveChartGranularity.WEEKLY -> {
-                                val weekOfYear = date.get(weekFields.weekOfWeekBasedYear())
-                                val year = date.get(weekFields.weekBasedYear())
-                                "W$weekOfYear" to (year * 100L + weekOfYear)
+                                val firstDay = date.with(weekFields.dayOfWeek(), 1)
+                                "W${date.get(weekFields.weekOfYear())}" to firstDay.toEpochDay()
                             }
-                            DriveChartGranularity.MONTHLY -> {
-                                val yearMonth = YearMonth.of(date.year, date.month)
-                                yearMonth.format(DateTimeFormatter.ofPattern("MMM yy")) to (date.year * 12L + date.monthValue)
+                            else -> { // MONTHLY
+                                date.format(DateTimeFormatter.ofPattern("MMM yy")) to YearMonth.from(date).atDay(1).toEpochDay()
                             }
                         }
                         Triple(label, sortKey, drive)
-                    } catch (e: Exception) {
-                        null
-                    }
+                    } catch (e: Exception) { null }
                 }
             }
-            .groupBy { Pair(it.first, it.second) }
-            .map { (key, drivesInPeriod) ->
-                DriveChartData(
-                    label = key.first,
-                    count = drivesInPeriod.size,
-                    totalDistance = drivesInPeriod.sumOf { it.third.distance ?: 0.0 },
-                    totalDurationMin = drivesInPeriod.sumOf { it.third.durationMin ?: 0 },
-                    maxSpeed = drivesInPeriod.maxOfOrNull { it.third.speedMax ?: 0 } ?: 0,
-                    sortKey = key.second
-                )
-            }
-            .sortedBy { it.sortKey }
+                .groupBy { it.first to it.second }
+                .map { (key, list) -> createChartPoint(key.first, key.second, list.map { it.third }) }
+                .sortedBy { it.sortKey }
+        }
+    }
+
+    // Helper function to centralize chart data creation
+    private fun createChartPoint(label: String, sortKey: Long, drives: List<DriveData>): DriveChartData {
+        return DriveChartData(
+            label = label,
+            count = drives.size,
+            totalDistance = drives.sumOf { it.distance ?: 0.0 },
+            totalDurationMin = drives.sumOf { it.durationMin ?: 0 },
+            maxSpeed = drives.maxOfOrNull { it.speedMax ?: 0 } ?: 0,
+            sortKey = sortKey
+        )
     }
 
     private fun calculateSummary(drives: List<DriveData>): DrivesSummary {

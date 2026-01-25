@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -125,14 +126,15 @@ class ChargesViewModel @Inject constructor(
 
     fun setDateFilter(filter: DateFilter) {
         val endDate = LocalDate.now()
-        val startDate = filter.days?.let { endDate.minusDays(it) }
-        _uiState.update { it.copy(startDate = startDate, endDate = if (filter.days != null) endDate else null, selectedFilter = filter) }
+        val startDate = filter.days?.let { days ->
+            if (days > 0) endDate.minusDays(days - 1) else endDate
+        }
+        _uiState.update { it.copy(
+            selectedFilter = filter,
+            startDate = startDate,
+            endDate = if (filter.days != null) endDate else null
+        )}
         loadCharges(startDate, if (filter.days != null) endDate else null)
-    }
-
-    fun clearDateFilter() {
-        _uiState.update { it.copy(startDate = null, endDate = null, selectedFilter = DateFilter.ALL_TIME) }
-        loadCharges(null, null)
     }
 
     fun refresh() {
@@ -251,7 +253,7 @@ class ChargesViewModel @Inject constructor(
 
         // Calculate summary and chart data from filtered charges
         val summary = calculateSummary(chargesForStats)
-        val chartData = calculateChartData(chargesForStats, granularity)
+        val chartData = calculateChartData(chargesForStats, granularity, state.startDate)
 
         _uiState.update {
             it.copy(
@@ -274,51 +276,78 @@ class ChargesViewModel @Inject constructor(
         }
     }
 
-    private fun calculateChartData(charges: List<ChargeData>, granularity: ChartGranularity): List<ChargeChartData> {
+    private fun calculateChartData(charges: List<ChargeData>, granularity: ChartGranularity, startDate: LocalDate?): List<ChargeChartData> {
         if (charges.isEmpty()) return emptyList()
 
         val formatter = DateTimeFormatter.ISO_DATE_TIME
         val weekFields = WeekFields.of(Locale.getDefault())
 
-        return charges
-            .mapNotNull { charge ->
+        //  Group the charges by day
+        val chargesByDay = charges.mapNotNull { charge ->
+            charge.startDate?.let {
+                try {
+                    // Use of localdatetime to support the full ISO format
+                    val date = LocalDateTime.parse(it, formatter).toLocalDate()
+                    date.toEpochDay() to charge
+                } catch (e: Exception) { null }
+            }
+        }.groupBy({ it.first }, { it.second })
+
+        return if (granularity == ChartGranularity.DAILY) {
+            // DAILY ranges (today, last 7 and last 30 days
+            // If not startDate (All Time), get the first trip, or today
+            val start = startDate ?: (chargesByDay.keys.minOrNull()?.let { LocalDate.ofEpochDay(it) } ?: LocalDate.now())
+            val end = LocalDate.now()
+            val result = mutableListOf<ChargeChartData>()
+            var current = start
+            while (!current.isAfter(end)) {
+                val key = current.toEpochDay()
+                val itemsInDay = chargesByDay[key] ?: emptyList()
+                result.add(
+                    createChargeChartPoint(
+                        label = current.format(DateTimeFormatter.ofPattern("d/M")),
+                        sortKey = key,
+                        charges = itemsInDay
+                    )
+                )
+                current = current.plusDays(1)
+            }
+            result
+        } else {
+            // WEEKLY and MONTHLY ranges
+            charges.mapNotNull { charge ->
                 charge.startDate?.let { dateStr ->
                     try {
-                        val date = LocalDate.parse(dateStr, formatter)
+                        val date = LocalDateTime.parse(dateStr, formatter).toLocalDate()
                         val (label, sortKey) = when (granularity) {
-                            ChartGranularity.DAILY -> {
-                                val dayLabel = date.format(DateTimeFormatter.ofPattern("d/M"))
-                                dayLabel to date.toEpochDay()
-                            }
                             ChartGranularity.WEEKLY -> {
-                                val weekOfYear = date.get(weekFields.weekOfWeekBasedYear())
-                                val year = date.get(weekFields.weekBasedYear())
-                                "W$weekOfYear" to (year * 100L + weekOfYear)
+                                val firstDay = date.with(weekFields.dayOfWeek(), 1)
+                                "W${date.get(weekFields.weekOfYear())}" to firstDay.toEpochDay()
                             }
-                            ChartGranularity.MONTHLY -> {
-                                val yearMonth = YearMonth.of(date.year, date.month)
-                                yearMonth.format(DateTimeFormatter.ofPattern("MMM yy")) to (date.year * 12L + date.monthValue)
+                            else -> { // MONTHLY
+                                date.format(DateTimeFormatter.ofPattern("MMM yy")) to YearMonth.from(date).atDay(1).toEpochDay()
                             }
                         }
                         Triple(label, sortKey, charge)
-                    } catch (e: Exception) {
-                        null
-                    }
+                    } catch (e: Exception) { null }
                 }
             }
-            .groupBy { Pair(it.first, it.second) }
-            .map { (key, chargesInPeriod) ->
-                ChargeChartData(
-                    label = key.first,
-                    count = chargesInPeriod.size,
-                    totalEnergy = chargesInPeriod.sumOf { it.third.chargeEnergyAdded ?: 0.0 },
-                    totalCost = chargesInPeriod.sumOf { it.third.cost ?: 0.0 },
-                    sortKey = key.second
-                )
-            }
-            .sortedBy { it.sortKey }
+                .groupBy { it.first to it.second }
+                .map { (key, list) -> createChargeChartPoint(key.first, key.second, list.map { it.third }) }
+                .sortedBy { it.sortKey }
+        }
     }
 
+    // Helper function to centralize chart data creation
+    private fun createChargeChartPoint(label: String, sortKey: Long, charges: List<ChargeData>): ChargeChartData {
+        return ChargeChartData(
+            label = label,
+            count = charges.size,
+            totalEnergy = charges.sumOf { it.chargeEnergyAdded ?: 0.0 },
+            totalCost = charges.sumOf { it.cost ?: 0.0 },
+            sortKey = sortKey
+        )
+    }
     private fun calculateSummary(charges: List<ChargeData>): ChargesSummary {
         if (charges.isEmpty()) return ChargesSummary()
 
