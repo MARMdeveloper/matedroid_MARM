@@ -38,7 +38,8 @@ import androidx.compose.ui.unit.sp
 data class BarChartData(
     val label: String,
     val value: Double,
-    val displayValue: String = value.toString()
+    val displayValue: String = value.toString(),
+    val color: Color? = null // for C bar color
 )
 
 @Composable
@@ -125,7 +126,8 @@ fun InteractiveBarChart(
                 }
 
                 val isSelected = index == selectedBarIndex
-                val currentBarColor = if (isSelected) barColor.copy(alpha = 0.7f) else barColor
+                val baseBarColor = barData.color ?: barColor
+                val currentBarColor = if (isSelected) baseBarColor.copy(alpha = 0.7f) else baseBarColor
 
                 if (barHeight > 0) {
                     drawRect(
