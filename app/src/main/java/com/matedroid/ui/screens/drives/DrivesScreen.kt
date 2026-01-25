@@ -614,7 +614,7 @@ private fun formatDate(dateStr: String): String {
 private fun formatDuration(minutes: Int): String {
     val hours = minutes / 60
     val mins = minutes % 60
-    return if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
+    return "%d:%02d".format(hours, mins)
 }
 
 /**
@@ -799,5 +799,5 @@ private fun DrivesChartPage(
 private fun formatDurationChart(minutes: Int): String {
     val hours = minutes / 60
     val mins = minutes % 60
-    return if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
+    return "%d:%02d".format(hours, mins)
 }
