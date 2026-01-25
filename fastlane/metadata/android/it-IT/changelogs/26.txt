@@ -1,0 +1,9 @@
+Migliorata l'internazionalizzazione e la coerenza della formattazione in tutta l'app.
+
+Modifiche:
+- La durata ora viene visualizzata nel formato "H:MM" in modo uniforme
+- I valori di distanza ora mostrano i separatori delle migliaia in base alla lingua
+
+Correzioni:
+- Data/ora nei Dettagli Viaggio ora visualizzata nel formato locale corretto
+- Corretto il simbolo % duplicato in Salute Batteria per le lingue non inglesi

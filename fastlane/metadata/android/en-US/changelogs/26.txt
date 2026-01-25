@@ -1,0 +1,9 @@
+Improved internationalization and formatting consistency across the app.
+
+Changed:
+- Duration now displays as "H:MM" format consistently
+- Distance values now show locale-aware thousands separators
+
+Fixed:
+- Date/time in Drive Details now displays in proper locale format
+- Fixed duplicate % symbol in Battery Health for non-English locales

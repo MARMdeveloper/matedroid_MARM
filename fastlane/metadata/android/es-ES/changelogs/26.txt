@@ -1,0 +1,9 @@
+Mejora de la internacionalización y consistencia del formato en toda la app.
+
+Cambios:
+- La duración ahora se muestra en formato "H:MM" de forma consistente
+- Los valores de distancia ahora muestran separadores de miles según el idioma
+
+Correcciones:
+- Fecha/hora en Detalles del Viaje ahora se muestra en el formato local correcto
+- Corregido el símbolo % duplicado en Salud de Batería para idiomas no ingleses

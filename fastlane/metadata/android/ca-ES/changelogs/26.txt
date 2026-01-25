@@ -1,0 +1,9 @@
+Millora de la internacionalització i consistència del format a tota l'app.
+
+Canvis:
+- La durada ara es mostra en format "H:MM" de manera consistent
+- Els valors de distància ara mostren separadors de milers segons l'idioma
+
+Correccions:
+- Data/hora als Detalls del Viatge ara es mostra en el format local correcte
+- Corregit el símbol % duplicat a Salut de Bateria per a idiomes no anglesos
