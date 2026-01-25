@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ElectricBolt
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Paid
@@ -56,7 +57,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,6 +74,7 @@ import com.matedroid.R
 import com.matedroid.data.api.models.ChargeData
 import com.matedroid.ui.components.BarChartData
 import com.matedroid.ui.components.InteractiveBarChart
+//import com.matedroid.ui.screens.battery.InfoDialog
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import java.time.LocalDateTime
@@ -701,6 +705,17 @@ private fun ChargesChartsPager(
     palette: CarColorPalette
 ) {
     val pagerState = rememberPagerState(pageCount = { ChargesChartType.entries.size })
+    var showTooltip by remember { mutableStateOf(false) }
+
+    if (showTooltip) {
+        InfoDialog(
+            //title = "título",    //capacityTitle,
+            //message = "mensaje", // capacityMessage,
+            //confirmText =      // gotItLabel,
+            onDismiss = { showTooltip = false },
+            palette = palette
+        )
+    }
 
     Column {
         Card(
@@ -722,9 +737,11 @@ private fun ChargesChartsPager(
                         granularity = granularity,
                         chartType = chartType,
                         currencySymbol = currencySymbol,
-                        palette = palette
+                        palette = palette,
+                        onShowInfo = { showTooltip = true }
                     )
                 }
+                ChartLegend(palette = palette)
             }
         }
 
@@ -760,7 +777,8 @@ private fun ChargesChartPage(
     granularity: ChartGranularity,
     chartType: ChargesChartType,
     currencySymbol: String,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    onShowInfo: () -> Unit
 ) {
     val title = when (chartType) {
         ChargesChartType.ENERGY -> when (granularity) {
@@ -784,7 +802,6 @@ private fun ChargesChartPage(
         ChargesChartType.COST -> Icons.Default.Paid
         ChargesChartType.COUNT -> Icons.Default.ElectricBolt
     }
-
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -800,30 +817,47 @@ private fun ChargesChartPage(
                 fontWeight = FontWeight.Bold,
                 color = palette.onSurface
             )
+            // Info icon
+            IconButton(
+                onClick = onShowInfo,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Info",
+                    tint = palette.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        val colorAC = palette.accent
+        val colorDC = Color(0xFFFF9800) // Orange for DC
         val barData = when (chartType) {
             ChargesChartType.ENERGY -> chartData.map { data ->
                 BarChartData(
                     label = data.label,
                     value = data.totalEnergy,
-                    displayValue = "%.1f kWh".format(data.totalEnergy)
+                    displayValue = "%.1f kWh".format(data.totalEnergy),
+                    color = if (data.hasDc) colorDC else colorAC
                 )
             }
             ChargesChartType.COST -> chartData.map { data ->
                 BarChartData(
                     label = data.label,
                     value = data.totalCost,
-                    displayValue = "$currencySymbol%.2f".format(data.totalCost)
+                    displayValue = "$currencySymbol%.2f".format(data.totalCost),
+                    color = if (data.hasDc) colorDC else colorAC
                 )
             }
             ChargesChartType.COUNT -> chartData.map { data ->
                 BarChartData(
                     label = data.label,
                     value = data.count.toDouble(),
-                    displayValue = data.count.toString()
+                    displayValue = data.count.toString(),
+                    color = if (data.hasDc) colorDC else colorAC
                 )
             }
         }
@@ -850,4 +884,80 @@ private fun ChargesChartPage(
             valueFormatter = valueFormatter
         )
     }
+}
+
+@Composable
+private fun ChartLegend(
+    palette: CarColorPalette
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Leyenda AC
+        LegendItem(color = palette.accent, label = stringResource(R.string.charging_ac))
+
+        Spacer(modifier = Modifier.width(24.dp))
+
+        // Leyenda DC
+        LegendItem(color = Color(0xFFFF9800), label = stringResource(R.string.charging_dc))
+    }
+}
+
+@Composable
+private fun LegendItem(color: Color, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(color)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun InfoDialog(onDismiss: () -> Unit, palette: CarColorPalette) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Información del gráfico") // stringResource(R.string.chart_info_title)) //
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Mensaje de explicación", // stringResource(R.string.chart_color_explanation),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                // Explicación AC
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(12.dp).background(palette.accent, RoundedCornerShape(2.dp)))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("AC: Energía de carga lenta.", style = MaterialTheme.typography.bodySmall)
+                }
+
+                // Explicación DC
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(12.dp).background(Color(0xFFFF9800), RoundedCornerShape(2.dp)))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("DC: Indica que este día hubo al menos una sesión de carga rápida.", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.ok))
+            }
+        }
+    )
 }
