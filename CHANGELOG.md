@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Drive Details**: Date/time now displays in proper locale format instead of mixed languages (fixes #103)
+- **Battery Health**: Fixed duplicate % symbol in "Loss (%)" label for ES/IT/CA locales (fixes #102)
 
 ## [0.12.1] - 2026-01-24
 
