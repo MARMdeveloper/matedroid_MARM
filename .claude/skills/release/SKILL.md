@@ -59,6 +59,8 @@ Fixed:
 
 Keep it concise - this appears in Play Store and F-Droid. Make the opening text engaging without it being too verbose or showy.
 
+Remember, the fastlane changelog MUST BE less than 500 characters long.
+
 ### 5. Translate Changelogs (Automatic)
 
 Automatically translate the English changelog and write the translations to:
@@ -74,6 +76,8 @@ Translation guidelines:
 - Keep proper nouns unchanged: MateDroid, Teslamate, Tesla, GitHub, etc.
 - Maintain the same tone: engaging but concise
 - Each translation must also respect the 500 character limit
+
+All the changelogs in fastlane, for any language, MUST BE LESS THAN 500 characters. ALWAYS check with `wc` how long they are.
 
 ### 6. Commit and Tag
 
