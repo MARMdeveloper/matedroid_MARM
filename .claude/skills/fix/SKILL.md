@@ -1,0 +1,154 @@
+---
+name: fix
+description: Fix a GitHub issue following the standard workflow. Reads the issue, creates a branch/PR, applies the fix, runs tests, and merges when CI passes.
+allowed-tools: Read, Edit, Write, Bash, Glob, Grep, mcp__github__issue_read, mcp__github__add_issue_comment, mcp__github__create_pull_request, mcp__github__pull_request_read, mcp__github__merge_pull_request, mcp__github__update_pull_request, mcp__github__list_issues
+---
+
+# Fix GitHub Issue Skill
+
+Fix a GitHub issue following the complete workflow from investigation to merge.
+
+## Arguments
+
+The skill expects a GitHub issue number as argument:
+```
+/fix 123
+```
+
+If no argument is provided, ask the user for the issue number.
+
+## Workflow
+
+### 1. Read the Issue
+
+Use `mcp__github__issue_read` to get the issue details:
+- Issue title and description
+- Any existing comments
+- Labels and assignees
+
+**Important**: Note the language the issue was written in. You will use this language for all interactions on the issue itself.
+
+### 2. Investigate the Problem
+
+Before writing any code:
+1. Understand the issue completely
+2. Search the codebase for relevant files using Glob and Grep
+3. Read the relevant source files
+4. If anything is unclear, add a comment to the issue asking for clarification (in the issue's original language)
+
+### 3. Create a Branch
+
+Create a new branch for the fix:
+```bash
+git checkout -b fix/issue-<number>-<short-description>
+```
+
+Example: `fix/issue-42-dashboard-crash`
+
+### 4. Apply the Fix
+
+Edit the necessary files to fix the issue. Follow these principles:
+- Keep changes minimal and focused on the issue
+- Do not refactor unrelated code
+- Add comments only where the logic isn't self-evident
+- All code comments MUST be in English
+
+### 5. Run Tests Locally
+
+Run the test suite to verify the fix doesn't break anything:
+```bash
+./gradlew testDebugUnitTest
+```
+
+Fix any test failures before proceeding.
+
+### 6. Commit and Push
+
+Commit with a semantic commit message:
+```bash
+git add -A
+git commit -m "fix: <description of fix> (#<issue-number>)"
+git push -u origin fix/issue-<number>-<short-description>
+```
+
+### 7. Create Pull Request
+
+Use `mcp__github__create_pull_request` to create a PR:
+- **Title**: Same as the commit message (e.g., `fix: resolve dashboard crash (#42)`)
+- **Body**: Must be in English and include:
+  - Summary of the problem
+  - Explanation of the fix
+  - Reference to the issue: `Fixes #<issue-number>`
+  - Test plan
+
+Example PR body:
+```markdown
+## Summary
+Brief description of what was fixed.
+
+Fixes #42
+
+## Root Cause
+Explanation of why the bug occurred.
+
+## Solution
+What changes were made to fix it.
+
+## Test Plan
+- [ ] Manual testing steps
+- [ ] Unit tests pass
+
+Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+### 8. Wait for CI
+
+Monitor the GitHub Actions workflow:
+```bash
+gh run list --limit 5
+gh run watch
+```
+
+If CI fails:
+1. Read the failure logs: `gh run view <run-id> --log-failed`
+2. Fix the issues locally
+3. Commit and push the fixes
+4. Wait for CI again
+
+Do NOT proceed to merge until all checks pass.
+
+### 9. Add Issue Comment
+
+Once the PR is created, add a comment to the original issue (in the issue's original language) letting the reporter know a fix is in progress:
+- Link to the PR
+- Brief explanation of what was done
+
+### 10. Merge the PR
+
+Once CI passes, merge the PR:
+```bash
+gh pr merge <pr-number> --squash --delete-branch
+```
+
+Or use `mcp__github__merge_pull_request` with `merge_method: "squash"`.
+
+### 11. Confirm Closure
+
+Verify the issue was automatically closed by the `Fixes #<number>` reference. If not, close it manually and add a final comment (in the issue's original language) confirming the fix is released.
+
+## Language Rules
+
+| Context | Language |
+|---------|----------|
+| Issue comments | Same language as the original issue |
+| Questions to clarify the issue | Same language as the original issue |
+| Code comments | English |
+| Commit messages | English |
+| PR title and body | English |
+| Code review responses | English |
+
+## Error Handling
+
+- If the issue cannot be reproduced, comment on the issue asking for more details
+- If the fix requires breaking changes, discuss in the issue before proceeding
+- If tests cannot pass due to unrelated failures, note this and ask the user how to proceed
