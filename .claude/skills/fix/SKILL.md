@@ -25,6 +25,7 @@ Use `mcp__github__issue_read` to get the issue details:
 - Issue title and description
 - Any existing comments
 - Labels and assignees
+- References to other issues, noted by the #123 format.
 
 **Important**: Note the language the issue was written in. You will use this language for all interactions on the issue itself.
 
