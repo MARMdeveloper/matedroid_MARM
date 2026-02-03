@@ -73,8 +73,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
 import com.matedroid.data.api.models.ChargeData
 import com.matedroid.ui.components.BarChartData
+import com.matedroid.ui.components.BarSegment
 import com.matedroid.ui.components.InteractiveBarChart
-//import com.matedroid.ui.screens.battery.InfoDialog
+import com.matedroid.ui.theme.ACColor
+import com.matedroid.ui.theme.DCColor
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import java.time.LocalDateTime
@@ -322,25 +324,32 @@ private fun ChargeTypeFilterChips(
     ) {
         items(ChargeTypeFilter.entries.toList()) { filter ->
             val isSelected = filter == selectedFilter
-            val chipColors = when (filter) {
-                ChargeTypeFilter.ALL -> FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = palette.surface,
-                    selectedLabelColor = palette.onSurface
-                )
-                ChargeTypeFilter.AC -> FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(0xFF4CAF50),
-                    selectedLabelColor = Color.White
-                )
-                ChargeTypeFilter.DC -> FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(0xFFFF9800),
-                    selectedLabelColor = Color.White
-                )
+            val themeColor = when (filter) {
+                ChargeTypeFilter.ALL -> palette.onSurfaceVariant
+                ChargeTypeFilter.AC -> Color(0xFF4CAF50) // Verde
+                ChargeTypeFilter.DC -> Color(0xFFFF9800) // Naranja
             }
+
             FilterChip(
                 selected = isSelected,
                 onClick = { onFilterSelected(filter) },
-                label = { Text(getChargeTypeFilterLabel(filter)) },
-                colors = chipColors
+                label = {
+                    Text(
+                        text = getChargeTypeFilterLabel(filter),
+                        color = if (isSelected) Color.White else themeColor
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = themeColor,
+                    containerColor = Color.Transparent
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = isSelected,
+                    borderColor = themeColor.copy(alpha = 0.6f),
+                    borderWidth = 1.dp,
+                    selectedBorderWidth = 0.dp
+                )
             )
         }
     }
@@ -705,17 +714,6 @@ private fun ChargesChartsPager(
     palette: CarColorPalette
 ) {
     val pagerState = rememberPagerState(pageCount = { ChargesChartType.entries.size })
-    var showTooltip by remember { mutableStateOf(false) }
-
-    if (showTooltip) {
-        InfoDialog(
-            //title = "título",    //capacityTitle,
-            //message = "mensaje", // capacityMessage,
-            //confirmText =      // gotItLabel,
-            onDismiss = { showTooltip = false },
-            palette = palette
-        )
-    }
 
     Column {
         Card(
@@ -737,11 +735,10 @@ private fun ChargesChartsPager(
                         granularity = granularity,
                         chartType = chartType,
                         currencySymbol = currencySymbol,
-                        palette = palette,
-                        onShowInfo = { showTooltip = true }
+                        palette = palette
                     )
                 }
-                ChartLegend(palette = palette)
+                //ChartLegend(palette = palette)
             }
         }
 
@@ -777,8 +774,7 @@ private fun ChargesChartPage(
     granularity: ChartGranularity,
     chartType: ChargesChartType,
     currencySymbol: String,
-    palette: CarColorPalette,
-    onShowInfo: () -> Unit
+    palette: CarColorPalette
 ) {
     val title = when (chartType) {
         ChargesChartType.ENERGY -> when (granularity) {
@@ -817,31 +813,20 @@ private fun ChargesChartPage(
                 fontWeight = FontWeight.Bold,
                 color = palette.onSurface
             )
-            // Info icon
-            IconButton(
-                onClick = onShowInfo,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Info",
-                    tint = palette.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.size(16.dp)
-                )
-            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        val colorAC = palette.accent
-        val colorDC = Color(0xFFFF9800) // Orange for DC
         val barData = when (chartType) {
             ChargesChartType.ENERGY -> chartData.map { data ->
                 BarChartData(
                     label = data.label,
                     value = data.totalEnergy,
                     displayValue = "%.1f kWh".format(data.totalEnergy),
-                    color = if (data.hasDc) colorDC else colorAC
+                    segments = listOf(
+                        BarSegment(data.energyAc, ACColor, "AC"),
+                        BarSegment(data.energyDc, DCColor, "DC")
+                    )
                 )
             }
             ChargesChartType.COST -> chartData.map { data ->
@@ -849,7 +834,10 @@ private fun ChargesChartPage(
                     label = data.label,
                     value = data.totalCost,
                     displayValue = "$currencySymbol%.2f".format(data.totalCost),
-                    color = if (data.hasDc) colorDC else colorAC
+                    segments = listOf(
+                        BarSegment(data.costAc, ACColor, "AC"),
+                        BarSegment(data.costDc, DCColor, "DC")
+                    )
                 )
             }
             ChargesChartType.COUNT -> chartData.map { data ->
@@ -857,7 +845,10 @@ private fun ChargesChartPage(
                     label = data.label,
                     value = data.count.toDouble(),
                     displayValue = data.count.toString(),
-                    color = if (data.hasDc) colorDC else colorAC
+                    segments = listOf(
+                        BarSegment(data.countAc.toDouble(), ACColor, "AC"),
+                        BarSegment(data.countDc.toDouble(), DCColor, "DC")
+                    )
                 )
             }
         }
@@ -886,6 +877,7 @@ private fun ChargesChartPage(
     }
 }
 
+/*
 @Composable
 private fun ChartLegend(
     palette: CarColorPalette
@@ -897,12 +889,8 @@ private fun ChartLegend(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Leyenda AC
-        LegendItem(color = palette.accent, label = stringResource(R.string.charging_ac))
-
+        LegendItem(color = Color(0xFF4CAF50) , label = stringResource(R.string.charging_ac))
         Spacer(modifier = Modifier.width(24.dp))
-
-        // Leyenda DC
         LegendItem(color = Color(0xFFFF9800), label = stringResource(R.string.charging_dc))
     }
 }
@@ -924,40 +912,4 @@ private fun LegendItem(color: Color, label: String) {
         )
     }
 }
-
-@Composable
-private fun InfoDialog(onDismiss: () -> Unit, palette: CarColorPalette) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = "Información del gráfico") // stringResource(R.string.chart_info_title)) //
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "Mensaje de explicación", // stringResource(R.string.chart_color_explanation),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                // Explicación AC
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(12.dp).background(palette.accent, RoundedCornerShape(2.dp)))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("AC: Energía de carga lenta.", style = MaterialTheme.typography.bodySmall)
-                }
-
-                // Explicación DC
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(12.dp).background(Color(0xFFFF9800), RoundedCornerShape(2.dp)))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("DC: Indica que este día hubo al menos una sesión de carga rápida.", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        },
-        confirmButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.ok))
-            }
-        }
-    )
-}
+*/
