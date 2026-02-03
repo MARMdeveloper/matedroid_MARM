@@ -6,6 +6,10 @@ import androidx.compose.ui.graphics.Color
 val NeutralPrimary = Color(0xFF5C6670)
 val NeutralDark = Color(0xFF1C1F23)
 
+// Charge colors
+val ACColor = Color(0xFF4CAF50)
+val DCColor = Color(0xFFFF9800)
+
 // Status colors (semantic - always fixed)
 val StatusSuccess = Color(0xFF4CAF50)
 val StatusWarning = Color(0xFFFF9800)
@@ -50,3 +54,6 @@ val SurfaceVariantDark = Color(0xFF44474A)
 val OnSurfaceVariantDark = Color(0xFFCACCCE)
 val ErrorDark = Color(0xFFFFB4AB)
 val OnErrorDark = Color(0xFF690005)
+
+// Other colors
+val BoundaryColor = Color(0xFF4CAF50)

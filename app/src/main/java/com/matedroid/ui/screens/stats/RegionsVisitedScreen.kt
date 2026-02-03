@@ -81,8 +81,9 @@ import com.matedroid.domain.model.YearFilter
 import com.matedroid.ui.icons.CustomIcons
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
-import com.matedroid.ui.theme.StatusSuccess
-import com.matedroid.ui.theme.StatusWarning
+import com.matedroid.ui.theme.BoundaryColor
+import com.matedroid.ui.theme.ACColor
+import com.matedroid.ui.theme.DCColor
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
@@ -483,13 +484,7 @@ private fun CountryMapCard(
     val cardShape = RoundedCornerShape(20.dp)
     val chargeCount = chargeLocations.size
     val driveCount = driveLocations.size
-
-    // Colors for markers - green for AC, yellow/orange for DC (matching status colors used elsewhere)
-    val acColor = StatusSuccess
-    val dcColor = StatusWarning
     val driveColor = palette.accent
-    val acColorArgb = acColor.toArgb()
-    val dcColorArgb = dcColor.toArgb()
     val driveColorArgb = driveColor.toArgb()
 
     // Track if initial zoom has been done (only zoom once when page first opens)
@@ -579,7 +574,7 @@ private fun CountryMapCard(
 
                         // Add country highlight if boundary is available
                         countryBoundary?.let { boundary ->
-                            val highlights = createCountryHighlightOverlays(boundary, acColorArgb)
+                            val highlights = createCountryHighlightOverlays(boundary, BoundaryColor.toArgb())
                             mapView.overlays.addAll(highlights)
                         }
 
@@ -588,7 +583,7 @@ private fun CountryMapCard(
                             MapViewMode.CHARGES -> {
                                 chargeLocations.forEach { charge ->
                                     val geoPoint = GeoPoint(charge.latitude, charge.longitude)
-                                    val markerColor = if (charge.isDcCharge) dcColorArgb else acColorArgb
+                                    val markerColor = if (charge.isDcCharge) DCColor else ACColor
 
                                     val marker = Marker(mapView).apply {
                                         position = geoPoint
@@ -599,7 +594,7 @@ private fun CountryMapCard(
                                         val dotDrawable = GradientDrawable().apply {
                                             shape = GradientDrawable.OVAL
                                             setSize(32, 32)
-                                            setColor(markerColor)
+                                            setColor(markerColor.toArgb())
                                             setStroke(4, android.graphics.Color.WHITE)
                                         }
                                         icon = dotDrawable
@@ -673,7 +668,7 @@ private fun CountryMapCard(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(
-                                        if (acSelected) acColor.copy(alpha = 0.2f) else Color.Transparent
+                                        if (acSelected) ACColor.copy(alpha = 0.2f) else Color.Transparent
                                     )
                                     .clickable { onChargeTypeFilterToggle(ChargeTypeFilter.AC_ONLY) }
                                     .padding(horizontal = 6.dp, vertical = 4.dp)
@@ -682,13 +677,13 @@ private fun CountryMapCard(
                                     modifier = Modifier
                                         .size(10.dp)
                                         .clip(CircleShape)
-                                        .background(acColor)
+                                        .background(ACColor)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "AC",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (acSelected) acColor else Color.DarkGray,
+                                    color = if (acSelected) ACColor else Color.DarkGray,
                                     fontWeight = if (acSelected) FontWeight.Bold else FontWeight.Medium
                                 )
                             }
@@ -699,7 +694,7 @@ private fun CountryMapCard(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(
-                                        if (dcSelected) dcColor.copy(alpha = 0.2f) else Color.Transparent
+                                        if (dcSelected) DCColor.copy(alpha = 0.2f) else Color.Transparent
                                     )
                                     .clickable { onChargeTypeFilterToggle(ChargeTypeFilter.DC_ONLY) }
                                     .padding(horizontal = 6.dp, vertical = 4.dp)
@@ -708,13 +703,13 @@ private fun CountryMapCard(
                                     modifier = Modifier
                                         .size(10.dp)
                                         .clip(CircleShape)
-                                        .background(dcColor)
+                                        .background(DCColor)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "DC",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (dcSelected) dcColor else Color.DarkGray,
+                                    color = if (dcSelected) DCColor else Color.DarkGray,
                                     fontWeight = if (dcSelected) FontWeight.Bold else FontWeight.Medium
                                 )
                             }
