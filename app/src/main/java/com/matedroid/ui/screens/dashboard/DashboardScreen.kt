@@ -141,6 +141,8 @@ import com.matedroid.ui.theme.MateDroidTheme
 import com.matedroid.ui.theme.StatusError
 import com.matedroid.ui.theme.StatusSuccess
 import com.matedroid.ui.theme.StatusWarning
+import com.matedroid.ui.theme.ACColor
+import com.matedroid.ui.theme.DCColor
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -649,7 +651,7 @@ private fun CarImage(
     val glowRadius = 70f
 
     // AC/DC color tint
-    val chargeTypeColor = if (isDcCharging) StatusWarning else StatusSuccess
+    val chargeTypeColor = if (isDcCharging) DCColor else ACColor
 
     // Breathing animation - smooth in/out
     val infiniteTransition = rememberInfiniteTransition(label = "chargingBreath")
@@ -1273,7 +1275,7 @@ private fun ChargingPowerGaugeCompact(
 ) {
     val isDcCharging = status.isDcCharging
     val powerKw = status.chargerPower ?: 0
-    val gaugeColor = if (isDcCharging) StatusWarning else StatusSuccess
+    val gaugeColor = if (isDcCharging) DCColor else ACColor
 
     // Calculate gauge progress based on charging type
     val gaugeProgress = if (isDcCharging) {

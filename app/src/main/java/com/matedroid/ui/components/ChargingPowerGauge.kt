@@ -26,8 +26,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.matedroid.ui.theme.MateDroidTheme
-import com.matedroid.ui.theme.StatusSuccess
-import com.matedroid.ui.theme.StatusWarning
+import com.matedroid.ui.theme.ACColor
+import com.matedroid.ui.theme.DCColor
 
 /**
  * A compact circular gauge showing charging power with an AC/DC badge.
@@ -51,7 +51,7 @@ fun ChargingPowerGauge(
     modifier: Modifier = Modifier,
     gaugeSize: Dp = 41.dp
 ) {
-    val gaugeColor = if (isDcCharging) StatusWarning else StatusSuccess
+    val gaugeColor = if (isDcCharging) DCColor else ACColor
     val trackColor = gaugeColor.copy(alpha = 0.2f)
 
     Row(
@@ -133,7 +133,7 @@ fun ChargingPowerGauge(
  */
 @Composable
 private fun ChargeTypeBadge(isDcCharging: Boolean) {
-    val backgroundColor = if (isDcCharging) StatusWarning else StatusSuccess
+    val backgroundColor = if (isDcCharging) DCColor else ACColor
     val text = if (isDcCharging) "DC" else "AC"
 
     Box(
