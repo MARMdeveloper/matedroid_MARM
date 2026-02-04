@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Settings**: Teslamate Base URL is now automatically retrieved from the API instead of requiring manual configuration
+- **Charges**: Edit cost button now appears on all charges (previously only shown for charges without a cost set)
 - **Stats for nerds**: AC/DC ratio bar now shows percentage values inside with inverted colors
 - **Stats for nerds**: Replaced "Top Speed" with "Cost / 100 km" in Drives Overview - a more useful metric for tracking EV operating costs
 
