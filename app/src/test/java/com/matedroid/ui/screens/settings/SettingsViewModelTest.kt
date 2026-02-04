@@ -2,6 +2,9 @@ package com.matedroid.ui.screens.settings
 
 import android.content.Context
 import androidx.work.WorkManager
+import com.matedroid.data.api.models.GlobalSettings
+import com.matedroid.data.api.models.GlobalSettingsData
+import com.matedroid.data.api.models.TeslamateUrls
 import com.matedroid.data.local.AppSettings
 import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.repository.ApiResult
@@ -152,6 +155,9 @@ class SettingsViewModelTest {
     @Test
     fun `testConnection succeeds with valid url`() = runTest {
         coEvery { repository.testConnection(any(), any()) } returns ApiResult.Success(Unit)
+        // Mock global settings fetch (called after successful connection)
+        coEvery { repository.getGlobalSettings() } returns ApiResult.Success(GlobalSettingsData(settings = GlobalSettings(teslamateUrls = TeslamateUrls(baseUrl = "https://teslamate.example.com"))))
+        coEvery { settingsDataStore.saveTeslamateBaseUrl(any()) } returns Unit
 
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -170,6 +176,9 @@ class SettingsViewModelTest {
     fun `testConnection tests both servers when secondary is configured`() = runTest {
         coEvery { repository.testConnection("https://primary.com", any()) } returns ApiResult.Success(Unit)
         coEvery { repository.testConnection("https://secondary.com", any()) } returns ApiResult.Success(Unit)
+        // Mock global settings fetch (called after successful connection)
+        coEvery { repository.getGlobalSettings() } returns ApiResult.Success(GlobalSettingsData(settings = GlobalSettings(teslamateUrls = TeslamateUrls(baseUrl = "https://teslamate.example.com"))))
+        coEvery { settingsDataStore.saveTeslamateBaseUrl(any()) } returns Unit
 
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -284,6 +293,9 @@ class SettingsViewModelTest {
     @Test
     fun `clearTestResult clears test result`() = runTest {
         coEvery { repository.testConnection(any(), any()) } returns ApiResult.Success(Unit)
+        // Mock global settings fetch (called after successful connection)
+        coEvery { repository.getGlobalSettings() } returns ApiResult.Success(GlobalSettingsData(settings = GlobalSettings(teslamateUrls = TeslamateUrls(baseUrl = "https://teslamate.example.com"))))
+        coEvery { settingsDataStore.saveTeslamateBaseUrl(any()) } returns Unit
 
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
