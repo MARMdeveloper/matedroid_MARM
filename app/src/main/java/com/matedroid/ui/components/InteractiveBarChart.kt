@@ -263,7 +263,7 @@ fun InteractiveBarChart(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.inverseOnSurface,
-                            //modifier = Modifier.align(Alignment.End).padding(top = 2.dp)
+                            modifier = Modifier.align(Alignment.End).padding(top = 2.dp)
                         )
                     } else {
                         // If there are no segments, show the single value
