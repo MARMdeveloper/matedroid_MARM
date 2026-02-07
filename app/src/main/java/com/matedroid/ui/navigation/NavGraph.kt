@@ -1,6 +1,7 @@
 package com.matedroid.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -12,6 +13,7 @@ import androidx.navigation.navArgument
 import com.matedroid.ui.screens.battery.BatteryScreen
 import com.matedroid.ui.screens.charges.ChargeDetailScreen
 import com.matedroid.ui.screens.charges.ChargesScreen
+import com.matedroid.ui.screens.charges.CurrentChargeScreen
 import com.matedroid.ui.screens.dashboard.DashboardScreen
 import com.matedroid.ui.screens.demo.PalettePreviewScreen
 import com.matedroid.ui.screens.drives.DriveDetailScreen
@@ -26,6 +28,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import com.matedroid.ui.screens.updates.SoftwareVersionsScreen
 import com.matedroid.domain.model.YearFilter
+import android.content.Intent
 
 sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
@@ -99,6 +102,15 @@ sealed class Screen(val route: String) {
             }
         }
     }
+    data object CurrentCharge : Screen("charges/{carId}/current?exteriorColor={exteriorColor}") {
+        fun createRoute(carId: Int, exteriorColor: String? = null): String {
+            return if (exteriorColor != null) {
+                "charges/$carId/current?exteriorColor=$exteriorColor"
+            } else {
+                "charges/$carId/current"
+            }
+        }
+    }
     data object PalettePreview : Screen("palette_preview")
     data object Stats : Screen("stats/{carId}?exteriorColor={exteriorColor}") {
         fun createRoute(carId: Int, exteriorColor: String? = null): String {
@@ -135,6 +147,7 @@ sealed class Screen(val route: String) {
 
 @Composable
 fun NavGraph(
+    intent: Intent? = null,
     startViewModel: StartDestinationViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
@@ -142,6 +155,19 @@ fun NavGraph(
 
     if (startDestination == null) {
         return // Wait for determination
+    }
+
+    // Handle deep-link from notification
+    LaunchedEffect(intent) {
+        intent?.let {
+            val navigateTo = it.getStringExtra("EXTRA_NAVIGATE_TO")
+            val carId = it.getIntExtra("EXTRA_CAR_ID", -1)
+            if (navigateTo == "current_charge" && carId > 0) {
+                navController.navigate(Screen.CurrentCharge.createRoute(carId)) {
+                    launchSingleTop = true
+                }
+            }
+        }
     }
 
     NavHost(
@@ -183,6 +209,9 @@ fun NavGraph(
                 },
                 onNavigateToStats = { carId, exteriorColor ->
                     navController.navigate(Screen.Stats.createRoute(carId, exteriorColor))
+                },
+                onNavigateToCurrentCharge = { carId, exteriorColor ->
+                    navController.navigate(Screen.CurrentCharge.createRoute(carId, exteriorColor))
                 }
             )
         }
@@ -228,6 +257,26 @@ fun NavGraph(
             ChargeDetailScreen(
                 carId = carId,
                 chargeId = chargeId,
+                exteriorColor = exteriorColor,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.CurrentCharge.route,
+            arguments = listOf(
+                navArgument("carId") { type = NavType.IntType },
+                navArgument("exteriorColor") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
+            val exteriorColor = backStackEntry.arguments?.getString("exteriorColor")
+            CurrentChargeScreen(
+                carId = carId,
                 exteriorColor = exteriorColor,
                 onNavigateBack = { navController.popBackStack() }
             )

@@ -42,7 +42,8 @@ data class ChargeData(
 @JsonClass(generateAdapter = true)
 data class ChargeBatteryDetails(
     @Json(name = "start_battery_level") val startBatteryLevel: Int? = null,
-    @Json(name = "end_battery_level") val endBatteryLevel: Int? = null
+    @Json(name = "end_battery_level") val endBatteryLevel: Int? = null,
+    @Json(name = "current_battery_level") val currentBatteryLevel: Int? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -86,10 +87,13 @@ data class ChargeDetail(
     @Json(name = "odometer") val odometer: Double? = null,
     @Json(name = "latitude") val latitude: Double? = null,
     @Json(name = "longitude") val longitude: Double? = null,
-    @Json(name = "charge_details") val chargePoints: List<ChargePoint>? = null
+    @Json(name = "charge_details") val chargePoints: List<ChargePoint>? = null,
+    @Json(name = "is_charging") val isCharging: Boolean? = null
 ) {
     val startBatteryLevel: Int? get() = batteryDetails?.startBatteryLevel
     val endBatteryLevel: Int? get() = batteryDetails?.endBatteryLevel
+    val currentBatteryLevel: Int? get() = batteryDetails?.currentBatteryLevel
+    val currentOrEndBatteryLevel: Int? get() = currentBatteryLevel ?: endBatteryLevel
 }
 
 @JsonClass(generateAdapter = true)

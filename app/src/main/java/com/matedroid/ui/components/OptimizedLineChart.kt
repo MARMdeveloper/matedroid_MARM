@@ -2,11 +2,19 @@ package com.matedroid.ui.components
 
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -83,10 +91,16 @@ fun OptimizedLineChart(
                         val chartHeightPx = chartHeightDp.toPx()
                         val points = chartData.displayPoints
 
-                        if (points.isEmpty()) return@detectTapGestures
+                        if (points.isEmpty()) {
+                            selectedPoint = null
+                            return@detectTapGestures
+                        }
 
-                        // Only respond to taps in the chart area (not the time labels)
-                        if (offset.y > chartHeightPx) return@detectTapGestures
+                        // Tap outside chart area dismisses tooltip
+                        if (offset.y > chartHeightPx) {
+                            selectedPoint = null
+                            return@detectTapGestures
+                        }
 
                         // Find closest point to tap
                         val stepX = width / (points.size - 1).coerceAtLeast(1)
@@ -146,14 +160,33 @@ fun OptimizedLineChart(
             }
         }
 
-        // Tooltip overlay
+        // Tooltip popup - dismisses on tap outside
         selectedPoint?.let { point ->
-            TooltipOverlay(
-                value = point.value,
-                unit = unit,
-                position = point.position,
-                modifier = Modifier.fillMaxSize()
-            )
+            val density = LocalDensity.current
+            Popup(
+                offset = with(density) {
+                    IntOffset(
+                        x = point.position.x.roundToInt(),
+                        y = (point.position.y - 48.dp.toPx()).roundToInt()
+                    )
+                },
+                onDismissRequest = { selectedPoint = null },
+                properties = PopupProperties(focusable = true)
+            ) {
+                val text = "%.1f".format(point.value) + " $unit"
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier
+                        .background(
+                            Color(0xCC323232),
+                            RoundedCornerShape(6.dp)
+                        )
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
         }
     }
 }
@@ -403,48 +436,3 @@ private fun DrawScope.drawTimeLabels(
     }
 }
 
-@Composable
-private fun TooltipOverlay(
-    value: Float,
-    unit: String,
-    position: Offset,
-    modifier: Modifier = Modifier
-) {
-    // Simple tooltip using Canvas text drawing for performance
-    Canvas(modifier = modifier) {
-        val text = "%.1f $unit".format(value)
-
-        drawContext.canvas.nativeCanvas.apply {
-            val textPaint = Paint().apply {
-                color = android.graphics.Color.WHITE
-                textSize = 32f
-                isAntiAlias = true
-                textAlign = Paint.Align.CENTER
-            }
-
-            val bgPaint = Paint().apply {
-                color = android.graphics.Color.argb(200, 50, 50, 50)
-                isAntiAlias = true
-            }
-
-            val textWidth = textPaint.measureText(text)
-            val padding = 16f
-            val tooltipY = (position.y - 40f).coerceAtLeast(50f)
-            val tooltipX = position.x.coerceIn(textWidth / 2 + padding, size.width - textWidth / 2 - padding)
-
-            // Draw background
-            drawRoundRect(
-                tooltipX - textWidth / 2 - padding,
-                tooltipY - 30f,
-                tooltipX + textWidth / 2 + padding,
-                tooltipY + 8f,
-                12f,
-                12f,
-                bgPaint
-            )
-
-            // Draw text
-            drawText(text, tooltipX, tooltipY, textPaint)
-        }
-    }
-}

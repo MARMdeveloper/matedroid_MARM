@@ -153,6 +153,7 @@ fun DashboardScreen(
     onNavigateToMileage: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     onNavigateToUpdates: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     onNavigateToStats: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
+    onNavigateToCurrentCharge: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -297,6 +298,11 @@ fun DashboardScreen(
                         onNavigateToStats = {
                             uiState.selectedCarId?.let { carId ->
                                 onNavigateToStats(carId, uiState.selectedCarExterior?.exteriorColor)
+                            }
+                        },
+                        onNavigateToCurrentCharge = {
+                            uiState.selectedCarId?.let { carId ->
+                                onNavigateToCurrentCharge(carId, uiState.selectedCarExterior?.exteriorColor)
                             }
                         },
                         onSaveCarImageOverride = { override ->
@@ -451,6 +457,7 @@ private fun DashboardContent(
     onNavigateToMileage: () -> Unit = {},
     onNavigateToUpdates: () -> Unit = {},
     onNavigateToStats: () -> Unit = {},
+    onNavigateToCurrentCharge: () -> Unit = {},
     onSaveCarImageOverride: (CarImageOverride?) -> Unit = {}
 ) {
     val isDarkTheme = isSystemInDarkTheme()
@@ -495,6 +502,7 @@ private fun DashboardContent(
             imageOverride = imageOverride,
             onNavigateToBattery = onNavigateToBattery,
             onNavigateToStats = onNavigateToStats,
+            onNavigateToCurrentCharge = onNavigateToCurrentCharge,
             onCarImageLongPress = { showCarImagePicker = true }
         )
 
@@ -1027,6 +1035,7 @@ private fun BatteryCard(
     imageOverride: CarImageOverride? = null,
     onNavigateToBattery: () -> Unit = {},
     onNavigateToStats: () -> Unit = {},
+    onNavigateToCurrentCharge: () -> Unit = {},
     onCarImageLongPress: () -> Unit = {}
 ) {
     val isDarkTheme = isSystemInDarkTheme()
@@ -1104,11 +1113,13 @@ private fun BatteryCard(
                     )
                     if (status.isCharging) {
                         Spacer(modifier = Modifier.width(8.dp))
-                        // Mini charging gauge with AC/DC badge
-                        ChargingPowerGaugeCompact(
-                            status = status,
-                            carTrimBadging = carTrimBadging
-                        )
+                        // Mini charging gauge with AC/DC badge - tappable to open live charge
+                        Box(modifier = Modifier.clickable(onClick = onNavigateToCurrentCharge)) {
+                            ChargingPowerGaugeCompact(
+                                status = status,
+                                carTrimBadging = carTrimBadging
+                            )
+                        }
                     }
                     if (batteryLevel > 90 && !status.isCharging) {
                         Spacer(modifier = Modifier.width(6.dp))
@@ -1161,12 +1172,17 @@ private fun BatteryCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Charging info row - shows details when charging
+            // Charging info row - shows details when charging, tappable to open live charge
             if (status.isCharging) {
-                ChargingDetailsRow(
-                    status = status,
-                    palette = palette
-                )
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onNavigateToCurrentCharge)
+                ) {
+                    ChargingDetailsRow(
+                        status = status,
+                        palette = palette
+                    )
+                }
             }
         }
     }
@@ -1341,6 +1357,14 @@ private fun ChargingPowerGaugeCompact(
                 color = androidx.compose.ui.graphics.Color.White
             )
         }
+
+        // Chevron to indicate tappable
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = gaugeColor
+        )
     }
 }
 

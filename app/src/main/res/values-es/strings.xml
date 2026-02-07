@@ -1023,4 +1023,18 @@
     <string name="car_variant_m3_legacy">M3 pre-2024</string>
     <string name="car_variant_m3_highland">M3 2024+</string>
     <string name="car_variant_m3_highland_perf">M3 2024+ Performance</string>
+
+    <!-- ==================== Live Charge Screen ==================== -->
+    <!-- Indicador en tiempo real mostrado durante la carga activa -->
+    <string name="current_charge_live">LIVE</string>
+    <!-- Etiqueta de tiempo transcurrido para el contador en tiempo real -->
+    <string name="current_charge_elapsed">Transcurrido</string>
+    <!-- Etiqueta de tiempo estimado de finalización -->
+    <string name="current_charge_estimated_end">Fin estimado</string>
+    <!-- Mostrado cuando la versión de la API es demasiado antigua -->
+    <string name="current_charge_unsupported">La monitorización de carga en curso requiere TeslaMate API 1.24 o superior</string>
+    <!-- Mostrado cuando el coche no está cargando actualmente -->
+    <string name="current_charge_not_charging">El coche no está cargando actualmente</string>
+    <!-- Título del gráfico de voltaje y corriente de doble eje -->
+    <string name="voltage_and_current_profile">Voltaje &amp; Corriente</string>
 </resources>

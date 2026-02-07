@@ -242,6 +242,26 @@ class TeslamateRepository @Inject constructor(
         }
     }
 
+    suspend fun getCurrentCharge(carId: Int): ApiResult<ChargeDetail> {
+        return executeWithFallback { api ->
+            try {
+                val response = api.getCurrentCharge(carId)
+                if (response.isSuccessful) {
+                    val detail = response.body()?.data?.charge
+                    if (detail != null) {
+                        ApiResult.Success(detail)
+                    } else {
+                        ApiResult.Error("No current charge data returned")
+                    }
+                } else {
+                    ApiResult.Error("Failed to fetch current charge: ${response.code()}", response.code())
+                }
+            } catch (e: Exception) {
+                throw e
+            }
+        }
+    }
+
     suspend fun getChargeDetail(carId: Int, chargeId: Int): ApiResult<ChargeDetail> {
         return executeWithFallback { api ->
             try {

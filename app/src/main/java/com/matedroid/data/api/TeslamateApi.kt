@@ -48,6 +48,11 @@ interface TeslamateApi {
         @Path("chargeId") chargeId: Int
     ): Response<ChargeDetailResponse>
 
+    @GET("api/v1/cars/{carId}/charges/current")
+    suspend fun getCurrentCharge(
+        @Path("carId") carId: Int
+    ): Response<ChargeDetailResponse>
+
     @GET("api/v1/cars/{carId}/drives")
     suspend fun getDrives(
         @Path("carId") carId: Int,

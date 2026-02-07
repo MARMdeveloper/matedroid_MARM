@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Live Charge Screen**: Real-time charging session visualization accessible from the dashboard charge gauge or charging notification tap. Shows live elapsed time, instant power, voltage/current (AC), SoC progress bar, power/voltage/current charts, and battery level chart. Requires TeslaMate API 1.24+.
 - **Charging Notifications**: Live update notifications during charging sessions (Android 16+) with visual battery progress bar showing current level and charge limit. Falls back to standard dismissable notifications on older Android versions.
 
 ### Changed

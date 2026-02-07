@@ -89,6 +89,7 @@ class ChargingNotificationManager @Inject constructor(
             )
         } else {
             buildFallbackNotification(
+                carId = car.carId,
                 title = title,
                 contentText = contentText,
                 batteryLevel = batteryLevel
@@ -204,7 +205,7 @@ class ChargingNotificationManager @Inject constructor(
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setVisibility(Notification.VISIBILITY_PUBLIC)  // Show on lock screen
-            .setContentIntent(createContentIntent())
+            .setContentIntent(createContentIntent(car.carId))
 
         // Add car image as large icon if available
         carBitmap?.let { bitmap ->
@@ -222,6 +223,7 @@ class ChargingNotificationManager @Inject constructor(
      * Build fallback notification for Android < 16.
      */
     private fun buildFallbackNotification(
+        carId: Int,
         title: String,
         contentText: String,
         batteryLevel: Int
@@ -235,20 +237,22 @@ class ChargingNotificationManager @Inject constructor(
             .setOnlyAlertOnce(true)
             .setAutoCancel(false)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)  // Show on lock screen
-            .setContentIntent(createContentIntent())
+            .setContentIntent(createContentIntent(carId))
             .build()
     }
 
     /**
-     * Create a PendingIntent that opens the app when notification is tapped.
+     * Create a PendingIntent that opens the app and navigates to the current charge screen.
      */
-    private fun createContentIntent(): PendingIntent {
+    private fun createContentIntent(carId: Int): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("EXTRA_NAVIGATE_TO", "current_charge")
+            putExtra("EXTRA_CAR_ID", carId)
         }
         return PendingIntent.getActivity(
             context,
-            0,
+            carId, // Use carId as requestCode for multi-car uniqueness
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
