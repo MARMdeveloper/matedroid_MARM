@@ -1,0 +1,16 @@
+MateDroid 1.0 — ya en Google Play!
+
+Agregado:
+- Carga en Vivo con graficos de potencia y SoC
+- Notificaciones de carga con progreso en vivo (Android 16+)
+- Foto de perfil del coche (pulsacion larga en dashboard)
+
+Cambiado:
+- URL Teslamate recuperada automaticamente de la API
+- Coste/100 km reemplaza Velocidad Max
+- Selector de coches filtra por color y llantas
+
+Corregido:
+- Filtros de rutas con dias correctos
+- Limpieza de notificaciones de carga
+- Mapeo de llantas en imagenes del coche

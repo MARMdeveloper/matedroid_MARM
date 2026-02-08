@@ -7,19 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-02-08
+
 ### Added
 - **Live Charge Screen**: Real-time charging session visualization accessible from the dashboard charge gauge or charging notification tap. Shows live elapsed time, instant power, voltage/current (AC), SoC progress bar, power/voltage/current charts, and battery level chart. Requires TeslaMate API 1.24+.
 - **Charging Notifications**: Live update notifications during charging sessions (Android 16+) with visual battery progress bar showing current level and charge limit. Falls back to standard dismissable notifications on older Android versions.
+- **Car Profile Picture**: Long-press the car image on the dashboard to choose a different angle
+- **Google Play Store**: Now available on the Google Play Store alongside F-Droid
 
 ### Changed
+- **Dashboard**: Car picker now filters by detected color, trim, and wheels for a cleaner selection
 - **Settings**: Teslamate Base URL is now automatically retrieved from the API instead of requiring manual configuration
 - **Charges**: Edit cost button now appears on all charges (previously only shown for charges without a cost set)
-- **Stats for nerds**: AC/DC ratio bar now shows percentage values inside with inverted colors
-- **Stats for nerds**: Replaced "Top Speed" with "Cost / 100 km" in Drives Overview - a more useful metric for tracking EV operating costs
+- **Stats for Nerds**: AC/DC ratio bar now shows percentage values inside with inverted colors
+- **Stats for Nerds**: Replaced "Top Speed" with "Cost / 100 km" in Drives Overview - a more useful metric for tracking EV operating costs
 
 ### Fixed
-- **Stats for nerds**: Fixed AC/DC translation inconsistency - technical terms should not be translated (CA/CC → AC/DC)
+- **Drives**: Show all days when filtered by last 7 or last 30 days (contributed by [@MARMdeveloper](https://github.com/MARMdeveloper), fixes #94)
+- **Stats for Nerds**: Fixed AC/DC translation inconsistency - technical terms should not be translated (CA/CC → AC/DC)
 - **Dashboard**: Loading and error messages now properly center each line when text wraps
+- **Car Images**: Fixed wheel mappings and removed incomplete wheelless assets
+- **Notifications**: Charging notification properly cancelled when service stops
 
 ## [0.12.4] - 2026-01-29
 
@@ -350,7 +358,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v0.12.4...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/vide/matedroid/compare/v0.12.4...v1.0.0
 [0.12.4]: https://github.com/vide/matedroid/compare/v0.12.3...v0.12.4
 [0.12.3]: https://github.com/vide/matedroid/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/vide/matedroid/compare/v0.12.1...v0.12.2
