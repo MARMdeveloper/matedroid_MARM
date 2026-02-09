@@ -26,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ElectricalServices
-import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -308,7 +307,6 @@ private fun CurrentChargeHeaderCard(
 ) {
     val unknownLabel = stringResource(R.string.unknown)
     val estimatedEndLabel = stringResource(R.string.current_charge_estimated_end)
-    val energyAddedLabel = stringResource(R.string.energy_added_header)
     val elapsedLabel = stringResource(R.string.current_charge_elapsed)
 
     // Get instant values from the latest data point
@@ -316,6 +314,11 @@ private fun CurrentChargeHeaderCard(
     val instantPower = latestPoint?.chargerPower
     val instantVoltage = latestPoint?.chargerVoltage
     val instantCurrent = latestPoint?.chargerCurrent
+
+    val startLevel = detail.startBatteryLevel ?: 0
+    val currentLevel = detail.currentOrEndBatteryLevel ?: 0
+    val targetLevel = chargeLimitSoc ?: 100
+    val solidGreen = Color(0xFF4CAF50)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -327,7 +330,88 @@ private fun CurrentChargeHeaderCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Elapsed time (live counter) + Estimated end
+            // 3-column SoC row: start → current → target
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Start
+                Column(
+                    horizontalAlignment = Alignment.Start,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "$startLevel%",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = stringResource(R.string.soc_start),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+
+                // Current (hero, with bolt icon)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(2f)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Bolt,
+                            contentDescription = null,
+                            modifier = Modifier.size(28.dp),
+                            tint = solidGreen
+                        )
+                        Text(
+                            text = "$currentLevel%",
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = solidGreen
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.soc_now),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = solidGreen
+                    )
+                }
+
+                // Target
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "$targetLevel%",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = stringResource(R.string.soc_target),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            // SoC progress bar
+            LiveSocProgressBar(
+                currentLevel = currentLevel,
+                startLevel = startLevel,
+                targetLevel = targetLevel,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Elapsed time + Estimated end
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -375,7 +459,7 @@ private fun CurrentChargeHeaderCard(
                 }
             }
 
-            // Energy added + battery progress + AC/DC badge
+            // Energy added + Instant power (compact row)
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
             )
@@ -383,116 +467,72 @@ private fun CurrentChargeHeaderCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 // Energy added with AC/DC badge
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Power,
+                        imageVector = Icons.Default.Bolt,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = Color(0xFF4CAF50)
+                        modifier = Modifier.size(20.dp),
+                        tint = solidGreen
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text(
-                            text = energyAddedLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                        )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "%.2f kWh".format(detail.chargeEnergyAdded ?: 0.0),
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF4CAF50)
+                                color = solidGreen
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             LiveChargeTypeBadge(isDcCharge = isDcCharge)
                         }
+                        Text(
+                            text = stringResource(R.string.soc_energy_added),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
                     }
                 }
 
-                // Battery progress (start% -> current%)
-                val startLevel = detail.startBatteryLevel ?: 0
-                val currentLevel = detail.currentOrEndBatteryLevel ?: 0
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "$startLevel% \u2192 $currentLevel%",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = "+${currentLevel - startLevel}%",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF4CAF50)
-                    )
-                }
-            }
-
-            // SoC progress bar
-            LiveSocProgressBar(
-                currentLevel = detail.currentOrEndBatteryLevel ?: 0,
-                startLevel = detail.startBatteryLevel ?: 0,
-                targetLevel = chargeLimitSoc ?: 100,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Instant power + voltage/current
-            if (instantPower != null) {
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Instant power
+                // Instant power
+                if (instantPower != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Bolt,
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = stringResource(R.string.power),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                            )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 text = "$instantPower kW",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                        }
-                    }
-
-                    // Voltage & Current (AC only)
-                    if (!isDcCharge && instantVoltage != null && instantCurrent != null) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = stringResource(R.string.voltage_and_current_profile),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                )
-                                Text(
-                                    text = "$instantVoltage V \u00B7 $instantCurrent A",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
+                            Text(
+                                text = stringResource(R.string.soc_instant_power),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
                         }
                     }
                 }
+            }
+
+            // Voltage & Current (AC only)
+            if (!isDcCharge && instantVoltage != null && instantCurrent != null) {
+                Text(
+                    text = "$instantVoltage V \u00B7 $instantCurrent A",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

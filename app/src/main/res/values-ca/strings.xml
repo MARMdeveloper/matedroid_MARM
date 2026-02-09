@@ -1037,4 +1037,11 @@
     <string name="current_charge_not_charging">El cotxe no està carregant actualment</string>
     <!-- Títol del gràfic de voltatge i corrent de doble eix -->
     <string name="voltage_and_current_profile">Voltatge &amp; Corrent</string>
+    <!-- Etiquetes SoC per a la fila de 3 columnes a la capçalera de càrrega en temps real -->
+    <string name="soc_start">inici</string>
+    <string name="soc_now">ara</string>
+    <string name="soc_target">objectiu</string>
+    <!-- Etiquetes fila compacta energia/potència -->
+    <string name="soc_energy_added">energia afegida</string>
+    <string name="soc_instant_power">instantània</string>
 </resources>
