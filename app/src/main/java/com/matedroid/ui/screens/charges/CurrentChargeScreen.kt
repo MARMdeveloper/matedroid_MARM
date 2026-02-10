@@ -263,8 +263,8 @@ private fun CurrentChargeContent(
                     FullscreenDualAxisLineChart(
                         dataLeft = voltages,
                         dataRight = currents,
-                        colorLeft = MaterialTheme.colorScheme.tertiary,
-                        colorRight = MaterialTheme.colorScheme.secondary,
+                        colorLeft = Color(0xFFFFA726),
+                        colorRight = Color(0xFF42A5F5),
                         unitLeft = "V",
                         unitRight = "A",
                         timeLabels = timeLabels,

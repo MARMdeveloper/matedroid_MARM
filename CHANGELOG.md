@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Notifications**: Charging notification now shows a 3-segment progress bar — charged (bright), charging-to-limit (dimmed), and beyond-limit (gray) — with bolt tracker at current SoC (#147)
+- **Live Charge Screen**: Voltage and Current lines in the V/A chart now use distinct colors (amber and blue) instead of similar gray tones
 
 ## [1.0.0] - 2026-02-08
 
