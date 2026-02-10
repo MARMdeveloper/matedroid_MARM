@@ -75,6 +75,17 @@ interface ChargeSummaryDao {
     """)
     suspend fun avgCostPerKwh(carId: Int): Double
 
+    // Average cost per kWh in range
+    @Query("""
+        SELECT COALESCE(SUM(cost) / NULLIF(SUM(energyAdded), 0), 0)
+        FROM charges_summary 
+        WHERE carId = :carId 
+        AND startDate >= :startDate 
+        AND startDate < :endDate
+        AND cost IS NOT NULL
+    """)
+    suspend fun avgCostPerKwhInRange(carId: Int, startDate: String, endDate: String): Double
+
     // Biggest single charge (by energy added)
     @Query("""
         SELECT * FROM charges_summary

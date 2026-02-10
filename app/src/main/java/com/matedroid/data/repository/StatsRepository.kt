@@ -154,7 +154,7 @@ class StatsRepository @Inject constructor(
             totalCharges = chargeSummaryDao.countInRange(carId, startDate, endDate),
             totalEnergyAddedKwh = chargeSummaryDao.sumEnergyAddedInRange(carId, startDate, endDate),
             totalCost = chargeSummaryDao.sumCostInRange(carId, startDate, endDate).takeIf { it > 0 },
-            avgCostPerKwh = null, // Not critical for year view
+            avgCostPerKwh = chargeSummaryDao.avgCostPerKwhInRange(carId, startDate, endDate).takeIf { it > 0 },
             avgChargeMinutes = null, // Not critical for year view
 
             longestDrive = driveSummaryDao.longestDriveInRange(carId, startDate, endDate),
@@ -389,9 +389,9 @@ class StatsRepository @Inject constructor(
             },
 
             maxOutsideTempDrivingC = aggregateDao.maxOutsideTempDrivingInRange(carId, startDate, endDate),
-            minOutsideTempDrivingC = null, // Not needed for records
-            maxCabinTempC = null, // Not needed for records
-            minCabinTempC = null, // Not needed for records
+            minOutsideTempDrivingC = aggregateDao.minOutsideTempDrivingInRange(carId, startDate, endDate),
+            maxCabinTempC = aggregateDao.maxInsideTempInRange(carId, startDate, endDate),
+            minCabinTempC = aggregateDao.minInsideTempInRange(carId, startDate, endDate),
             hottestDrive = hottestDriveAgg?.let { agg ->
                 val drive = driveSummaryDao.get(agg.driveId)
                 DriveTempRecord(
@@ -410,7 +410,7 @@ class StatsRepository @Inject constructor(
             },
 
             maxOutsideTempChargingC = aggregateDao.maxOutsideTempChargingInRange(carId, startDate, endDate),
-            minOutsideTempChargingC = null, // Not needed for records
+            minOutsideTempChargingC = aggregateDao.minOutsideTempChargingInRange(carId, startDate, endDate),
             hottestCharge = hottestChargeAgg?.let { agg ->
                 val charge = chargeSummaryDao.get(agg.chargeId)
                 ChargeTempRecord(

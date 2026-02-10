@@ -155,6 +155,15 @@ interface AggregateDao {
     """)
     suspend fun coldestDrive(carId: Int): DriveDetailAggregate?
 
+    // Coldest outside temperature while driving in Range
+    @Query("""
+        SELECT MIN(minOutsideTemp) FROM drive_detail_aggregates a
+        JOIN drives_summary d ON a.driveId = d.driveId
+        WHERE a.carId = :carId
+        AND d.startDate >= :startDate AND d.startDate < :endDate
+    """)
+    suspend fun minOutsideTempDrivingInRange(carId: Int, startDate: String, endDate: String): Double?
+
     @Query("""
         SELECT a.* FROM drive_detail_aggregates a
         JOIN drives_summary d ON a.driveId = d.driveId
@@ -163,6 +172,33 @@ interface AggregateDao {
         ORDER BY a.minOutsideTemp ASC LIMIT 1
     """)
     suspend fun coldestDriveInRange(carId: Int, startDate: String, endDate: String): DriveDetailAggregate?
+
+    // Hottest cabin temperature in Range
+    @Query("""
+        SELECT MAX(maxInsideTemp) FROM drive_detail_aggregates a
+        JOIN drives_summary d ON a.driveId = d.driveId
+        WHERE a.carId = :carId
+        AND d.startDate >= :startDate AND d.startDate < :endDate
+    """)
+    suspend fun maxInsideTempInRange(carId: Int, startDate: String, endDate: String): Double?
+
+    // Coldest cabin temperature in Range
+    @Query("""
+        SELECT MIN(minInsideTemp) FROM drive_detail_aggregates a
+        JOIN drives_summary d ON a.driveId = d.driveId
+        WHERE a.carId = :carId
+        AND d.startDate >= :startDate AND d.startDate < :endDate
+    """)
+    suspend fun minInsideTempInRange(carId: Int, startDate: String, endDate: String): Double?
+
+    // Coldest outside temperature while charging in Range
+    @Query("""
+        SELECT MIN(minOutsideTemp) FROM charge_detail_aggregates a
+        JOIN charges_summary c ON a.chargeId = c.chargeId
+        WHERE a.carId = :carId
+        AND c.startDate >= :startDate AND c.startDate < :endDate
+    """)
+    suspend fun minOutsideTempChargingInRange(carId: Int, startDate: String, endDate: String): Double?
 
     // Hottest cabin temperature
     @Query("SELECT MAX(maxInsideTemp) FROM drive_detail_aggregates WHERE carId = :carId")
