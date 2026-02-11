@@ -196,7 +196,10 @@ class StatsViewModel @Inject constructor(
 
     private fun loadStats() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            // Only show initial loading state if the screen is empty
+            if (_uiState.value.carStats == null) {
+                _uiState.update { it.copy(isLoading = true) }
+            }
             loadStatsInternal()
             _uiState.update { it.copy(isLoading = false) }
         }
