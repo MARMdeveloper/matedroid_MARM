@@ -88,6 +88,19 @@ jobs:
           status: completed
           whatsNewDirectory: fastlane/metadata/android
 
+      - name: Upload to Google Play (Open Beta)
+        if: github.event_name == 'release' && env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' && contains(github.event.release.tag_name, '-beta')
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.matedroid
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: beta
+          status: completed
+          whatsNewDirectory: fastlane/metadata/android
+
       - name: Upload to Google Play (Production)
         if: github.event_name == 'release' && env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' && !contains(github.event.release.tag_name, '-beta')
         env:
