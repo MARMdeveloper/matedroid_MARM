@@ -67,7 +67,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import com.matedroid.BuildConfig
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalDensity
@@ -111,6 +113,9 @@ fun StatsScreen(
     val isDarkTheme = isSystemInDarkTheme()
     val palette = CarColorPalettes.forExteriorColor(exteriorColor, isDarkTheme)
     var showSyncLogsDialog by remember { mutableStateOf(false) }
+
+    // State for Records pager - remember across filter changes
+    var recordsSelectedCategory by rememberSaveable { mutableStateOf("") }
 
     // State for range record dialog
     var rangeRecordToShow by remember { mutableStateOf<MaxDistanceBetweenChargesRecord?>(null) }
@@ -240,6 +245,8 @@ fun StatsScreen(
                     isGeocoding = uiState.isGeocoding,
                     palette = palette,
                     currencySymbol = uiState.currencySymbol,
+                    recordsSelectedCategory = recordsSelectedCategory,
+                    onRecordsCategoryChanged = { recordsSelectedCategory = it },
                     onYearFilterSelected = { viewModel.setYearFilter(it) },
                     onNavigateToDriveDetail = onNavigateToDriveDetail,
                     onNavigateToChargeDetail = onNavigateToChargeDetail,
@@ -345,6 +352,8 @@ private fun StatsContent(
     isGeocoding: Boolean,
     palette: CarColorPalette,
     currencySymbol: String,
+    recordsSelectedCategory: String,
+    onRecordsCategoryChanged: (String) -> Unit,
     onYearFilterSelected: (YearFilter) -> Unit,
     onNavigateToDriveDetail: (Int) -> Unit,
     onNavigateToChargeDetail: (Int) -> Unit,
@@ -398,6 +407,8 @@ private fun StatsContent(
                 deepStats = stats.deepStats,
                 palette = palette,
                 currencySymbol = currencySymbol,
+                selectedCategory = recordsSelectedCategory,
+                onCategoryChanged = onRecordsCategoryChanged,
                 onDriveClick = onNavigateToDriveDetail,
                 onChargeClick = onNavigateToChargeDetail,
                 onDayClick = onNavigateToDayDetail,
@@ -709,6 +720,8 @@ private fun RecordsCard(
     deepStats: DeepStats?,
     palette: CarColorPalette,
     currencySymbol: String,
+    selectedCategory: String,
+    onCategoryChanged: (String) -> Unit,
     onDriveClick: (Int) -> Unit,
     onChargeClick: (Int) -> Unit,
     onDayClick: (String) -> Unit,
@@ -856,7 +869,27 @@ private fun RecordsCard(
         }
     }
 
-    val pagerState = rememberPagerState(pageCount = { pages.size })
+// Find the first page of the selected category, or default to 0
+    val initialPage = if (selectedCategory.isNotEmpty()) {
+        pages.indexOfFirst { it.categoryTitle == selectedCategory }.takeIf { it >= 0 } ?: 0
+    } else {
+        0
+    }
+
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { pages.size }
+    )
+
+// Update selected category when page changes
+    LaunchedEffect(pagerState.currentPage) {
+        snapshotFlow { pagerState.currentPage }
+            .collect { page ->
+                if (page < pages.size) {
+                    onCategoryChanged(pages[page].categoryTitle)
+                }
+            }
+    }
 
     Column {
         // Section header
