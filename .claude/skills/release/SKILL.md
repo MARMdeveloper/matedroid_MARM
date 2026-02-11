@@ -42,6 +42,10 @@ Edit `app/build.gradle.kts`:
 
 Create `fastlane/metadata/android/en-US/changelogs/{versionCode}.txt` with the release notes.
 
+**Important — stable vs beta scope:**
+- **Beta release** (e.g. `1.1.0-beta2`): the changelog covers only the changes since the previous release (beta or stable).
+- **Stable (production) release** (e.g. `1.1.0`): the changelog must cover **all changes since the previous stable release** (e.g. `1.0.0`), NOT just what changed since the last beta. Collect entries from every intermediate beta and the `[Unreleased]` section, then write a single consolidated changelog. This is what end-users on the production track will see — they never saw the beta changelogs.
+
 Format (max 500 chars for Play Store):
 ```
 More human readable and engaging new features and major fixes overview. Do NOT mention external contributors here.
@@ -101,5 +105,5 @@ Mention external contributors, highlighting new ones and giving credit.
 
 The GitHub Actions workflow will automatically:
 - Build APK and AAB
-- Upload to GitHub release
-- Deploy to Google Play (alpha track)
+- Upload APKs to GitHub release
+- Deploy to Google Play (beta track for `-beta` releases, production track for stable releases)
