@@ -57,19 +57,18 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew bundleRelease
 
-      - name: Rename Release APK
+      - name: Stage release artifacts
         run: |
+          mkdir -p staging
           VERSION=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
-          mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/matedroid-${VERSION}.apk
-          echo "APK_NAME=matedroid-${VERSION}.apk" >> $GITHUB_ENV
+          cp app/build/outputs/apk/release/app-release.apk staging/matedroid-${VERSION}.apk
+          cp app/build/outputs/bundle/release/app-release.aab staging/app-release.aab
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-outputs
-          path: |
-            app/build/outputs/apk/release/${{ env.APK_NAME }}
-            app/build/outputs/bundle/release/app-release.aab
+          path: staging/
 
   build-debug:
     runs-on: ubuntu-latest
@@ -124,7 +123,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/app/build/outputs/apk/release/*.apk
+            release/*.apk
             debug/*.apk
 
   publish-play:
@@ -170,7 +169,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.matedroid
-          releaseFiles: release/app/build/outputs/bundle/release/app-release.aab
+          releaseFiles: release/app-release.aab
           track: ${{ steps.play-track.outputs.track }}
           status: completed
           whatsNewDirectory: fastlane/metadata/android
