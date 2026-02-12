@@ -139,6 +139,7 @@ fun StatsScreen(
         viewModel.setCarId(carId)
     }
 
+    /* Not needed here, and creates flickering
     // Periodic sync every 60 seconds while the screen is visible
     LaunchedEffect(Unit) {
         while (true) {
@@ -146,6 +147,7 @@ fun StatsScreen(
             viewModel.triggerSync()
         }
     }
+    */
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
