@@ -241,6 +241,7 @@ fun StatsScreen(
                     selectedYearFilter = uiState.selectedYearFilter,
                     deepSyncProgress = uiState.deepSyncProgress,
                     isSyncing = uiState.isSyncing,
+                    isUpdating = uiState.isUpdating,
                     geocodeProgress = uiState.geocodeProgress,
                     isGeocoding = uiState.isGeocoding,
                     palette = palette,
@@ -348,6 +349,7 @@ private fun StatsContent(
     selectedYearFilter: YearFilter,
     deepSyncProgress: Float,
     isSyncing: Boolean,
+    isUpdating: Boolean,
     geocodeProgress: GeocodeProgressInfo?,
     isGeocoding: Boolean,
     palette: CarColorPalette,
@@ -363,87 +365,108 @@ private fun StatsContent(
     onGapRecordClick: (Double, String, String, String) -> Unit,
     onSyncProgressClick: (() -> Unit)? = null
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Year filter chips
-        item {
-            YearFilterChips(
-                availableYears = availableYears,
-                selectedFilter = selectedYearFilter,
-                palette = palette,
-                onFilterSelected = onYearFilterSelected
-            )
-        }
-
-        // Sync progress indicator if deep sync is actively running
-        if (isSyncing && deepSyncProgress < 1f && deepSyncProgress > 0f) {
+    // Use a box as the root container to allow for stacking
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            // Year filter chips
             item {
-                SyncProgressCard(
-                    progress = deepSyncProgress,
+                YearFilterChips(
+                    availableYears = availableYears,
+                    selectedFilter = selectedYearFilter,
                     palette = palette,
-                    onClick = onSyncProgressClick
+                    onFilterSelected = onYearFilterSelected
                 )
             }
-        }
 
-        // Geocode progress indicator if location identification is ongoing
-        if (isGeocoding && geocodeProgress != null) {
+            // Sync progress indicator if deep sync is actively running
+            if (isSyncing && deepSyncProgress < 1f && deepSyncProgress > 0f) {
+                item {
+                    SyncProgressCard(
+                        progress = deepSyncProgress,
+                        palette = palette,
+                        onClick = onSyncProgressClick
+                    )
+                }
+            }
+
+            // Geocode progress indicator if location identification is ongoing
+            if (isGeocoding && geocodeProgress != null) {
+                item {
+                    GeocodeProgressCard(
+                        progress = geocodeProgress,
+                        palette = palette,
+                        onClick = onSyncProgressClick
+                    )
+                }
+            }
+
+            // Records (at the top)
             item {
-                GeocodeProgressCard(
-                    progress = geocodeProgress,
+                RecordsCard(
+                    quickStats = stats.quickStats,
+                    deepStats = stats.deepStats,
                     palette = palette,
-                    onClick = onSyncProgressClick
+                    currencySymbol = currencySymbol,
+                    selectedCategory = recordsSelectedCategory,
+                    onCategoryChanged = onRecordsCategoryChanged,
+                    onDriveClick = onNavigateToDriveDetail,
+                    onChargeClick = onNavigateToChargeDetail,
+                    onDayClick = onNavigateToDayDetail,
+                    onCountriesVisitedClick = {
+                        val year = (selectedYearFilter as? YearFilter.Year)?.year
+                        onNavigateToCountriesVisited(year)
+                    },
+                    onRangeRecordClick = onRangeRecordClick,
+                    onGapRecordClick = onGapRecordClick
                 )
             }
-        }
 
-        // Records (at the top)
-        item {
-            RecordsCard(
-                quickStats = stats.quickStats,
-                deepStats = stats.deepStats,
-                palette = palette,
-                currencySymbol = currencySymbol,
-                selectedCategory = recordsSelectedCategory,
-                onCategoryChanged = onRecordsCategoryChanged,
-                onDriveClick = onNavigateToDriveDetail,
-                onChargeClick = onNavigateToChargeDetail,
-                onDayClick = onNavigateToDayDetail,
-                onCountriesVisitedClick = {
-                    val year = (selectedYearFilter as? YearFilter.Year)?.year
-                    onNavigateToCountriesVisited(year)
-                },
-                onRangeRecordClick = onRangeRecordClick,
-                onGapRecordClick = onGapRecordClick
-            )
-        }
-
-        // Quick Stats - Drives Overview
-        item {
-            QuickStatsDrivesCard(quickStats = stats.quickStats, palette = palette, currencySymbol = currencySymbol)
-        }
-
-        // Quick Stats - Charges Overview
-        item {
-            QuickStatsChargesCard(quickStats = stats.quickStats, palette = palette, currencySymbol = currencySymbol)
-        }
-
-        // AC/DC Ratio (moved here, near charges)
-        stats.deepStats?.let { deepStats ->
+            // Quick Stats - Drives Overview
             item {
-                AcDcRatioCard(deepStats = deepStats, palette = palette)
+                QuickStatsDrivesCard(
+                    quickStats = stats.quickStats,
+                    palette = palette,
+                    currencySymbol = currencySymbol
+                )
+            }
+
+            // Quick Stats - Charges Overview
+            item {
+                QuickStatsChargesCard(
+                    quickStats = stats.quickStats,
+                    palette = palette,
+                    currencySymbol = currencySymbol
+                )
+            }
+
+            // AC/DC Ratio (moved here, near charges)
+            stats.deepStats?.let { deepStats ->
+                item {
+                    AcDcRatioCard(deepStats = deepStats, palette = palette)
+                }
+            }
+
+            // Deep Stats - only if available
+            stats.deepStats?.let { deepStats ->
+                // Temperature Stats
+                item {
+                    TemperatureStatsCard(deepStats = deepStats, palette = palette)
+                }
             }
         }
-
-        // Deep Stats - only if available
-        stats.deepStats?.let { deepStats ->
-            // Temperature Stats
-            item {
-                TemperatureStatsCard(deepStats = deepStats, palette = palette)
-            }
+        // Progress indicator
+        if (isUpdating) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .align(Alignment.TopCenter),
+                    color = palette.accent
+                )
         }
     }
 }
