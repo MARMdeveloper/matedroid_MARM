@@ -1,0 +1,5 @@
+Correcciones de errores para notificaciones de carga.
+
+Fixed:
+- La notificación de carga ahora navega a la pantalla de carga en vivo al tocarla
+- El worker de notificaciones de carga se reprograma correctamente después del reinicio del dispositivo

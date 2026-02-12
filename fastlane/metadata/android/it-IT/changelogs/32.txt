@@ -1,0 +1,5 @@
+Correzioni di bug per le notifiche di ricarica.
+
+Fixed:
+- La notifica di ricarica ora naviga alla schermata di ricarica live quando toccata
+- Il worker delle notifiche di ricarica viene riprogrammato correttamente dopo il riavvio del dispositivo

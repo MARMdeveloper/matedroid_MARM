@@ -1,0 +1,5 @@
+Bug fixes for charging notifications.
+
+Fixed:
+- Charging notification now navigates to live charge screen when tapped
+- Charging notification worker properly rescheduled after device reboot

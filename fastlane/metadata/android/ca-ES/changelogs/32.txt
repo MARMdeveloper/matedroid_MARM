@@ -1,0 +1,5 @@
+Correccions d'errors per a notificacions de càrrega.
+
+Fixed:
+- La notificació de càrrega ara navega a la pantalla de càrrega en directe en tocar-la
+- El worker de notificacions de càrrega es reprograma correctament després del reinici del dispositiu
