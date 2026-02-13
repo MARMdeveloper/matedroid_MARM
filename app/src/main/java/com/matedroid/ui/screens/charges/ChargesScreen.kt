@@ -268,6 +268,7 @@ private fun ChargesContent(
                     // Will be correct once sync has processed charge details
                     isDcCharge = charge.chargeId in dcChargeIds,
                     currencySymbol = currencySymbol,
+                    palette = palette,
                     onEditCost = if (teslamateBaseUrl.isNotBlank()) {
                         {
                             val url = "$teslamateBaseUrl/charge-cost/${charge.chargeId}"
@@ -326,8 +327,8 @@ private fun ChargeTypeFilterChips(
             val isSelected = filter == selectedFilter
             val themeColor = when (filter) {
                 ChargeTypeFilter.ALL -> palette.onSurfaceVariant
-                ChargeTypeFilter.AC -> Color(0xFF4CAF50) // Verde
-                ChargeTypeFilter.DC -> Color(0xFFFF9800) // Naranja
+                ChargeTypeFilter.AC -> palette.acColor
+                ChargeTypeFilter.DC -> palette.dcColor
             }
 
             FilterChip(
@@ -475,6 +476,7 @@ private fun ChargeItem(
     charge: ChargeData,
     isDcCharge: Boolean,
     currencySymbol: String,
+    palette: CarColorPalette,
     onEditCost: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
@@ -533,7 +535,7 @@ private fun ChargeItem(
                         }
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    ChargeTypeBadge(isDcCharge = isDcCharge)
+                    ChargeTypeBadge(isDcCharge = isDcCharge, palette = palette)
                 }
             }
 
@@ -665,8 +667,8 @@ private fun ChargeStatCard(
 }
 
 @Composable
-private fun ChargeTypeBadge(isDcCharge: Boolean) {
-    val backgroundColor = if (isDcCharge) Color(0xFFFF9800) else Color(0xFF4CAF50)
+private fun ChargeTypeBadge(isDcCharge: Boolean, palette: CarColorPalette) {
+    val backgroundColor = if (isDcCharge) palette.dcColor else palette.acColor
     val text = if (isDcCharge) stringResource(R.string.charging_dc) else stringResource(R.string.charging_ac)
 
     Box(
@@ -824,8 +826,8 @@ private fun ChargesChartPage(
                     value = data.totalEnergy,
                     displayValue = "%.1f kWh".format(data.totalEnergy),
                     segments = listOf(
-                        BarSegment(data.energyAc, ACColor, "AC"),
-                        BarSegment(data.energyDc, DCColor, "DC")
+                        BarSegment(data.energyAc, palette.acColor, "AC"),
+                        BarSegment(data.energyDc, palette.dcColor, "DC")
                     )
                 )
             }
@@ -835,8 +837,8 @@ private fun ChargesChartPage(
                     value = data.totalCost,
                     displayValue = "$currencySymbol%.2f".format(data.totalCost),
                     segments = listOf(
-                        BarSegment(data.costAc, ACColor, "AC"),
-                        BarSegment(data.costDc, DCColor, "DC")
+                        BarSegment(data.costAc, palette.acColor, "AC"),
+                        BarSegment(data.costDc, palette.dcColor, "DC")
                     )
                 )
             }
@@ -846,8 +848,8 @@ private fun ChargesChartPage(
                     value = data.count.toDouble(),
                     displayValue = data.count.toString(),
                     segments = listOf(
-                        BarSegment(data.countAc.toDouble(), ACColor, "AC"),
-                        BarSegment(data.countDc.toDouble(), DCColor, "DC")
+                        BarSegment(data.countAc.toDouble(), palette.acColor, "AC"),
+                        BarSegment(data.countDc.toDouble(), palette.dcColor, "DC")
                     )
                 )
             }
