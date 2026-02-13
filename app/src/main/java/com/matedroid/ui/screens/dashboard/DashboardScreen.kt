@@ -141,8 +141,6 @@ import com.matedroid.ui.theme.MateDroidTheme
 import com.matedroid.ui.theme.StatusError
 import com.matedroid.ui.theme.StatusSuccess
 import com.matedroid.ui.theme.StatusWarning
-import com.matedroid.ui.theme.ACColor
-import com.matedroid.ui.theme.DCColor
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -579,6 +577,7 @@ private fun CarImage(
     carModel: String?,
     carTrimBadging: String?,
     carExterior: CarExterior?,
+    palette: CarColorPalette,
     modifier: Modifier = Modifier,
     isCharging: Boolean = false,
     isDcCharging: Boolean = false,
@@ -651,7 +650,7 @@ private fun CarImage(
     val glowRadius = 70f
 
     // AC/DC color tint
-    val chargeTypeColor = if (isDcCharging) DCColor else ACColor
+    val chargeTypeColor = if (isDcCharging) palette.dcColor else palette.acColor
 
     // Breathing animation - smooth in/out
     val infiniteTransition = rememberInfiniteTransition(label = "chargingBreath")
@@ -1083,6 +1082,7 @@ private fun BatteryCard(
                 carModel = carModel,
                 carTrimBadging = carTrimBadging,
                 carExterior = carExterior,
+                palette = palette,
                 modifier = Modifier.fillMaxWidth(),
                 isCharging = status.isCharging,
                 isDcCharging = status.isDcCharging,
@@ -1127,7 +1127,8 @@ private fun BatteryCard(
                         Box(modifier = Modifier.clickable(onClick = onNavigateToCurrentCharge)) {
                             ChargingPowerGaugeCompact(
                                 status = status,
-                                carTrimBadging = carTrimBadging
+                                carTrimBadging = carTrimBadging,
+                                palette = palette
                             )
                         }
                     }
@@ -1176,6 +1177,7 @@ private fun BatteryCard(
                 currentLevel = batteryLevel,
                 targetLevel = chargeLimit,
                 isCharging = status.isCharging,
+                isDcCharging = status.isDcCharging,
                 palette = palette,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1203,13 +1205,19 @@ private fun ChargingProgressBar(
     currentLevel: Int,
     targetLevel: Int,
     isCharging: Boolean = false,
+    isDcCharging: Boolean = false,
     palette: CarColorPalette,
     modifier: Modifier = Modifier
 ) {
     val currentFraction = currentLevel / 100f
     val targetFraction = targetLevel / 100f
-    val solidGreen = StatusSuccess
-    val dimmedGreen = StatusSuccess.copy(alpha = 0.3f)
+    // Use AC/DC color when charging, StatusSuccess as fallback
+    val chargeColor = if (isCharging) {
+        if (isDcCharging) palette.dcColor else palette.acColor
+    } else {
+        StatusSuccess  // Fallback (not used in practice)
+    }
+    val dimmedChargeColor = chargeColor.copy(alpha = 0.3f)
 
     Canvas(
         modifier = modifier
@@ -1226,11 +1234,11 @@ private fun ChargingProgressBar(
         )
 
         if (isCharging) {
-            // Charging: show green with target area
-            // Dimmed green for target area (from current to target)
+            // Charging: show AC/DC color with target area
+            // Dimmed color for target area (from current to target)
             if (targetFraction > currentFraction) {
                 drawRect(
-                    color = dimmedGreen,
+                    color = dimmedChargeColor,
                     topLeft = androidx.compose.ui.geometry.Offset(width * currentFraction, 0f),
                     size = androidx.compose.ui.geometry.Size(
                         width * (targetFraction - currentFraction),
@@ -1238,9 +1246,9 @@ private fun ChargingProgressBar(
                     )
                 )
             }
-            // Solid green for current charge level
+            // Solid AC/DC color for current charge level
             drawRect(
-                color = solidGreen,
+                color = chargeColor,
                 size = androidx.compose.ui.geometry.Size(width * currentFraction, height)
             )
         } else {
@@ -1271,11 +1279,12 @@ private fun ChargingProgressBar(
 @Composable
 private fun ChargingPowerGaugeCompact(
     status: CarStatus,
-    carTrimBadging: String?
+    carTrimBadging: String?,
+    palette: CarColorPalette
 ) {
     val isDcCharging = status.isDcCharging
     val powerKw = status.chargerPower ?: 0
-    val gaugeColor = if (isDcCharging) DCColor else ACColor
+    val gaugeColor = if (isDcCharging) palette.dcColor else palette.acColor
 
     // Calculate gauge progress based on charging type
     val gaugeProgress = if (isDcCharging) {
@@ -1622,17 +1631,17 @@ private fun SmallLocationMap(
                     controller.setZoom(15.0)
                     controller.setCenter(carLocation)
 
-                // Add a marker for the car
-                val marker = Marker(this).apply {
-                    position = carLocation
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = ctx.getDrawable(android.R.drawable.ic_menu_mylocation)
+                    // Add a marker for the car
+                    val marker = Marker(this).apply {
+                        position = carLocation
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        icon = ctx.getDrawable(android.R.drawable.ic_menu_mylocation)
+                    }
+                    overlays.add(marker)
                 }
-                overlays.add(marker)
-            }
-        },
-        modifier = Modifier.fillMaxSize()
-    )
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 @Composable
