@@ -1,0 +1,16 @@
+MateDroid 1.0 — now on Google Play!
+
+Added:
+- Live Charge Screen with real-time power and SoC charts
+- Charging notifications with live progress (Android 16+)
+- Car profile picture selection (long-press on dashboard)
+
+Changed:
+- Teslamate Base URL auto-retrieved from API
+- Cost/100 km replaces Top Speed in stats
+- Car picker filters by color, trim, and wheels
+
+Fixed:
+- Drive filters showing correct days
+- Charging notification cleanup
+- Car image wheel mappings

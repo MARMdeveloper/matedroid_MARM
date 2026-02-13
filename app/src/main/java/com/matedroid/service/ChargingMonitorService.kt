@@ -1,6 +1,7 @@
 package com.matedroid.service
 
 import android.app.Notification
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -60,6 +61,7 @@ class ChargingMonitorService : Service() {
     private var consecutiveFailures = 0
     private val maxConsecutiveFailures = 3
     private var isMonitoring = false
+    private val activeNotificationCarIds = mutableSetOf<Int>()
 
     override fun onCreate() {
         super.onCreate()
@@ -86,9 +88,21 @@ class ChargingMonitorService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        Log.d(TAG, "Service destroyed")
+        Log.d(TAG, "Service destroyed, cancelling ${activeNotificationCarIds.size} notifications")
         isMonitoring = false
         monitorJob?.cancel()
+
+        // Explicitly cancel all charging notifications so they don't linger
+        // when the service stops (e.g., after consecutive API failures due to VPN loss)
+        for (carId in activeNotificationCarIds) {
+            chargingNotificationManager.cancelNotification(carId)
+        }
+        activeNotificationCarIds.clear()
+
+        // Also cancel the placeholder notification in case it was never replaced
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(INITIAL_NOTIFICATION_ID)
+
         serviceScope.cancel()
         super.onDestroy()
     }
@@ -202,6 +216,7 @@ class ChargingMonitorService : Service() {
 
                 if (status.isCharging) {
                     anyCharging = true
+                    activeNotificationCarIds.add(car.carId)
                     Log.d(TAG, "Car ${car.carId} charging at ${status.batteryLevel}%")
 
                     // Update notification with real data
@@ -226,6 +241,7 @@ class ChargingMonitorService : Service() {
                     }
                 } else {
                     // Cancel notification for this car if not charging
+                    activeNotificationCarIds.remove(car.carId)
                     chargingNotificationManager.cancelNotification(car.carId)
                 }
             }

@@ -1,0 +1,16 @@
+MateDroid 1.0 — ara a Google Play!
+
+Afegit:
+- Carrega en Viu amb grafics de potencia i SoC
+- Notificacions de carrega amb progres en viu (Android 16+)
+- Foto de perfil del cotxe (pressio llarga al dashboard)
+
+Canviat:
+- URL Teslamate recuperada automaticament de l'API
+- Cost/100 km substitueix Velocitat Max
+- Selector de cotxes filtra per color i llantes
+
+Corregit:
+- Filtres de rutes amb dies correctes
+- Neteja de notificacions de carrega
+- Mapeig de llantes en imatges del cotxe

@@ -1037,4 +1037,11 @@
     <string name="current_charge_not_charging">L\'auto non è attualmente in carica</string>
     <!-- Titolo grafico tensione e corrente a doppio asse -->
     <string name="voltage_and_current_profile">Tensione &amp; Corrente</string>
+    <!-- Etichette SoC per la riga a 3 colonne nell'intestazione della ricarica in tempo reale -->
+    <string name="soc_start">inizio</string>
+    <string name="soc_now">ora</string>
+    <string name="soc_target">obiettivo</string>
+    <!-- Etichette riga compatta energia/potenza -->
+    <string name="soc_energy_added">energia aggiunta</string>
+    <string name="soc_instant_power">istantanea</string>
 </resources>

@@ -75,6 +75,8 @@ import com.matedroid.data.api.models.ChargeData
 import com.matedroid.ui.components.BarChartData
 import com.matedroid.ui.components.BarSegment
 import com.matedroid.ui.components.InteractiveBarChart
+import com.matedroid.ui.theme.ACColor
+import com.matedroid.ui.theme.DCColor
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import java.time.LocalDateTime

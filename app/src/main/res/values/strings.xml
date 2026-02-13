@@ -1038,4 +1038,11 @@
     <string name="current_charge_not_charging">The car is not currently charging</string>
     <!-- Chart title for voltage and current dual-axis chart -->
     <string name="voltage_and_current_profile">Voltage &amp; Current</string>
+    <!-- SoC labels for the 3-column row in live charge header -->
+    <string name="soc_start">start</string>
+    <string name="soc_now">now</string>
+    <string name="soc_target">target</string>
+    <!-- Compact energy/power row labels -->
+    <string name="soc_energy_added">energy added</string>
+    <string name="soc_instant_power">instant</string>
 </resources>

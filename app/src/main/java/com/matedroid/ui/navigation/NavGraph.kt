@@ -157,14 +157,28 @@ fun NavGraph(
         return // Wait for determination
     }
 
-    // Handle deep-link from notification
+    // Handle deep-link from notification or adb intent
     LaunchedEffect(intent) {
         intent?.let {
             val navigateTo = it.getStringExtra("EXTRA_NAVIGATE_TO")
             val carId = it.getIntExtra("EXTRA_CAR_ID", -1)
-            if (navigateTo == "current_charge" && carId > 0) {
-                navController.navigate(Screen.CurrentCharge.createRoute(carId)) {
-                    launchSingleTop = true
+            val exteriorColor = it.getStringExtra("EXTRA_EXTERIOR_COLOR")
+            if (navigateTo != null && carId > 0) {
+                val route = when (navigateTo) {
+                    "current_charge" -> Screen.CurrentCharge.createRoute(carId, exteriorColor)
+                    "charges" -> Screen.Charges.createRoute(carId, exteriorColor)
+                    "drives" -> Screen.Drives.createRoute(carId, exteriorColor)
+                    "mileage" -> Screen.Mileage.createRoute(carId, exteriorColor)
+                    "battery" -> Screen.Battery.createRoute(carId, exteriorColor = exteriorColor)
+                    "stats" -> Screen.Stats.createRoute(carId, exteriorColor)
+                    "countries_visited" -> Screen.CountriesVisited.createRoute(carId, exteriorColor)
+                    "updates" -> Screen.Updates.createRoute(carId, exteriorColor)
+                    else -> null
+                }
+                route?.let { r ->
+                    navController.navigate(r) {
+                        launchSingleTop = true
+                    }
                 }
             }
         }

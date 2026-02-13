@@ -141,6 +141,8 @@ import com.matedroid.ui.theme.MateDroidTheme
 import com.matedroid.ui.theme.StatusError
 import com.matedroid.ui.theme.StatusSuccess
 import com.matedroid.ui.theme.StatusWarning
+import com.matedroid.ui.theme.ACColor
+import com.matedroid.ui.theme.DCColor
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1037,4 +1037,11 @@
     <string name="current_charge_not_charging">El coche no está cargando actualmente</string>
     <!-- Título del gráfico de voltaje y corriente de doble eje -->
     <string name="voltage_and_current_profile">Voltaje &amp; Corriente</string>
+    <!-- Etiquetas SoC para la fila de 3 columnas en la cabecera de carga en vivo -->
+    <string name="soc_start">inicio</string>
+    <string name="soc_now">ahora</string>
+    <string name="soc_target">objetivo</string>
+    <!-- Etiquetas fila compacta energía/potencia -->
+    <string name="soc_energy_added">energía añadida</string>
+    <string name="soc_instant_power">instantánea</string>
 </resources>

@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -57,24 +57,19 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew bundleRelease
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-
-      - name: Rename APKs
+      - name: Rename Release APK
         run: |
           VERSION=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
           mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/matedroid-${VERSION}.apk
-          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/matedroid-${VERSION}-debug.apk
           echo "APK_NAME=matedroid-${VERSION}.apk" >> $GITHUB_ENV
-          echo "APK_NAME_DEBUG=matedroid-${VERSION}-debug.apk" >> $GITHUB_ENV
 
-      - name: Upload APKs to release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
         with:
-          files: |
+          name: release-outputs
+          path: |
             app/build/outputs/apk/release/${{ env.APK_NAME }}
-            app/build/outputs/apk/debug/${{ env.APK_NAME_DEBUG }}
+            app/build/outputs/bundle/release/app-release.aab
 
       - name: Prepare changelog for Google Play
         if: github.event_name == 'release'
@@ -94,7 +89,7 @@ jobs:
           whatsNewDirectory: fastlane/metadata/android
 
       - name: Upload to Google Play (Production)
-        if: github.event_name == 'release' && env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' && vars.PLAY_STORE_PRODUCTION_ENABLED == 'true'
+        if: github.event_name == 'release' && env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' && !contains(github.event.release.tag_name, '-beta')
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         uses: r0adkll/upload-google-play@v1
@@ -106,12 +101,58 @@ jobs:
           status: completed
           whatsNewDirectory: fastlane/metadata/android
 
-      - name: Upload APKs and AAB as artifacts
-        if: github.event_name == 'workflow_dispatch'
+  build-debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Rename Debug APK
+        run: |
+          VERSION=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/matedroid-${VERSION}-debug.apk
+          echo "APK_NAME_DEBUG=matedroid-${VERSION}-debug.apk" >> $GITHUB_ENV
+
+      - name: Upload debug artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-outputs
-          path: |
-            app/build/outputs/apk/release/${{ env.APK_NAME }}
-            app/build/outputs/apk/debug/${{ env.APK_NAME_DEBUG }}
-            app/build/outputs/bundle/release/app-release.aab
+          name: debug-outputs
+          path: app/build/outputs/apk/debug/${{ env.APK_NAME_DEBUG }}
+
+  publish:
+    needs: [build-release, build-debug]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-outputs
+          path: release
+
+      - name: Download debug artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: debug-outputs
+          path: debug
+
+      - name: Upload APKs to GitHub release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/app/build/outputs/apk/release/*.apk
+            debug/*.apk
