@@ -82,8 +82,6 @@ import com.matedroid.ui.icons.CustomIcons
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import com.matedroid.ui.theme.BoundaryColor
-import com.matedroid.ui.theme.ACColor
-import com.matedroid.ui.theme.DCColor
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
@@ -583,7 +581,7 @@ private fun CountryMapCard(
                             MapViewMode.CHARGES -> {
                                 chargeLocations.forEach { charge ->
                                     val geoPoint = GeoPoint(charge.latitude, charge.longitude)
-                                    val markerColor = if (charge.isDcCharge) DCColor else ACColor
+                                    val markerColor = if (charge.isDcCharge) palette.dcColor else palette.acColor
 
                                     val marker = Marker(mapView).apply {
                                         position = geoPoint
@@ -668,7 +666,7 @@ private fun CountryMapCard(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(
-                                        if (acSelected) ACColor.copy(alpha = 0.2f) else Color.Transparent
+                                        if (acSelected) palette.acColor.copy(alpha = 0.2f) else Color.Transparent
                                     )
                                     .clickable { onChargeTypeFilterToggle(ChargeTypeFilter.AC_ONLY) }
                                     .padding(horizontal = 6.dp, vertical = 4.dp)
@@ -677,13 +675,13 @@ private fun CountryMapCard(
                                     modifier = Modifier
                                         .size(10.dp)
                                         .clip(CircleShape)
-                                        .background(ACColor)
+                                        .background(palette.acColor)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "AC",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (acSelected) ACColor else Color.DarkGray,
+                                    color = if (acSelected) palette.acColor else Color.DarkGray,
                                     fontWeight = if (acSelected) FontWeight.Bold else FontWeight.Medium
                                 )
                             }
@@ -694,7 +692,7 @@ private fun CountryMapCard(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(
-                                        if (dcSelected) DCColor.copy(alpha = 0.2f) else Color.Transparent
+                                        if (dcSelected) palette.dcColor.copy(alpha = 0.2f) else Color.Transparent
                                     )
                                     .clickable { onChargeTypeFilterToggle(ChargeTypeFilter.DC_ONLY) }
                                     .padding(horizontal = 6.dp, vertical = 4.dp)
@@ -703,13 +701,13 @@ private fun CountryMapCard(
                                     modifier = Modifier
                                         .size(10.dp)
                                         .clip(CircleShape)
-                                        .background(DCColor)
+                                        .background(palette.dcColor)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "DC",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (dcSelected) DCColor else Color.DarkGray,
+                                    color = if (dcSelected) palette.dcColor else Color.DarkGray,
                                     fontWeight = if (dcSelected) FontWeight.Bold else FontWeight.Medium
                                 )
                             }
