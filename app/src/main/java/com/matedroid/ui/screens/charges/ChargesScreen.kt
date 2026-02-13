@@ -309,7 +309,7 @@ private fun DateFilterChips(
 @Composable
 private fun getDateFilterLabel(filter: DateFilter): String {
     return when (filter) {
-        DateFilter.LAST_1_DAY -> stringResource(R.string.filter_today)
+        DateFilter.TODAY -> stringResource(R.string.filter_today)
         DateFilter.LAST_7_DAYS -> stringResource(R.string.filter_last_7_days)
         DateFilter.LAST_30_DAYS -> stringResource(R.string.filter_last_30_days)
         DateFilter.LAST_90_DAYS -> stringResource(R.string.filter_last_90_days)
