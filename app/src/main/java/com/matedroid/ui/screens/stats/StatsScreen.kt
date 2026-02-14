@@ -835,10 +835,10 @@ private fun RecordsCard(
     // Category 3: Weather & Altitude
     val weatherRecords = mutableListOf<RecordData>()
     deepStats?.driveWithMaxElevation?.let { record ->
-        weatherRecords.add(RecordData("🏔️", labelHighestPoint, "${record.elevationM} m", record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
+        weatherRecords.add(RecordData("🏔️", labelHighestPoint, "%,d m".format(record.elevationM), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
     }
     deepStats?.driveWithMostClimbing?.let { record ->
-        weatherRecords.add(RecordData("⛰️", labelMostClimbing, record.elevationGainM?.let { "+$it m" } ?: "N/A", record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
+        weatherRecords.add(RecordData("⛰️", labelMostClimbing, record.elevationGainM?.let { "+%,d m".format(it) } ?: "N/A", record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
     }
     deepStats?.hottestDrive?.let { record ->
         weatherRecords.add(RecordData("🌡️", labelHottestDrive, "%.1f°C".format(record.tempC), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
