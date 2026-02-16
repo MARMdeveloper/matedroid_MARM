@@ -307,7 +307,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
                 BarChartData(
                     label = year.toString(),
                     value = distance,
-                    displayValue = "%.1f km".format(distance)
+                    displayValue = "%,.1f km".format(distance)
                 )
             }
 
@@ -316,7 +316,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                valueFormatter = { "%.1f km".format(it) },
+                valueFormatter = { "%,.1f km".format(it) },
                 yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
@@ -362,7 +362,7 @@ private fun YearRow(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "%.0f km".format(yearData.totalDistance),
+                        text = "%,.0f km".format(yearData.totalDistance),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -504,7 +504,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
                 BarChartData(
                     label = month.toString(),
                     value = distance,
-                    displayValue = "%.1f km".format(distance)
+                    displayValue = "%,.1f km".format(distance)
                 )
             }
 
@@ -513,7 +513,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                valueFormatter = { "%.1f km".format(it) },
+                valueFormatter = { "%,.1f km".format(it) },
                 yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
@@ -566,7 +566,7 @@ private fun MonthRow(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "%.0f km".format(monthData.totalDistance),
+                        text = "%,.0f km".format(monthData.totalDistance),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -741,13 +741,13 @@ private fun MonthSummaryCard(
             ) {
                 StatChip(
                     icon = CustomIcons.Road,
-                    value = "%.1f km".format(totalDistance),
+                    value = "%,.1f km".format(totalDistance),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     prefix = "Ø",
                     icon = CustomIcons.Road,
-                    value = "%.1f km".format(avgDistance),
+                    value = "%,.1f km".format(avgDistance),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -831,7 +831,7 @@ private fun SummaryRow(
         ) {
             SummaryItem(
                 icon = Icons.Outlined.AllInclusive,
-                value = "%.0f km".format(totalDistance),
+                value = "%,.0f km".format(totalDistance),
                 label = stringResource(R.string.mileage_total),
                 iconColor = iconColor,
                 valueColor = valueColor,
@@ -839,7 +839,7 @@ private fun SummaryRow(
             )
             SummaryItemWithInfo(
                 icon = Icons.Filled.Speed,
-                value = "%.0f km".format(avgDistance),
+                value = "%,.0f km".format(avgDistance),
                 label = avgLabel,
                 iconColor = iconColor,
                 valueColor = valueColor,
@@ -1038,7 +1038,7 @@ private fun DailyChartCard(
                 BarChartData(
                     label = day.toString(),
                     value = distance,
-                    displayValue = "%.1f km".format(distance)
+                    displayValue = "%,.1f km".format(distance)
                 )
             }
 
@@ -1047,7 +1047,7 @@ private fun DailyChartCard(
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                valueFormatter = { "%.1f km".format(it) },
+                valueFormatter = { "%,.1f km".format(it) },
                 yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
@@ -1111,7 +1111,7 @@ private fun DayTripRow(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "%.1f km".format(dayData.totalDistance),
+                        text = "%,.2f km".format(dayData.totalDistance),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -1298,13 +1298,13 @@ private fun DaySummaryCard(
             ) {
                 StatChip(
                     icon = CustomIcons.Road,
-                    value = "%.1f km".format(dayData.totalDistance),
+                    value = "%,.2f km".format(dayData.totalDistance),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     prefix = "Ø",
                     icon = CustomIcons.Road,
-                    value = "%.1f km".format(avgDistance),
+                    value = "%,.2f km".format(avgDistance),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1388,7 +1388,7 @@ private fun DriveRow(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "%.1f km".format(distance),
+                        text = "%,.2f km".format(distance),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
