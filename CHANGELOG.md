@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-02-20
+
+### Changed
+- **Live Charge Screen**: Current SoC is now the most prominent element — displayed as a large hero number at the top of the header card, with a 3-column start/current/target row and progress bar below. Energy and power stats are compacted into a single row.
+
+### Fixed
+- **Notifications**: Live charge navigation and notification deep-link are now hidden when TeslaMate API < 1.24 (endpoint unavailable)
+- **Notifications**: Charging notification now navigates to live charge screen when tapped (fixes regression in fallback path when foreground service cannot start from background)
+- **Notifications**: Charging notification worker is now properly rescheduled after device reboot
+- **Notifications**: Charging notification correctly navigates to main screen when live charge API is unavailable
+- **Live Charge Screen**: Voltage and Current lines in the V/A chart now use distinct colors (amber and blue)
+- **Live Charge Screen**: Screen now closes automatically when charging stops
+- **Dashboard**: Chevron arrow on charging power gauge is now hidden when live charge screen is unavailable
+- **Stats for Nerds**: Fixed missing values (avg cost/kWh, coldest temperatures, cabin temperatures) when filtering by year (contributed by [@MARMdeveloper](https://github.com/MARMdeveloper), fixes #150)
+
 ## [1.1.0-beta3] - 2026-02-12
 
 ### Fixed
@@ -379,7 +394,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.1.0-beta3...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/vide/matedroid/compare/v1.0.0...v1.1.0
 [1.1.0-beta3]: https://github.com/vide/matedroid/compare/v1.1.0-beta2...v1.1.0-beta3
 [1.1.0-beta2]: https://github.com/vide/matedroid/compare/v1.1.0-beta1...v1.1.0-beta2
 [1.1.0-beta1]: https://github.com/vide/matedroid/compare/v1.0.0...v1.1.0-beta1
