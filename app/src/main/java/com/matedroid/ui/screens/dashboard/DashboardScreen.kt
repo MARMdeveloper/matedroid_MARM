@@ -1129,7 +1129,8 @@ private fun BatteryCard(
                         Box(modifier = if (isCurrentChargeAvailable) Modifier.clickable(onClick = onNavigateToCurrentCharge) else Modifier) {
                             ChargingPowerGaugeCompact(
                                 status = status,
-                                carTrimBadging = carTrimBadging
+                                carTrimBadging = carTrimBadging,
+                                isTappable = isCurrentChargeAvailable
                             )
                         }
                     }
@@ -1273,7 +1274,8 @@ private fun ChargingProgressBar(
 @Composable
 private fun ChargingPowerGaugeCompact(
     status: CarStatus,
-    carTrimBadging: String?
+    carTrimBadging: String?,
+    isTappable: Boolean = false
 ) {
     val isDcCharging = status.isDcCharging
     val powerKw = status.chargerPower ?: 0
@@ -1370,13 +1372,15 @@ private fun ChargingPowerGaugeCompact(
             )
         }
 
-        // Chevron to indicate tappable
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = gaugeColor
-        )
+        // Chevron to indicate tappable - only shown when the live charge API is available
+        if (isTappable) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = gaugeColor
+            )
+        }
     }
 }
 
