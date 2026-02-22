@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Dashboard**: Swipe left/right on the car image to switch between vehicles when multiple cars are configured; dot indicators below the image show which car is selected
+
 ## [1.1.0] - 2026-02-20
 
 ### Changed

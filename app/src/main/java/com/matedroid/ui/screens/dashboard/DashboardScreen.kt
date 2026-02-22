@@ -26,7 +26,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -51,8 +54,6 @@ import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.filled.WbSunny
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
 import com.matedroid.ui.icons.CustomIcons
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -121,6 +122,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import com.matedroid.data.api.models.BatteryDetails
+import com.matedroid.data.api.models.CarData
 import com.matedroid.data.api.models.CarExterior
 import com.matedroid.data.api.models.CarGeodata
 import com.matedroid.data.api.models.CarStatus
@@ -158,7 +160,6 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showCarSelector by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -167,79 +168,11 @@ fun DashboardScreen(
         }
     }
 
-    // Car selector dialog
-    if (showCarSelector && uiState.hasMultipleCars) {
-        AlertDialog(
-            onDismissRequest = { showCarSelector = false },
-            title = { Text(stringResource(R.string.select_vehicle)) },
-            text = {
-                Column {
-                    uiState.cars.forEach { car ->
-                        val isSelected = car.carId == uiState.selectedCarId
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    viewModel.selectCar(car.carId)
-                                    showCarSelector = false
-                                }
-                                .padding(vertical = 12.dp, horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.DirectionsCar,
-                                contentDescription = null,
-                                tint = if (isSelected) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = car.displayName ?: stringResource(R.string.car_fallback_name, car.carId),
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.weight(1f)
-                            )
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = stringResource(R.string.selected),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showCarSelector = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    if (uiState.hasMultipleCars) {
-                        Row(
-                            modifier = Modifier.clickable { showCarSelector = true },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(uiState.selectedCarName ?: "MateDroid")
-                            Icon(
-                                imageVector = Icons.Filled.ArrowDropDown,
-                                contentDescription = stringResource(R.string.select_car),
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    } else {
-                        Text(uiState.selectedCarName ?: "MateDroid")
-                    }
+                    Text(uiState.selectedCarName ?: "MateDroid")
                 },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
@@ -270,6 +203,10 @@ fun DashboardScreen(
                         totalCharges = uiState.totalCharges,
                         totalDrives = uiState.totalDrives,
                         imageOverride = uiState.carImageOverride,
+                        cars = uiState.cars,
+                        selectedCarId = uiState.selectedCarId,
+                        onSelectCar = { viewModel.selectCar(it) },
+                        carImageOverrides = uiState.carImageOverrides,
                         isCurrentChargeAvailable = uiState.isCurrentChargeAvailable,
                         onNavigateToCharges = {
                             uiState.selectedCarId?.let { carId ->
@@ -452,6 +389,10 @@ private fun DashboardContent(
     totalCharges: Int? = null,
     totalDrives: Int? = null,
     imageOverride: CarImageOverride? = null,
+    cars: List<CarData> = emptyList(),
+    selectedCarId: Int? = null,
+    onSelectCar: (Int) -> Unit = {},
+    carImageOverrides: Map<Int, CarImageOverride> = emptyMap(),
     isCurrentChargeAvailable: Boolean = false,
     onNavigateToCharges: () -> Unit = {},
     onNavigateToDrives: () -> Unit = {},
@@ -502,6 +443,10 @@ private fun DashboardContent(
             carTrimBadging = carTrimBadging,
             carExterior = carExterior,
             imageOverride = imageOverride,
+            cars = cars,
+            selectedCarId = selectedCarId,
+            onSelectCar = onSelectCar,
+            carImageOverrides = carImageOverrides,
             isCurrentChargeAvailable = isCurrentChargeAvailable,
             onNavigateToBattery = onNavigateToBattery,
             onNavigateToStats = onNavigateToStats,
@@ -1044,6 +989,10 @@ private fun BatteryCard(
     carTrimBadging: String? = null,
     carExterior: CarExterior? = null,
     imageOverride: CarImageOverride? = null,
+    cars: List<CarData> = emptyList(),
+    selectedCarId: Int? = null,
+    onSelectCar: (Int) -> Unit = {},
+    carImageOverrides: Map<Int, CarImageOverride> = emptyMap(),
     isCurrentChargeAvailable: Boolean = false,
     onNavigateToBattery: () -> Unit = {},
     onNavigateToStats: () -> Unit = {},
@@ -1080,20 +1029,84 @@ private fun BatteryCard(
                 modifier = Modifier.padding(top = 4.dp, bottom = 0.dp)
             )
 
-            // Car image with pulsing glow effect when charging
-            CarImage(
-                carModel = carModel,
-                carTrimBadging = carTrimBadging,
-                carExterior = carExterior,
-                modifier = Modifier.fillMaxWidth(),
-                isCharging = status.isCharging,
-                isDcCharging = status.isDcCharging,
-                accentColor = palette.accent,
-                carSurfaceColor = palette.surface,
-                imageOverride = imageOverride,
-                onNavigateToStats = onNavigateToStats,
-                onLongPress = onCarImageLongPress
-            )
+            // Car image — pager when multiple cars, single image otherwise
+            if (cars.size > 1) {
+                val initialPage = cars.indexOfFirst { it.carId == selectedCarId }.coerceAtLeast(0)
+                val pagerState = rememberPagerState(initialPage = initialPage) { cars.size }
+
+                // Sync pager position when selected car changes externally
+                LaunchedEffect(selectedCarId) {
+                    val targetPage = cars.indexOfFirst { it.carId == selectedCarId }.coerceAtLeast(0)
+                    if (targetPage != pagerState.currentPage) {
+                        pagerState.animateScrollToPage(targetPage)
+                    }
+                }
+
+                // Notify viewmodel when user swipes to a new car
+                LaunchedEffect(pagerState.settledPage) {
+                    val car = cars.getOrNull(pagerState.settledPage) ?: return@LaunchedEffect
+                    if (car.carId != selectedCarId) {
+                        onSelectCar(car.carId)
+                    }
+                }
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth()
+                ) { page ->
+                    val car = cars[page]
+                    val isSettled = page == pagerState.settledPage
+                    val carPalette = CarColorPalettes.forExteriorColor(car.carExterior?.exteriorColor, isDarkTheme)
+                    CarImage(
+                        carModel = car.carDetails?.model,
+                        carTrimBadging = car.carDetails?.trimBadging,
+                        carExterior = car.carExterior,
+                        modifier = Modifier.fillMaxWidth(),
+                        isCharging = if (isSettled) status.isCharging else false,
+                        isDcCharging = if (isSettled) status.isDcCharging else false,
+                        accentColor = carPalette.accent,
+                        carSurfaceColor = carPalette.surface,
+                        imageOverride = carImageOverrides[car.carId],
+                        onNavigateToStats = if (isSettled) onNavigateToStats else null,
+                        onLongPress = if (isSettled) onCarImageLongPress else null
+                    )
+                }
+
+                // Dots indicator
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    repeat(cars.size) { index ->
+                        val isSelected = pagerState.currentPage == index
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isSelected) palette.accent
+                                    else palette.onSurfaceVariant.copy(alpha = 0.3f)
+                                )
+                        )
+                    }
+                }
+            } else {
+                // Single car — existing behaviour unchanged
+                CarImage(
+                    carModel = carModel,
+                    carTrimBadging = carTrimBadging,
+                    carExterior = carExterior,
+                    modifier = Modifier.fillMaxWidth(),
+                    isCharging = status.isCharging,
+                    isDcCharging = status.isDcCharging,
+                    accentColor = palette.accent,
+                    carSurfaceColor = palette.surface,
+                    imageOverride = imageOverride,
+                    onNavigateToStats = onNavigateToStats,
+                    onLongPress = onCarImageLongPress
+                )
+            }
 
             // Battery info row - tappable to navigate to battery health
             Row(
