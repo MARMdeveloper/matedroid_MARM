@@ -13,10 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -268,37 +267,31 @@ fun DualAxisLineChart(
             }
         }
 
-        // Tooltip popup
+        // Tooltip rendered in-bounds (not a Popup) to avoid overlapping the TopAppBar
         displayedPoint?.let { point ->
-            val d = LocalDensity.current
-            Popup(
-                offset = with(d) {
-                    IntOffset(
-                        x = point.position.x.roundToInt(),
-                        y = (point.position.y - 48.dp.toPx()).roundToInt()
-                    )
-                },
-                onDismissRequest = { selectedPoint = null },
-                properties = PopupProperties(focusable = false)
-            ) {
-                val lines = mutableListOf<String>()
-                if (point.valueLeft != null) lines.add("%.1f".format(point.valueLeft) + " $unitLeft")
-                if (point.valueRight != null) lines.add("%.1f".format(point.valueRight) + " $unitRight")
-                val text = lines.joinToString("  |  ")
+            var tooltipWidth by remember { mutableStateOf(0) }
+            var tooltipHeight by remember { mutableStateOf(0) }
 
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier
-                        .background(
-                            Color(0xCC323232),
-                            RoundedCornerShape(6.dp)
-                        )
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                )
-            }
+            val lines = mutableListOf<String>()
+            if (point.valueLeft != null) lines.add("%.1f".format(point.valueLeft) + " $unitLeft")
+            if (point.valueRight != null) lines.add("%.1f".format(point.valueRight) + " $unitRight")
+            val text = lines.joinToString("  |  ")
+
+            val xPx = (point.position.x - tooltipWidth / 2f)
+                .coerceIn(0f, (canvasWidthPx - tooltipWidth).coerceAtLeast(0f))
+            val yPx = (point.position.y - tooltipHeight - 24f).coerceAtLeast(0f)
+
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier
+                    .offset { IntOffset(xPx.roundToInt(), yPx.roundToInt()) }
+                    .onSizeChanged { tooltipWidth = it.width; tooltipHeight = it.height }
+                    .background(Color(0xCC323232), RoundedCornerShape(6.dp))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            )
         }
     }
 }
