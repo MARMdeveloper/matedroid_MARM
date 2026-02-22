@@ -60,6 +60,7 @@ import androidx.compose.foundation.lazy.items as logItems
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -365,23 +366,22 @@ private fun StatsContent(
     onGapRecordClick: (Double, String, String, String) -> Unit,
     onSyncProgressClick: (() -> Unit)? = null
 ) {
-    // Use a box as the root container to allow for stacking
-    Box(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Year filter chips — pinned above the scrollable content
+        YearFilterChips(
+            availableYears = availableYears,
+            selectedFilter = selectedYearFilter,
+            palette = palette,
+            onFilterSelected = onYearFilterSelected,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        HorizontalDivider(color = palette.onSurface.copy(alpha = 0.08f))
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Year filter chips
-            item {
-                YearFilterChips(
-                    availableYears = availableYears,
-                    selectedFilter = selectedYearFilter,
-                    palette = palette,
-                    onFilterSelected = onYearFilterSelected
-                )
-            }
-
             // Sync progress indicator if deep sync is actively running
             if (isSyncing && deepSyncProgress < 1f && deepSyncProgress > 0f) {
                 item {
@@ -458,17 +458,18 @@ private fun StatsContent(
                 }
             }
         }
-        // Progress indicator
+        // Progress indicator overlay at the top of the scrollable area
         if (isUpdating) {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .align(Alignment.TopCenter),
-                    color = palette.accent
-                )
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .align(Alignment.TopCenter),
+                color = palette.accent
+            )
         }
-    }
+        } // end Box (scrollable area)
+    } // end Column
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -477,9 +478,11 @@ private fun YearFilterChips(
     availableYears: List<Int>,
     selectedFilter: YearFilter,
     palette: CarColorPalette,
-    onFilterSelected: (YearFilter) -> Unit
+    onFilterSelected: (YearFilter) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     LazyRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // All Time option
