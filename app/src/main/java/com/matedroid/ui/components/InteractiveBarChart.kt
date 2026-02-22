@@ -84,27 +84,22 @@ fun InteractiveBarChart(
                     containerWidth = it.size.width.toFloat()}
                 .height(120.dp)
                 .pointerInput(data) {
+                    val yAxisWidth = 32.dp.toPx()
                     detectTapGestures { offset ->
-                        val yAxisWidth = with(density) { 32.dp.toPx() }
-                        val chartWidth = size.width - yAxisWidth
-                        val barWidth = chartWidth / data.size
-
-                        // Check if tap is in chart area
                         if (offset.x > yAxisWidth) {
+                            val chartWidth = size.width - yAxisWidth
+                            val barWidth = chartWidth / data.size
                             val barIndex = ((offset.x - yAxisWidth) / barWidth).toInt()
-                            if (barIndex in data.indices) {
-                                if (selectedBarIndex == barIndex) {
-                                    selectedBarIndex = null
-                                } else {
-                                    selectedBarIndex = barIndex
-                                    tooltipPosition = Offset(
-                                        yAxisWidth + barIndex * barWidth + barWidth / 2,
-                                        offset.y
-                                    )
-                                }
+                                .coerceIn(0, data.lastIndex)
+                            if (selectedBarIndex == barIndex) {
+                                selectedBarIndex = null
+                            } else {
+                                selectedBarIndex = barIndex
+                                tooltipPosition = Offset(
+                                    yAxisWidth + barIndex * barWidth + barWidth / 2,
+                                    offset.y
+                                )
                             }
-                        } else {
-                            selectedBarIndex = null
                         }
                     }
                 }

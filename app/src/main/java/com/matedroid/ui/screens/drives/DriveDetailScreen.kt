@@ -5,6 +5,7 @@ import android.graphics.Paint
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,9 +52,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -65,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlin.math.roundToInt
 import com.matedroid.R
 import com.matedroid.data.api.models.DriveDetail
 import com.matedroid.data.api.models.DrivePosition
@@ -165,11 +170,13 @@ private fun DriveDetailContent(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    var sharedXFraction by remember { mutableStateOf<Float?>(null) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
+            .pointerInput(Unit) { detectTapGestures { sharedXFraction = null } }
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -258,12 +265,52 @@ private fun DriveDetailContent(
             if (!detail.positions.isNullOrEmpty() && detail.positions.size > 2) {
                 // Extract time labels for X axis (5 labels: start, 1st quarter, half, 3rd quarter, end)
                 val timeLabels = extractTimeLabels(detail.positions)
+                val positions = detail.positions
+                val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+                val fractionToTimeLabel: (Float) -> String = { fraction ->
+                    val index = (fraction * positions.lastIndex).roundToInt().coerceIn(0, positions.lastIndex)
+                    positions[index].date?.let { dateStr ->
+                        try {
+                            val dt = try {
+                                java.time.OffsetDateTime.parse(dateStr).toLocalDateTime()
+                            } catch (e: java.time.format.DateTimeParseException) {
+                                java.time.LocalDateTime.parse(dateStr.replace("Z", ""))
+                            }
+                            dt.format(timeFormatter)
+                        } catch (e: Exception) { "" }
+                    } ?: ""
+                }
 
-                SpeedChartCard(positions = detail.positions, units = units, timeLabels = timeLabels)
-                PowerChartCard(positions = detail.positions, timeLabels = timeLabels)
-                BatteryChartCard(positions = detail.positions, timeLabels = timeLabels)
+                SpeedChartCard(
+                    positions = detail.positions,
+                    units = units,
+                    timeLabels = timeLabels,
+                    externalSelectedFraction = sharedXFraction,
+                    onXSelected = { sharedXFraction = it },
+                    fractionToTimeLabel = fractionToTimeLabel
+                )
+                PowerChartCard(
+                    positions = detail.positions,
+                    timeLabels = timeLabels,
+                    externalSelectedFraction = sharedXFraction,
+                    onXSelected = { sharedXFraction = it },
+                    fractionToTimeLabel = fractionToTimeLabel
+                )
+                BatteryChartCard(
+                    positions = detail.positions,
+                    timeLabels = timeLabels,
+                    externalSelectedFraction = sharedXFraction,
+                    onXSelected = { sharedXFraction = it },
+                    fractionToTimeLabel = fractionToTimeLabel
+                )
                 if (detail.positions.any { it.elevation != null && it.elevation != 0 }) {
-                    ElevationChartCard(positions = detail.positions, timeLabels = timeLabels)
+                    ElevationChartCard(
+                        positions = detail.positions,
+                        timeLabels = timeLabels,
+                        externalSelectedFraction = sharedXFraction,
+                        onXSelected = { sharedXFraction = it },
+                        fractionToTimeLabel = fractionToTimeLabel
+                    )
                 }
             }
         }
@@ -612,7 +659,14 @@ private fun StatItemView(
 }
 
 @Composable
-private fun SpeedChartCard(positions: List<DrivePosition>, units: Units?, timeLabels: List<String>) {
+private fun SpeedChartCard(
+    positions: List<DrivePosition>,
+    units: Units?,
+    timeLabels: List<String>,
+    externalSelectedFraction: Float? = null,
+    onXSelected: ((Float?) -> Unit)? = null,
+    fractionToTimeLabel: ((Float) -> String)? = null
+) {
     val speeds = positions.mapNotNull { it.speed?.toFloat() }
     if (speeds.size < 2) return
 
@@ -623,6 +677,9 @@ private fun SpeedChartCard(positions: List<DrivePosition>, units: Units?, timeLa
         color = MaterialTheme.colorScheme.primary,
         unit = UnitFormatter.getSpeedUnit(units),
         timeLabels = timeLabels,
+        externalSelectedFraction = externalSelectedFraction,
+        onXSelected = onXSelected,
+        fractionToTimeLabel = fractionToTimeLabel,
         convertValue = { value ->
             if (units?.isImperial == true) (value * 0.621371f) else value
         }
@@ -630,7 +687,13 @@ private fun SpeedChartCard(positions: List<DrivePosition>, units: Units?, timeLa
 }
 
 @Composable
-private fun PowerChartCard(positions: List<DrivePosition>, timeLabels: List<String>) {
+private fun PowerChartCard(
+    positions: List<DrivePosition>,
+    timeLabels: List<String>,
+    externalSelectedFraction: Float? = null,
+    onXSelected: ((Float?) -> Unit)? = null,
+    fractionToTimeLabel: ((Float) -> String)? = null
+) {
     val powers = positions.mapNotNull { it.power?.toFloat() }
     if (powers.size < 2) return
 
@@ -641,12 +704,21 @@ private fun PowerChartCard(positions: List<DrivePosition>, timeLabels: List<Stri
         color = MaterialTheme.colorScheme.tertiary,
         unit = "kW",
         showZeroLine = true,
-        timeLabels = timeLabels
+        timeLabels = timeLabels,
+        externalSelectedFraction = externalSelectedFraction,
+        onXSelected = onXSelected,
+        fractionToTimeLabel = fractionToTimeLabel
     )
 }
 
 @Composable
-private fun BatteryChartCard(positions: List<DrivePosition>, timeLabels: List<String>) {
+private fun BatteryChartCard(
+    positions: List<DrivePosition>,
+    timeLabels: List<String>,
+    externalSelectedFraction: Float? = null,
+    onXSelected: ((Float?) -> Unit)? = null,
+    fractionToTimeLabel: ((Float) -> String)? = null
+) {
     val batteryLevels = positions.mapNotNull { it.batteryLevel?.toFloat() }
     if (batteryLevels.size < 2) return
 
@@ -657,12 +729,21 @@ private fun BatteryChartCard(positions: List<DrivePosition>, timeLabels: List<St
         color = MaterialTheme.colorScheme.secondary,
         unit = "%",
         fixedMinMax = Pair(0f, 100f),
-        timeLabels = timeLabels
+        timeLabels = timeLabels,
+        externalSelectedFraction = externalSelectedFraction,
+        onXSelected = onXSelected,
+        fractionToTimeLabel = fractionToTimeLabel
     )
 }
 
 @Composable
-private fun ElevationChartCard(positions: List<DrivePosition>, timeLabels: List<String>) {
+private fun ElevationChartCard(
+    positions: List<DrivePosition>,
+    timeLabels: List<String>,
+    externalSelectedFraction: Float? = null,
+    onXSelected: ((Float?) -> Unit)? = null,
+    fractionToTimeLabel: ((Float) -> String)? = null
+) {
     val elevations = positions.mapNotNull { it.elevation?.toFloat() }
     if (elevations.size < 2) return
 
@@ -672,7 +753,10 @@ private fun ElevationChartCard(positions: List<DrivePosition>, timeLabels: List<
         data = elevations,
         color = Color(0xFF8B4513), // Brown color for terrain
         unit = "m",
-        timeLabels = timeLabels
+        timeLabels = timeLabels,
+        externalSelectedFraction = externalSelectedFraction,
+        onXSelected = onXSelected,
+        fractionToTimeLabel = fractionToTimeLabel
     )
 }
 
@@ -686,7 +770,10 @@ private fun ChartCard(
     showZeroLine: Boolean = false,
     fixedMinMax: Pair<Float, Float>? = null,
     timeLabels: List<String> = emptyList(),
-    convertValue: (Float) -> Float = { it }
+    convertValue: (Float) -> Float = { it },
+    externalSelectedFraction: Float? = null,
+    onXSelected: ((Float?) -> Unit)? = null,
+    fractionToTimeLabel: ((Float) -> String)? = null
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -723,6 +810,9 @@ private fun ChartCard(
                 fixedMinMax = fixedMinMax,
                 timeLabels = timeLabels,
                 convertValue = convertValue,
+                externalSelectedFraction = externalSelectedFraction,
+                onXSelected = onXSelected,
+                fractionToTimeLabel = fractionToTimeLabel,
                 modifier = Modifier.fillMaxWidth()
             )
         }
