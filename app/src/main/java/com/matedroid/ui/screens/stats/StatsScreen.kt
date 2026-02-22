@@ -1150,8 +1150,8 @@ private fun AcDcRatioCard(deepStats: DeepStats, palette: CarColorPalette) {
     }
 
     val acRatio = (deepStats.acChargeEnergyKwh / totalEnergy).toFloat()
-    val acColor = Color(0xFF4CAF50) // Green
-    val dcColor = Color(0xFFFFC107) // Yellow/Amber
+    val acColor = palette.acColor
+    val dcColor = palette.dcColor
 
     StatsCard(
         title = stringResource(R.string.stats_ac_dc_ratio),
