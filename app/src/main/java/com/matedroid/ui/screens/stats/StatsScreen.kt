@@ -603,12 +603,12 @@ private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalett
         Row(modifier = Modifier.fillMaxWidth()) {
             StatItem(
                 label = stringResource(R.string.stats_total_drives),
-                value = quickStats.totalDrives.toString(),
+                value = "%,d".format(quickStats.totalDrives),
                 modifier = Modifier.weight(1f)
             )
             StatItem(
                 label = stringResource(R.string.stats_driving_days),
-                value = quickStats.totalDrivingDays?.toString() ?: "-",
+                value = quickStats.totalDrivingDays?.let { "%,d".format(it) } ?: "-",
                 modifier = Modifier.weight(1f)
             )
         }
@@ -651,7 +651,7 @@ private fun QuickStatsChargesCard(quickStats: QuickStats, palette: CarColorPalet
         Row(modifier = Modifier.fillMaxWidth()) {
             StatItem(
                 label = stringResource(R.string.stats_total_charges),
-                value = quickStats.totalCharges.toString(),
+                value = "%,d".format(quickStats.totalCharges),
                 modifier = Modifier.weight(1f)
             )
             StatItem(
@@ -797,10 +797,10 @@ private fun RecordsCard(
     // Category 3: Weather & Altitude
     val weatherRecords = mutableListOf<RecordData>()
     deepStats?.driveWithMaxElevation?.let { record ->
-        weatherRecords.add(RecordData("🏔️", labelHighestPoint, "${record.elevationM} m", record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
+        weatherRecords.add(RecordData("🏔️", labelHighestPoint, "%,d m".format(record.elevationM), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
     }
     deepStats?.driveWithMostClimbing?.let { record ->
-        weatherRecords.add(RecordData("⛰️", labelMostClimbing, record.elevationGainM?.let { "+$it m" } ?: "N/A", record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
+        weatherRecords.add(RecordData("⛰️", labelMostClimbing, record.elevationGainM?.let { "+%,d m".format(it) } ?: "N/A", record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
     }
     deepStats?.hottestDrive?.let { record ->
         weatherRecords.add(RecordData("🌡️", labelHottestDrive, "%.1f°C".format(record.tempC), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })

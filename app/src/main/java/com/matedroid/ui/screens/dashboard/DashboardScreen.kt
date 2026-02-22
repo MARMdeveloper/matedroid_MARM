@@ -1515,9 +1515,9 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
         val isImperial = units?.unitOfLength == "mi"
         if (isImperial) {
             val feet = (it * 3.28084).toInt()
-            "$feet ft"
+            "%,d ft".format(feet)
         } else {
-            "$it m"
+            "%,d m".format(it)
         }
     }
 

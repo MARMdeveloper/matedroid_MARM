@@ -350,7 +350,7 @@ private fun CountrySummaryCard(
                 // Drive count
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = country.driveCount.toString(),
+                        text = "%,d".format(country.driveCount),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = palette.accent
@@ -992,7 +992,7 @@ private fun RegionCard(
                 // Drive count
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = region.driveCount.toString(),
+                        text = "%,d".format(region.driveCount),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = palette.accent
