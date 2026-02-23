@@ -2,11 +2,8 @@ name: Nightly Alpha Build
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # midnight UTC
-  workflow_dispatch:     # allow manual trigger for testing
-
-permissions:
-  contents: write  # needed to commit the versionCode bump back to main
+    - cron: '0 4 * * *'
+  workflow_dispatch:  # allow manual trigger for testing
 
 jobs:
   check-changes:
@@ -48,25 +45,15 @@ jobs:
           RAW_VERSION=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
           MAJOR_MINOR=$(echo "$RAW_VERSION" | cut -d. -f1,2)
           ALPHA_NAME="${MAJOR_MINOR}-alpha-${DATE}"
-          # Increment versionCode by 1 from the current value in build.gradle.kts.
-          # This keeps a single monotonic sequence shared with stable releases.
-          CURRENT_CODE=$(grep 'versionCode' app/build.gradle.kts | sed 's/[^0-9]*//g')
-          ALPHA_CODE=$((CURRENT_CODE + 1))
+          # Monotonic versionCode from epoch/10 (~625 years of headroom)
+          ALPHA_CODE=$(./scripts/bump-version-code.sh --dry-run)
           echo "name=${ALPHA_NAME}" >> $GITHUB_OUTPUT
           echo "code=${ALPHA_CODE}" >> $GITHUB_OUTPUT
           echo "Alpha version: ${ALPHA_NAME} (code ${ALPHA_CODE})"
 
-      - name: Bump versionCode in build.gradle.kts and commit
+      - name: Patch build.gradle.kts for alpha build
         run: |
           sed -i "s|versionCode = [0-9]*|versionCode = ${{ steps.version.outputs.code }}|" app/build.gradle.kts
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/build.gradle.kts
-          git commit -m "chore: bump versionCode to ${{ steps.version.outputs.code }} for nightly alpha"
-          git push origin main
-
-      - name: Patch versionName for alpha build (in-memory only, not committed)
-        run: |
           sed -i 's|versionName = "[^"]*"|versionName = "${{ steps.version.outputs.name }}"|' app/build.gradle.kts
 
       - name: Set up JDK 17

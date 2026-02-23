@@ -258,21 +258,40 @@ fastlane/metadata/android/
 
 Each release requires a changelog file named `{versionCode}.txt` (e.g., `24.txt`) in all locale directories. The `/release` skill automatically creates translated changelogs for all supported languages.
 
+#### Version Code
+
+The `versionCode` is generated from Unix epoch / 10 via `scripts/bump-version-code.sh`. This produces a monotonically increasing integer with 10-second granularity, shared by both stable and nightly alpha releases. The scheme is safe until ~2650 (well within int32 range).
+
+```bash
+# Preview what the next versionCode would be
+./scripts/bump-version-code.sh --dry-run
+
+# Update build.gradle.kts with a new versionCode
+./scripts/bump-version-code.sh
+```
+
+#### Nightly Alpha Builds
+
+A GitHub Actions workflow runs daily at 04:00 UTC. If there are new commits on `main` since the last 24h, it builds and uploads an alpha AAB to the Google Play closed testing (alpha) track with version name `MAJOR.MINOR-alpha-YYYYMMDD`.
+
 #### Manual Release
 
 If releasing manually:
 
 ```bash
-# 1. Update version in app/build.gradle.kts (versionCode and versionName)
-# 2. Update CHANGELOG.md with release notes
-# 3. Create changelogs in fastlane/metadata/android/{locale}/changelogs/{versionCode}.txt
-# 4. Commit and push
+# 1. Bump versionCode
+./scripts/bump-version-code.sh
 
-# 5. Create a release with GitHub CLI
-gh release create v0.5.0 --generate-notes
+# 2. Update versionName in app/build.gradle.kts
+# 3. Update CHANGELOG.md with release notes
+# 4. Create changelogs in fastlane/metadata/android/{locale}/changelogs/{versionCode}.txt
+# 5. Commit and push
+
+# 6. Create a release with GitHub CLI
+gh release create v1.2.0 --generate-notes
 
 # Or create a draft release to edit notes first
-gh release create v0.5.0 --generate-notes --draft
+gh release create v1.2.0 --generate-notes --draft
 ```
 
 #### Signing Configuration (Optional)
