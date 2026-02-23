@@ -3,9 +3,7 @@ package com.matedroid.ui.screens.dashboard
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.BlurMaskFilter
-import android.graphics.Canvas as AndroidCanvas
-import android.graphics.Paint
+import com.matedroid.ui.util.GlowBitmapRenderer
 import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.Canvas
@@ -474,50 +472,9 @@ private fun DashboardContent(
     }
 }
 
-/**
- * Creates a glow bitmap from the alpha channel of the source bitmap.
- * The glow follows the shape of the non-transparent pixels.
- *
- * @param source The source bitmap with transparency
- * @param glowColor The color for the glow effect
- * @param glowRadius The radius of the blur effect in pixels
- * @return A new bitmap containing only the glow effect
- */
-private fun createGlowBitmap(source: Bitmap, glowColor: Color, glowRadius: Float): Bitmap {
-    // Create a larger bitmap to accommodate the glow extending beyond the original bounds
-    val padding = (glowRadius * 2).toInt()
-    val glowBitmap = Bitmap.createBitmap(
-        source.width + padding * 2,
-        source.height + padding * 2,
-        Bitmap.Config.ARGB_8888
-    )
-
-    val canvas = AndroidCanvas(glowBitmap)
-
-    // Extract alpha from source first
-    val alphaBitmap = source.extractAlpha()
-
-    // Create paint with blur effect - use OUTER blur for glow effect
-    val glowPaint = Paint().apply {
-        isAntiAlias = true
-        color = android.graphics.Color.argb(
-            (glowColor.alpha * 255).toInt(),
-            (glowColor.red * 255).toInt(),
-            (glowColor.green * 255).toInt(),
-            (glowColor.blue * 255).toInt()
-        )
-        maskFilter = BlurMaskFilter(glowRadius, BlurMaskFilter.Blur.OUTER)
-    }
-
-    // Draw the blurred alpha multiple times for a stronger glow effect
-    repeat(3) {
-        canvas.drawBitmap(alphaBitmap, padding.toFloat(), padding.toFloat(), glowPaint)
-    }
-
-    alphaBitmap.recycle()
-
-    return glowBitmap
-}
+// createGlowBitmap moved to GlowBitmapRenderer for reuse by the home screen widget
+private fun createGlowBitmap(source: Bitmap, glowColor: Color, glowRadius: Float): Bitmap =
+    GlowBitmapRenderer.createGlowBitmap(source, glowColor, glowRadius)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

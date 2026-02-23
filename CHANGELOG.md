@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Home screen widget**: Battery info widget for the Android home screen. Shows battery level, range, state, temperature, and charging details (power, voltage, current, phases, energy added, time to full) for any configured car. Features a dimmed car image background with a static glow effect when charging. One widget per car can be configured; updates every 15 minutes via WorkManager.
 - **Dashboard**: Swipe left/right on the car image to switch between vehicles when multiple cars are configured; dot indicators below the image show which car is selected
 
 ## [1.1.0] - 2026-02-20
