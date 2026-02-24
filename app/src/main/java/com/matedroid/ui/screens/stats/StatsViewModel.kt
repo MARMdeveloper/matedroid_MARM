@@ -9,10 +9,13 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
+import com.matedroid.data.api.models.Units
 import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.model.Currency
 import com.matedroid.data.repository.GeocodeProgressInfo
+import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.StatsRepository
+import com.matedroid.data.repository.TeslamateRepository
 import com.matedroid.data.sync.DataSyncWorker
 import com.matedroid.data.sync.SyncLogCollector
 import com.matedroid.data.sync.SyncManager
@@ -44,6 +47,7 @@ data class StatsUiState(
     val geocodeProgress: GeocodeProgressInfo? = null,
     val isGeocoding: Boolean = false,
     val currencySymbol: String = "€",
+    val isImperial: Boolean = false,
     val error: String? = null,
     val isUpdating: Boolean = false
 )
@@ -51,6 +55,7 @@ data class StatsUiState(
 @HiltViewModel
 class StatsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val repository: TeslamateRepository,
     private val statsRepository: StatsRepository,
     private val syncManager: SyncManager,
     private val syncLogCollector: SyncLogCollector,
@@ -85,10 +90,26 @@ class StatsViewModel @Inject constructor(
 
     fun setCarId(id: Int) {
         carId = id
+        loadIsImperial(id)
         loadStats()
         startObservingSyncStatus()
         startObservingProgress(id)
         startObservingGeocodeProgress(id)
+    }
+
+    private fun loadIsImperial(carId: Int) {
+        viewModelScope.launch {
+            val override = settingsDataStore.unitsOverride.first()
+            val isImperial = when (override) {
+                "imperial" -> true
+                "metric"   -> false
+                else -> when (val r = repository.getCarStatus(carId)) {
+                    is ApiResult.Success -> r.data.units?.isImperial == true
+                    is ApiResult.Error   -> false
+                }
+            }
+            _uiState.update { it.copy(isImperial = isImperial) }
+        }
     }
 
     /**

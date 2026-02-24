@@ -110,6 +110,7 @@ fun RegionsVisitedScreen(
         CarColorPalettes.forExteriorColor(exteriorColor, isDarkTheme)
     }
     var showSortMenu by remember { mutableStateOf(false) }
+    val distUnit = if (uiState.isImperial) "mi" else "km"
 
     LaunchedEffect(carId, countryCode, yearFilter) {
         viewModel.loadRegions(carId, countryCode, yearFilter)
@@ -223,7 +224,8 @@ fun RegionsVisitedScreen(
                         onMapViewModeChange = { viewModel.setMapViewMode(it) },
                         onChargeTypeFilterToggle = { viewModel.toggleChargeTypeFilter(it) },
                         onMapYearChange = { viewModel.setMapYearFilter(it) },
-                        palette = palette
+                        palette = palette,
+                        isImperial = uiState.isImperial
                     )
                 }
             }
@@ -247,7 +249,8 @@ private fun RegionsContent(
     onMapViewModeChange: (MapViewMode) -> Unit,
     onChargeTypeFilterToggle: (ChargeTypeFilter) -> Unit,
     onMapYearChange: (Int?) -> Unit,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    isImperial: Boolean
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -259,7 +262,8 @@ private fun RegionsContent(
                 CountrySummaryCard(
                     country = country,
                     localizedName = getLocalizedCountryName(country.countryCode),
-                    palette = palette
+                    palette = palette,
+                    isImperial = isImperial
                 )
             }
         }
@@ -287,14 +291,15 @@ private fun RegionsContent(
                     chargeTypeFilter = chargeTypeFilter,
                     onMapViewModeChange = onMapViewModeChange,
                     onChargeTypeFilterToggle = onChargeTypeFilterToggle,
-                    palette = palette
+                    palette = palette,
+                    isImperial = isImperial
                 )
             }
         }
 
         // Region cards
         items(regions, key = { it.regionName }) { region ->
-            RegionCard(region = region, palette = palette)
+            RegionCard(region = region, palette = palette, isImperial = isImperial)
         }
     }
 }
@@ -303,9 +308,11 @@ private fun RegionsContent(
 private fun CountrySummaryCard(
     country: CountryRecord,
     localizedName: String,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    isImperial: Boolean
 ) {
     val cardShape = RoundedCornerShape(20.dp)
+    val distUnit = if (isImperial) "mi" else "km"
 
     Box(
         modifier = Modifier
@@ -391,7 +398,9 @@ private fun CountrySummaryCard(
             ) {
                 StatChip(
                     icon = Icons.Default.Route,
-                    value = "%,.0f km".format(country.totalDistanceKm),
+                    value = "%,.0f $distUnit".format(
+                        if (isImperial) country.totalDistanceKm * 0.621371 else country.totalDistanceKm
+                    ),
                     palette = palette,
                     modifier = Modifier.weight(1f)
                 )
@@ -477,13 +486,15 @@ private fun CountryMapCard(
     chargeTypeFilter: ChargeTypeFilter,
     onMapViewModeChange: (MapViewMode) -> Unit,
     onChargeTypeFilterToggle: (ChargeTypeFilter) -> Unit,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    isImperial: Boolean
 ) {
     val cardShape = RoundedCornerShape(20.dp)
     val chargeCount = chargeLocations.size
     val driveCount = driveLocations.size
     val driveColor = palette.accent
     val driveColorArgb = driveColor.toArgb()
+    val distUnit = if (isImperial) "mi" else "km"
 
     // Track if initial zoom has been done (only zoom once when page first opens)
     var hasInitialZoom by remember { mutableStateOf(false) }
@@ -617,7 +628,9 @@ private fun CountryMapCard(
                                         position = geoPoint
                                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
                                         title = drive.address
-                                        snippet = "%,.1f km".format(drive.distanceKm)
+                                        snippet = "%,.1f $distUnit".format(
+                                            if (isImperial) drive.distanceKm * 0.621371 else drive.distanceKm
+                                        )
 
                                         val dotDrawable = GradientDrawable().apply {
                                             shape = GradientDrawable.OVAL
@@ -948,9 +961,11 @@ private fun createCountryHighlightOverlays(boundary: CountryBoundary, accentColo
 @Composable
 private fun RegionCard(
     region: RegionRecord,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    isImperial: Boolean
 ) {
     val cardShape = RoundedCornerShape(16.dp)
+    val distUnit = if (isImperial) "mi" else "km"
 
     Box(
         modifier = Modifier
@@ -1010,7 +1025,9 @@ private fun RegionCard(
             ) {
                 StatChip(
                     icon = Icons.Default.Route,
-                    value = "%,.0f km".format(region.totalDistanceKm),
+                    value = "%,.0f $distUnit".format(
+                        if (isImperial) region.totalDistanceKm * 0.621371 else region.totalDistanceKm
+                    ),
                     palette = palette,
                     modifier = Modifier.weight(1f)
                 )

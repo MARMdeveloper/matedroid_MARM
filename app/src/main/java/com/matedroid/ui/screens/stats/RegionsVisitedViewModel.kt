@@ -2,8 +2,11 @@ package com.matedroid.ui.screens.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.matedroid.data.local.SettingsDataStore
+import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.CountryBoundary
 import com.matedroid.data.repository.StatsRepository
+import com.matedroid.data.repository.TeslamateRepository
 import com.matedroid.domain.model.ChargeLocation
 import com.matedroid.domain.model.CountryRecord
 import com.matedroid.domain.model.DriveLocation
@@ -12,6 +15,7 @@ import com.matedroid.domain.model.YearFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -58,6 +62,7 @@ data class RegionsVisitedUiState(
     val availableYears: List<Int> = emptyList(),    // Years with data in this country
     val selectedMapYear: Int? = null,                // null = all years
     val sortOrder: RegionSortOrder = RegionSortOrder.FIRST_VISIT,
+    val isImperial: Boolean = false,
     val error: String? = null
 ) {
     /** Charges filtered by type and year for map display */
@@ -94,7 +99,9 @@ data class RegionsVisitedUiState(
 
 @HiltViewModel
 class RegionsVisitedViewModel @Inject constructor(
-    private val statsRepository: StatsRepository
+    private val statsRepository: StatsRepository,
+    private val repository: TeslamateRepository,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegionsVisitedUiState())
@@ -107,6 +114,15 @@ class RegionsVisitedViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
+                val override = settingsDataStore.unitsOverride.first()
+                val isImperial = when (override) {
+                    "imperial" -> true
+                    "metric"   -> false
+                    else -> when (val r = repository.getCarStatus(carId)) {
+                        is ApiResult.Success -> r.data.units?.isImperial == true
+                        is ApiResult.Error   -> false
+                    }
+                }
                 // Load country record for header card
                 val countries = statsRepository.getCountriesVisited(carId, yearFilter)
                 val countryRecord = countries.find { it.countryCode == countryCode }
@@ -131,6 +147,7 @@ class RegionsVisitedViewModel @Inject constructor(
                         regions = sorted,
                         chargeLocations = chargeLocations,
                         driveLocations = driveLocations,
+                        isImperial = isImperial,
                         availableYears = availableYears,
                         error = null
                     )

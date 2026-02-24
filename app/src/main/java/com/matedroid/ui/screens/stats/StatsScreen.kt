@@ -81,6 +81,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
@@ -95,6 +96,7 @@ import com.matedroid.domain.model.YearFilter
 import com.matedroid.ui.icons.CustomIcons
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -143,7 +145,7 @@ fun StatsScreen(
     // Periodic sync every 60 seconds while the screen is visible
     LaunchedEffect(Unit) {
         while (true) {
-            kotlinx.coroutines.delay(60_000L) // Wait 60 seconds
+            delay(60_000L) // Wait 60 seconds
             viewModel.triggerSync()
         }
     }
@@ -170,6 +172,7 @@ fun StatsScreen(
             drives = rangeRecordDrives,
             isLoading = isLoadingRangeRecordDrives,
             palette = palette,
+            isImperial = uiState.isImperial,
             onDriveClick = { driveId ->
                 rangeRecordToShow = null
                 onNavigateToDriveDetail(driveId)
@@ -247,6 +250,7 @@ fun StatsScreen(
                     isGeocoding = uiState.isGeocoding,
                     palette = palette,
                     currencySymbol = uiState.currencySymbol,
+                    isImperial = uiState.isImperial,
                     recordsSelectedCategory = recordsSelectedCategory,
                     onRecordsCategoryChanged = { recordsSelectedCategory = it },
                     onYearFilterSelected = { viewModel.setYearFilter(it) },
@@ -355,6 +359,7 @@ private fun StatsContent(
     isGeocoding: Boolean,
     palette: CarColorPalette,
     currencySymbol: String,
+    isImperial: Boolean,
     recordsSelectedCategory: String,
     onRecordsCategoryChanged: (String) -> Unit,
     onYearFilterSelected: (YearFilter) -> Unit,
@@ -411,6 +416,7 @@ private fun StatsContent(
                     deepStats = stats.deepStats,
                     palette = palette,
                     currencySymbol = currencySymbol,
+                    isImperial = isImperial,
                     selectedCategory = recordsSelectedCategory,
                     onCategoryChanged = onRecordsCategoryChanged,
                     onDriveClick = onNavigateToDriveDetail,
@@ -430,7 +436,8 @@ private fun StatsContent(
                 QuickStatsDrivesCard(
                     quickStats = stats.quickStats,
                     palette = palette,
-                    currencySymbol = currencySymbol
+                    currencySymbol = currencySymbol,
+                    isImperial = isImperial
                 )
             }
 
@@ -439,7 +446,8 @@ private fun StatsContent(
                 QuickStatsChargesCard(
                     quickStats = stats.quickStats,
                     palette = palette,
-                    currencySymbol = currencySymbol
+                    currencySymbol = currencySymbol,
+                    isImperial = isImperial
                 )
             }
 
@@ -624,10 +632,16 @@ private fun GeocodeProgressCard(
 // ======== Quick Stats Cards ========
 
 @Composable
-private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalette, currencySymbol: String) {
+private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalette, currencySymbol: String, isImperial: Boolean) {
+    val distUnit  = if (isImperial) "mi" else "km"
+    val speedUnit = if (isImperial) "mph" else "km/h"
+    val effUnit   = if (isImperial) "Wh/mi" else "Wh/km"
+    val dist      = if (isImperial) quickStats.totalDistanceKm * 0.621371 else quickStats.totalDistanceKm
+    val eff       = if (isImperial) quickStats.avgEfficiencyWhKm * 1.60934 else quickStats.avgEfficiencyWhKm
     // Calculate cost per 100 km: (totalCost / totalDistanceKm) * 100
-    val costPer100Km = if (quickStats.totalCost != null && quickStats.totalCost > 0 && quickStats.totalDistanceKm > 0) {
-        (quickStats.totalCost / quickStats.totalDistanceKm) * 100
+    val costPer100 = if (quickStats.totalCost != null && quickStats.totalCost > 0 && quickStats.totalDistanceKm > 0) {
+        val distanceInUnits = if (isImperial) quickStats.totalDistanceKm * 0.621371 else quickStats.totalDistanceKm
+        (quickStats.totalCost / distanceInUnits) * 100
     } else {
         null
     }
@@ -653,7 +667,7 @@ private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalett
         Row(modifier = Modifier.fillMaxWidth()) {
             StatItem(
                 label = stringResource(R.string.total_distance),
-                value = "%,.0f km".format(quickStats.totalDistanceKm),
+                value = "%,.0f $distUnit".format(dist),
                 modifier = Modifier.weight(1f)
             )
             StatItem(
@@ -666,12 +680,12 @@ private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalett
         Row(modifier = Modifier.fillMaxWidth()) {
             StatItem(
                 label = stringResource(R.string.stats_avg_efficiency),
-                value = "%.0f Wh/km".format(quickStats.avgEfficiencyWhKm),
+                value = "%.0f $effUnit".format(eff),
                 modifier = Modifier.weight(1f)
             )
             StatItem(
-                label = stringResource(R.string.stats_cost_per_distance, "km"),
-                value = costPer100Km?.let { "%.2f %s".format(it, currencySymbol) } ?: "N/A",
+                label = stringResource(R.string.stats_cost_per_distance, distUnit),
+                value = costPer100?.let { "%.2f %s".format(it, currencySymbol) } ?: "N/A",
                 modifier = Modifier.weight(1f)
             )
         }
@@ -679,7 +693,7 @@ private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalett
 }
 
 @Composable
-private fun QuickStatsChargesCard(quickStats: QuickStats, palette: CarColorPalette, currencySymbol: String) {
+private fun QuickStatsChargesCard(quickStats: QuickStats, palette: CarColorPalette, currencySymbol: String, isImperial: Boolean) {
     StatsCard(
         title = stringResource(R.string.stats_charges_overview),
         icon = Icons.Default.BatteryChargingFull,
@@ -746,6 +760,7 @@ private fun RecordsCard(
     deepStats: DeepStats?,
     palette: CarColorPalette,
     currencySymbol: String,
+    isImperial: Boolean,
     selectedCategory: String,
     onCategoryChanged: (String) -> Unit,
     onDriveClick: (Int) -> Unit,
@@ -785,16 +800,20 @@ private fun RecordsCard(
     val gapTypeCharging = stringResource(R.string.gap_type_charging)
     val gapTypeDriving = stringResource(R.string.gap_type_driving)
 
+    val distUnit  = if (isImperial) "mi" else "km"
+    val speedUnit = if (isImperial) "mph" else "km/h"
+    val effUnit   = if (isImperial) "Wh/mi" else "Wh/km"
+
     // Category 1: Drives
     val driveRecords = mutableListOf<RecordData>()
     quickStats.longestDrive?.let { drive ->
-        driveRecords.add(RecordData("📏", labelLongestDrive, "%,.1f km".format(drive.distance), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
+        driveRecords.add(RecordData("📏", labelLongestDrive, "%,.1f $distUnit".format(if (isImperial) drive.distance * 0.621371 else drive.distance), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
     }
     quickStats.fastestDrive?.let { drive ->
-        driveRecords.add(RecordData("🏎️", labelTopSpeed, "${drive.speedMax} km/h", drive.startDate.take(10)) { onDriveClick(drive.driveId) })
+        driveRecords.add(RecordData("🏎️", labelTopSpeed, "${if (isImperial) (drive.speedMax * 0.621371).toInt() else drive.speedMax} $speedUnit", drive.startDate.take(10)) { onDriveClick(drive.driveId) })
     }
     quickStats.mostEfficientDrive?.let { drive ->
-        driveRecords.add(RecordData("🌱", labelMostEfficient, "%.0f Wh/km".format(drive.efficiency ?: 0.0), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
+        driveRecords.add(RecordData("🌱", labelMostEfficient, "%.0f $effUnit".format(if (isImperial) (drive.efficiency ?: 0.0) * 1.60934 else drive.efficiency ?: 0.0), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
     }
     quickStats.longestDrivingStreak?.let { streak ->
         driveRecords.add(RecordData("🔥", labelLongestStreak, stringResource(R.string.format_days_count, streak.streakDays), "${streak.startDate} → ${streak.endDate}", null))
@@ -857,7 +876,7 @@ private fun RecordsCard(
     // Category 4: Miscelaneous
     val miscRecords = mutableListOf<RecordData>()
     quickStats.maxDistanceBetweenCharges?.let { record ->
-        miscRecords.add(RecordData("🔋", labelLongestRange, "%,.1f km".format(record.distance), "${record.fromDate.take(10)} → ${record.toDate.take(10)}") { onRangeRecordClick(record) })
+        miscRecords.add(RecordData("🔋", labelLongestRange, "%,.1f $distUnit".format(if (isImperial) record.distance * 0.621371 else record.distance), "${record.fromDate.take(10)} → ${record.toDate.take(10)}") { onRangeRecordClick(record) })
     }
     quickStats.longestGapWithoutCharging?.let { gap ->
         miscRecords.add(RecordData("⏰", labelNoCharging, stringResource(R.string.format_days, gap.gapDays), "${gap.fromDate.take(10)} → ${gap.toDate.take(10)}") { onGapRecordClick(gap.gapDays, gap.fromDate, gap.toDate, gapTypeCharging) })
@@ -866,7 +885,7 @@ private fun RecordsCard(
         miscRecords.add(RecordData("🅿️", labelNoDriving, stringResource(R.string.format_days, gap.gapDays), "${gap.fromDate.take(10)} → ${gap.toDate.take(10)}") { onGapRecordClick(gap.gapDays, gap.fromDate, gap.toDate, gapTypeDriving) })
     }
     quickStats.mostDistanceDay?.let { day ->
-        miscRecords.add(RecordData("🛣️", labelMostDistanceDay, "%,.1f km".format(day.totalDistance), day.day) { onDayClick(day.day) })
+        miscRecords.add(RecordData("🛣️", labelMostDistanceDay, "%,.1f $distUnit".format(if (isImperial) day.totalDistance * 0.621371 else day.totalDistance), day.day) { onDayClick(day.day) })
     }
 
     // Build list of all categories with their records
@@ -1461,7 +1480,7 @@ private fun SyncLogsDialog(
                         Text(
                             text = log,
                             style = MaterialTheme.typography.bodySmall,
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            fontFamily = FontFamily.Monospace,
                             modifier = Modifier.padding(vertical = 2.dp)
                         )
                     }
@@ -1575,9 +1594,11 @@ private fun RangeRecordDialog(
     drives: List<DriveSummary>,
     isLoading: Boolean,
     palette: CarColorPalette,
+    isImperial: Boolean,
     onDriveClick: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val distUnit  = if (isImperial) "mi" else "km"
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -1609,7 +1630,7 @@ private fun RangeRecordDialog(
                                 color = palette.onSurfaceVariant
                             )
                             Text(
-                                text = "%,.1f km".format(record.distance),
+                                text = "%,.1f $distUnit".format(if (isImperial) record.distance * 0.621371 else record.distance),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = palette.onSurface
@@ -1693,6 +1714,7 @@ private fun RangeRecordDialog(
                                 DriveListItem(
                                     drive = drive,
                                     palette = palette,
+                                    isImperial = isImperial,
                                     onClick = { onDriveClick(drive.driveId) }
                                 )
                             }
@@ -1716,8 +1738,10 @@ private fun RangeRecordDialog(
 private fun DriveListItem(
     drive: DriveSummary,
     palette: CarColorPalette,
+    isImperial: Boolean,
     onClick: () -> Unit
 ) {
+    val distUnit  = if (isImperial) "mi" else "km"
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1754,7 +1778,7 @@ private fun DriveListItem(
             Spacer(modifier = Modifier.width(8.dp))
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "%,.1f km".format(drive.distance),
+                    text = "%,.1f $distUnit".format(if (isImperial) drive.distance * 0.621371 else drive.distance),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = palette.onSurface

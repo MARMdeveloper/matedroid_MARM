@@ -180,6 +180,7 @@ fun CountriesVisitedScreen(
                     CountriesList(
                         countries = uiState.countries,
                         palette = palette,
+                        isImperial = uiState.isImperial,
                         onCountryClick = onNavigateToRegions
                     )
                 }
@@ -192,6 +193,7 @@ fun CountriesVisitedScreen(
 private fun CountriesList(
     countries: List<CountryRecord>,
     palette: CarColorPalette,
+    isImperial: Boolean,
     onCountryClick: (countryCode: String, countryName: String) -> Unit
 ) {
     LazyColumn(
@@ -204,6 +206,7 @@ private fun CountriesList(
                 country = country,
                 localizedName = localizedName,
                 palette = palette,
+                isImperial = isImperial,
                 onClick = { onCountryClick(country.countryCode, localizedName) }
             )
         }
@@ -215,9 +218,11 @@ private fun CountryCard(
     country: CountryRecord,
     localizedName: String,
     palette: CarColorPalette,
+    isImperial: Boolean,
     onClick: () -> Unit
 ) {
     val cardShape = RoundedCornerShape(20.dp)
+    val distUnit = if (isImperial) "mi" else "km"
 
     Box(
         modifier = Modifier
@@ -297,7 +302,9 @@ private fun CountryCard(
                 // Distance chip
                 StatChip(
                     icon = Icons.Default.Route,
-                    value = "%,.0f km".format(country.totalDistanceKm),
+                    value = "%,.0f $distUnit".format(
+                        if (isImperial) country.totalDistanceKm * 0.621371 else country.totalDistanceKm
+                    ),
                     palette = palette,
                     modifier = Modifier.weight(1f)
                 )

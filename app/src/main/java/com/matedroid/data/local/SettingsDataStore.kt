@@ -52,7 +52,8 @@ data class AppSettings(
     val currencyCode: String = "EUR",
     val showShortDrivesCharges: Boolean = false,
     val teslamateBaseUrl: String = "",
-    val lastSelectedCarId: Int? = null
+    val lastSelectedCarId: Int? = null,
+    val unitsOverride: String = "auto"   // "auto" | "metric" | "imperial"
 ) {
     val isConfigured: Boolean
         get() = serverUrl.isNotBlank()
@@ -74,6 +75,7 @@ class SettingsDataStore @Inject constructor(
     private val teslamateBaseUrlKey = stringPreferencesKey("teslamate_base_url")
     private val lastSelectedCarIdKey = intPreferencesKey("last_selected_car_id")
     private val carImageOverridesKey = stringPreferencesKey("car_image_overrides")
+    private val unitsOverrideKey = stringPreferencesKey("units_override")
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { preferences ->
         AppSettings(
@@ -84,12 +86,17 @@ class SettingsDataStore @Inject constructor(
             currencyCode = preferences[currencyCodeKey] ?: "EUR",
             showShortDrivesCharges = preferences[showShortDrivesChargesKey] ?: false,
             teslamateBaseUrl = preferences[teslamateBaseUrlKey] ?: "",
-            lastSelectedCarId = preferences[lastSelectedCarIdKey]
+            lastSelectedCarId = preferences[lastSelectedCarIdKey],
+            unitsOverride = preferences[unitsOverrideKey] ?: "auto"
         )
     }
 
     val showShortDrivesCharges: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[showShortDrivesChargesKey] ?: false
+    }
+
+    val unitsOverride: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[unitsOverrideKey] ?: "auto"
     }
 
     /**
@@ -158,6 +165,12 @@ class SettingsDataStore @Inject constructor(
         context.dataStore.edit { preferences ->
             preferences[showShortDrivesChargesKey] = show
         }
+    }
+
+    suspend fun saveUnitsOverride(value: String) {
+        context.dataStore.edit { preferences ->
+                preferences[unitsOverrideKey] = value
+            }
     }
 
     suspend fun saveTeslamateBaseUrl(url: String) {

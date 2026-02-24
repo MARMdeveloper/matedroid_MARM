@@ -2,12 +2,16 @@ package com.matedroid.ui.screens.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.matedroid.data.local.SettingsDataStore
+import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.StatsRepository
+import com.matedroid.data.repository.TeslamateRepository
 import com.matedroid.domain.model.CountryRecord
 import com.matedroid.domain.model.YearFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -29,12 +33,15 @@ data class CountriesVisitedUiState(
     val isLoading: Boolean = true,
     val countries: List<CountryRecord> = emptyList(),
     val sortOrder: CountrySortOrder = CountrySortOrder.FIRST_VISIT,
+    val isImperial: Boolean = false,
     val error: String? = null
 )
 
 @HiltViewModel
 class CountriesVisitedViewModel @Inject constructor(
-    private val statsRepository: StatsRepository
+    private val statsRepository: StatsRepository,
+    private val repository: TeslamateRepository,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CountriesVisitedUiState())
@@ -47,12 +54,22 @@ class CountriesVisitedViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
+                val override = settingsDataStore.unitsOverride.first()
+                val isImperial = when (override) {
+                    "imperial" -> true
+                    "metric"   -> false
+                    else -> when (val r = repository.getCarStatus(carId)) {
+                        is ApiResult.Success -> r.data.units?.isImperial == true
+                        is ApiResult.Error   -> false
+                    }
+                }
                 originalCountries = statsRepository.getCountriesVisited(carId, yearFilter)
                 val sorted = sortCountries(originalCountries, _uiState.value.sortOrder)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         countries = sorted,
+                        isImperial = isImperial,
                         error = null
                     )
                 }
