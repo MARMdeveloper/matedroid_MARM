@@ -150,6 +150,7 @@ fun MileageScreen(
                         uiState = uiState,
                         chartData = viewModel.getYearlyChartData(),
                         palette = palette,
+                        isImperial = uiState.isImperial,
                         onYearClick = { viewModel.selectYear(it) }
                     )
                 }
@@ -168,6 +169,7 @@ fun MileageScreen(
                     uiState = uiState,
                     chartData = viewModel.getMonthlyChartData(),
                     palette = palette,
+                    isImperial = uiState.isImperial,
                     onClose = { viewModel.clearSelectedYear() },
                     onMonthClick = { viewModel.selectMonth(it) }
                 )
@@ -188,6 +190,7 @@ fun MileageScreen(
                     dailyData = uiState.dailyData,
                     dailyChartData = viewModel.getDailyChartData(),
                     palette = palette,
+                    isImperial = uiState.isImperial,
                     onClose = { viewModel.clearSelectedMonth() },
                     onDayClick = { viewModel.selectDay(it) }
                 )
@@ -204,6 +207,7 @@ fun MileageScreen(
                 DayDetailScreen(
                     dayData = dayData,
                     palette = palette,
+                    isImperial = uiState.isImperial,
                     onClose = { viewModel.clearSelectedDay() },
                     onDriveClick = onNavigateToDriveDetail
                 )
@@ -221,6 +225,7 @@ private fun YearOverviewContent(
     uiState: MileageUiState,
     chartData: List<Pair<Int, Double>>,
     palette: CarColorPalette,
+    isImperial: Boolean,
     onYearClick: (Int) -> Unit
 ) {
     LazyColumn(
@@ -237,6 +242,7 @@ private fun YearOverviewContent(
                 avgLabel = stringResource(R.string.mileage_avg_year),
                 driveCount = uiState.totalLifetimeDriveCount,
                 palette = palette,
+                isImperial = isImperial,
                 firstDriveDate = uiState.firstDriveDate
             )
         }
@@ -244,7 +250,7 @@ private fun YearOverviewContent(
         // Yearly chart
         if (chartData.isNotEmpty()) {
             item {
-                YearlyChartCard(chartData = chartData, palette = palette)
+                YearlyChartCard(chartData = chartData, palette = palette, isImperial = isImperial)
             }
         }
 
@@ -252,6 +258,7 @@ private fun YearOverviewContent(
         items(uiState.yearlyData) { yearData ->
             YearRow(
                 yearData = yearData,
+                isImperial = isImperial,
                 onClick = { onYearClick(yearData.year) }
             )
         }
@@ -277,7 +284,8 @@ private fun YearOverviewContent(
 }
 
 @Composable
-private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColorPalette) {
+private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColorPalette, isImperial: Boolean) {
+    val distUnit = if (isImperial) "mi" else "km"
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -307,7 +315,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
                 BarChartData(
                     label = year.toString(),
                     value = distance,
-                    displayValue = "%,.1f km".format(distance)
+                    displayValue = "%,.1f $distUnit".format(if (isImperial) distance * 0.621371 else distance)
                 )
             }
 
@@ -316,7 +324,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                valueFormatter = { "%,.1f km".format(it) },
+                valueFormatter = { "%,.1f $distUnit".format(if (isImperial) it * 0.621371 else it) },
                 yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
@@ -326,8 +334,10 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
 @Composable
 private fun YearRow(
     yearData: YearlyMileage,
+    isImperial: Boolean,
     onClick: () -> Unit
 ) {
+    val distUnit = if (isImperial) "mi" else "km"
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -362,7 +372,7 @@ private fun YearRow(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "%,.0f km".format(yearData.totalDistance),
+                        text = "%,.0f $distUnit".format(if (isImperial) yearData.totalDistance * 0.621371 else yearData.totalDistance),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -403,6 +413,7 @@ private fun YearDetailScreen(
     uiState: MileageUiState,
     chartData: List<Pair<Int, Double>>,
     palette: CarColorPalette,
+    isImperial: Boolean,
     onClose: () -> Unit,
     onMonthClick: (YearMonth) -> Unit
 ) {
@@ -435,19 +446,21 @@ private fun YearDetailScreen(
                     avgDistance = uiState.avgMonthlyDistance,
                     avgLabel = stringResource(R.string.mileage_avg_month),
                     driveCount = uiState.yearDriveCount,
+                    isImperial = isImperial,
                     palette = palette
                 )
             }
 
             // Monthly chart
             item {
-                MonthlyChartCard(chartData = chartData, palette = palette)
+                MonthlyChartCard(chartData = chartData, palette = palette, isImperial = isImperial)
             }
 
             // Monthly list
             items(uiState.monthlyData) { monthData ->
                 MonthRow(
                     monthData = monthData,
+                    isImperial = isImperial,
                     onClick = { onMonthClick(monthData.yearMonth) }
                 )
             }
@@ -474,7 +487,8 @@ private fun YearDetailScreen(
 }
 
 @Composable
-private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColorPalette) {
+private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColorPalette, isImperial: Boolean) {
+    val distUnit = if (isImperial) "mi" else "km"
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -504,7 +518,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
                 BarChartData(
                     label = month.toString(),
                     value = distance,
-                    displayValue = "%,.1f km".format(distance)
+                    displayValue = "%,.1f $distUnit".format(if (isImperial) distance * 0.621371 else distance)
                 )
             }
 
@@ -513,7 +527,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                valueFormatter = { "%,.1f km".format(it) },
+                valueFormatter = { "%,.1f $distUnit".format(if (isImperial) it * 0.621371 else it) },
                 yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
@@ -523,8 +537,10 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
 @Composable
 private fun MonthRow(
     monthData: MonthlyMileage,
+    isImperial: Boolean,
     onClick: () -> Unit
 ) {
+    val distUnit = if (isImperial) "mi" else "km"
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -566,7 +582,7 @@ private fun MonthRow(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "%,.0f km".format(monthData.totalDistance),
+                        text = "%,.0f $distUnit".format(if (isImperial) monthData.totalDistance * 0.621371 else monthData.totalDistance),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -608,6 +624,7 @@ private fun MonthDetailScreen(
     dailyData: List<DailyMileage>,
     dailyChartData: List<Pair<Int, Double>>,
     palette: CarColorPalette,
+    isImperial: Boolean,
     onClose: () -> Unit,
     onDayClick: (LocalDate) -> Unit
 ) {
@@ -640,6 +657,7 @@ private fun MonthDetailScreen(
                 MonthSummaryCard(
                     yearMonth = yearMonth,
                     monthData = monthData,
+                    isImperial = isImperial,
                     palette = palette
                 )
             }
@@ -650,6 +668,7 @@ private fun MonthDetailScreen(
                     DailyChartCard(
                         chartData = dailyChartData,
                         daysWithData = dailyData.size,
+                        isImperial = isImperial,
                         palette = palette
                     )
                 }
@@ -669,6 +688,7 @@ private fun MonthDetailScreen(
                 items(dailyData) { dayData ->
                     DayTripRow(
                         dayData = dayData,
+                        isImperial = isImperial,
                         onClick = { onDayClick(dayData.date) }
                     )
                 }
@@ -681,11 +701,15 @@ private fun MonthDetailScreen(
 private fun MonthSummaryCard(
     yearMonth: YearMonth,
     monthData: MonthlyMileage?,
+    isImperial: Boolean,
     palette: CarColorPalette
 ) {
+    val distUnit = if (isImperial) "mi" else "km"
     val totalDistance = monthData?.totalDistance ?: 0.0
+    val displayTotal = if (isImperial) totalDistance * 0.621371 else totalDistance
     val driveCount = monthData?.driveCount ?: 0
     val avgDistance = if (driveCount > 0) totalDistance / driveCount else 0.0
+    val displayAvg = if (isImperial) avgDistance * 0.621371 else avgDistance
     val totalBatteryUsage = monthData?.totalBatteryUsage ?: 0.0
     val totalEnergy = monthData?.totalEnergy ?: 0.0
     val avgEnergy = if (driveCount > 0) totalEnergy / driveCount else 0.0
@@ -741,13 +765,13 @@ private fun MonthSummaryCard(
             ) {
                 StatChip(
                     icon = CustomIcons.Road,
-                    value = "%,.1f km".format(totalDistance),
+                    value = "%,.1f $distUnit".format(displayTotal),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     prefix = "Ø",
                     icon = CustomIcons.Road,
-                    value = "%,.1f km".format(avgDistance),
+                    value = "%,.1f $distUnit".format(displayAvg),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -784,9 +808,13 @@ private fun SummaryRow(
     avgDistance: Double,
     avgLabel: String,
     driveCount: Int,
+    isImperial: Boolean = false,
     palette: CarColorPalette? = null,
     firstDriveDate: LocalDate? = null
 ) {
+    val distUnit     = if (isImperial) "mi" else "km"
+    val displayTotal = if (isImperial) totalDistance * 0.621371 else totalDistance
+    val displayAvg   = if (isImperial) avgDistance * 0.621371 else avgDistance
     val containerColor = palette?.surface ?: MaterialTheme.colorScheme.surfaceVariant
     val iconColor = palette?.accent ?: ChartBlue
     val valueColor = palette?.onSurface ?: MaterialTheme.colorScheme.onSurface
@@ -831,7 +859,7 @@ private fun SummaryRow(
         ) {
             SummaryItem(
                 icon = Icons.Outlined.AllInclusive,
-                value = "%,.0f km".format(totalDistance),
+                value = "%,.0f $distUnit".format(displayTotal),
                 label = stringResource(R.string.mileage_total),
                 iconColor = iconColor,
                 valueColor = valueColor,
@@ -839,7 +867,7 @@ private fun SummaryRow(
             )
             SummaryItemWithInfo(
                 icon = Icons.Filled.Speed,
-                value = "%,.0f km".format(avgDistance),
+                value = "%,.0f $distUnit".format(displayAvg),
                 label = avgLabel,
                 iconColor = iconColor,
                 valueColor = valueColor,
@@ -996,8 +1024,10 @@ private fun StatChip(
 private fun DailyChartCard(
     chartData: List<Pair<Int, Double>>,
     daysWithData: Int,
+    isImperial: Boolean,
     palette: CarColorPalette
 ) {
+    val distUnit = if (isImperial) "mi" else "km"
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -1038,7 +1068,7 @@ private fun DailyChartCard(
                 BarChartData(
                     label = day.toString(),
                     value = distance,
-                    displayValue = "%,.1f km".format(distance)
+                    displayValue = "%,.1f $distUnit".format(if (isImperial) distance * 0.621371 else distance)
                 )
             }
 
@@ -1047,7 +1077,7 @@ private fun DailyChartCard(
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                valueFormatter = { "%,.1f km".format(it) },
+                valueFormatter = { "%,.1f $distUnit".format(if (isImperial) it * 0.621371 else it) },
                 yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
@@ -1057,8 +1087,10 @@ private fun DailyChartCard(
 @Composable
 private fun DayTripRow(
     dayData: DailyMileage,
+    isImperial: Boolean,
     onClick: () -> Unit
 ) {
+    val distUnit = if (isImperial) "mi" else "km"
     val dayOfWeek = dayData.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
     val dateStr = "%d %s".format(
         dayData.date.dayOfMonth,
@@ -1111,7 +1143,7 @@ private fun DayTripRow(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "%,.1f km".format(dayData.totalDistance),
+                        text = "%,.1f $distUnit".format(if (isImperial) dayData.totalDistance * 0.621371 else dayData.totalDistance),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -1181,6 +1213,7 @@ private fun DayDetailScreen(
     dayData: DailyMileage,
     palette: CarColorPalette,
     onClose: () -> Unit,
+    isImperial: Boolean,
     onDriveClick: (Int) -> Unit
 ) {
     val dayOfWeek = dayData.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
@@ -1217,6 +1250,7 @@ private fun DayDetailScreen(
                 DaySummaryCard(
                     dayData = dayData,
                     dateStr = dateStr,
+                    isImperial = isImperial,
                     palette = palette
                 )
             }
@@ -1235,6 +1269,7 @@ private fun DayDetailScreen(
                 items(dayData.drives) { drive ->
                     DriveRow(
                         drive = drive,
+                        isImperial = isImperial,
                         onClick = { onDriveClick(drive.driveId) }
                     )
                 }
@@ -1247,9 +1282,13 @@ private fun DayDetailScreen(
 private fun DaySummaryCard(
     dayData: DailyMileage,
     dateStr: String,
+    isImperial: Boolean,
     palette: CarColorPalette
 ) {
+    val distUnit = if (isImperial) "mi" else "km"
+    val displayTotal = if (isImperial) dayData.totalDistance * 0.621371 else dayData.totalDistance
     val avgDistance = if (dayData.driveCount > 0) dayData.totalDistance / dayData.driveCount else 0.0
+    val displayAvg   = if (isImperial) avgDistance * 0.621371 else avgDistance
     val avgEnergy = if (dayData.driveCount > 0) dayData.totalEnergy / dayData.driveCount else 0.0
 
     Card(
@@ -1298,13 +1337,13 @@ private fun DaySummaryCard(
             ) {
                 StatChip(
                     icon = CustomIcons.Road,
-                    value = "%,.1f km".format(dayData.totalDistance),
+                    value = "%,.1f $distUnit".format(displayTotal),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     prefix = "Ø",
                     icon = CustomIcons.Road,
-                    value = "%,.1f km".format(avgDistance),
+                    value = "%,.1f $distUnit".format(displayAvg),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1334,11 +1373,14 @@ private fun DaySummaryCard(
 @Composable
 private fun DriveRow(
     drive: com.matedroid.data.api.models.DriveData,
+    isImperial: Boolean,
     onClick: () -> Unit
 ) {
+    val distUnit = if (isImperial) "mi" else "km"
     val startTime = drive.startDate?.let { parseTime(it) } ?: ""
     val endTime = drive.endDate?.let { parseTime(it) } ?: ""
     val distance = drive.distance ?: 0.0
+    val displayDistance = if (isImperial) distance * 0.621371 else distance
     val duration = drive.durationMin ?: 0
     val energyUsed = drive.energyConsumedNet ?: 0.0
 
@@ -1388,7 +1430,7 @@ private fun DriveRow(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "%,.1f km".format(distance),
+                        text = "%,.1f $distUnit".format(displayDistance),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

@@ -44,6 +44,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
@@ -125,6 +128,7 @@ fun SettingsScreen(
                 onAcceptInvalidCertsChange = viewModel::updateAcceptInvalidCerts,
                 onCurrencyChange = viewModel::updateCurrency,
                 onShowShortDrivesChargesChange = viewModel::updateShowShortDrivesCharges,
+                onUnitsOverrideChange = viewModel::updateUnitsOverride,
                 onTestConnection = viewModel::testConnection,
                 onSave = { viewModel.saveSettings(onNavigateToDashboard) },
                 onPalettePreview = onNavigateToPalettePreview,
@@ -206,6 +210,7 @@ private fun SettingsContent(
     onAcceptInvalidCertsChange: (Boolean) -> Unit,
     onCurrencyChange: (String) -> Unit,
     onShowShortDrivesChargesChange: (Boolean) -> Unit,
+    onUnitsOverrideChange: (String) -> Unit,
     onTestConnection: () -> Unit,
     onSave: () -> Unit,
     onPalettePreview: () -> Unit = {},
@@ -500,6 +505,36 @@ private fun SettingsContent(
                         }
                     }
                 )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // === Units override ===
+            Text(
+                text = stringResource(R.string.settings_units_label),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = stringResource(R.string.settings_units_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            val unitOptions = listOf("auto", "metric", "imperial")
+            val unitLabels  = listOf(
+                stringResource(R.string.settings_units_auto),
+                stringResource(R.string.settings_units_metric),
+                stringResource(R.string.settings_units_imperial)
+            )
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                unitOptions.forEachIndexed { index, option ->
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(index, unitOptions.size),
+                        selected = uiState.unitsOverride == option,
+                        onClick = { onUnitsOverrideChange(option) },
+                        label = { Text(unitLabels[index]) }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -802,6 +837,7 @@ private fun SettingsScreenPreview() {
             onCurrencyChange = {},
             onShowShortDrivesChargesChange = {},
             onTestConnection = {},
+            onUnitsOverrideChange = {},
             onSave = {}
         )
     }
@@ -826,6 +862,7 @@ private fun SettingsScreenWithResultPreview() {
             onCurrencyChange = {},
             onShowShortDrivesChargesChange = {},
             onTestConnection = {},
+            onUnitsOverrideChange = {},
             onSave = {}
         )
     }
@@ -852,6 +889,7 @@ private fun SettingsScreenWithBothResultsPreview() {
             onCurrencyChange = {},
             onShowShortDrivesChargesChange = {},
             onTestConnection = {},
+            onUnitsOverrideChange = {},
             onSave = {}
         )
     }
@@ -874,6 +912,7 @@ private fun SettingsScreenWithWarningPreview() {
             onCurrencyChange = {},
             onShowShortDrivesChargesChange = {},
             onTestConnection = {},
+            onUnitsOverrideChange = {},
             onSave = {}
         )
     }

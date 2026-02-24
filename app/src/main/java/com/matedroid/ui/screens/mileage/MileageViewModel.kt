@@ -3,12 +3,15 @@ package com.matedroid.ui.screens.mileage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.DriveData
+import com.matedroid.data.api.models.Units
+import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -50,6 +53,7 @@ data class MileageUiState(
     val isRefreshing: Boolean = false,
     val error: String? = null,
     val allDrives: List<DriveData> = emptyList(),
+    val isImperial: Boolean = false,
 
     // Lifetime totals (year overview)
     val yearlyData: List<YearlyMileage> = emptyList(),
@@ -76,7 +80,8 @@ data class MileageUiState(
 
 @HiltViewModel
 class MileageViewModel @Inject constructor(
-    private val repository: TeslamateRepository
+    private val repository: TeslamateRepository,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MileageUiState())
@@ -87,7 +92,23 @@ class MileageViewModel @Inject constructor(
     fun setCarId(id: Int) {
         if (carId != id) {
             carId = id
+            loadIsImperial(id)
             loadAllDrives()
+        }
+    }
+
+    private fun loadIsImperial(carId: Int) {
+        viewModelScope.launch {
+            val override = settingsDataStore.unitsOverride.first()
+            val isImperial = when (override) {
+                "imperial" -> true
+                "metric"   -> false
+                else -> when (val r = repository.getCarStatus(carId)) {
+                    is ApiResult.Success -> r.data.units?.isImperial == true
+                    is ApiResult.Error   -> false
+                }
+            }
+            _uiState.update { it.copy(isImperial = isImperial) }
         }
     }
 

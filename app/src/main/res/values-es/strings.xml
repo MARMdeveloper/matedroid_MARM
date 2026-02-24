@@ -203,6 +203,13 @@
     <string name="settings_show_short_hint">Mostrar viajes muy cortos y cargas mínimas en las listas</string>
     <string name="more_information">Más información</string>
 
+    <!-- Units selector -->
+    <string name="settings_units_hint">Sobrescribe las unidades recibidas por la API</string>
+    <string name="settings_units_label">Unidades preferidas</string>
+    <string name="settings_units_auto">Auto</string>
+    <string name="settings_units_metric">Métricas</string>
+    <string name="settings_units_imperial">Imperiales</string>
+
     <!-- Short drives/charges info dialog -->
     <string name="settings_short_dialog_title">Viajes y cargas cortos</string>
     <string name="settings_short_dialog_text">Cuando está desactivado (por defecto), los siguientes elementos están ocultos de las listas:\n\n• Viajes de menos de 1 minuto o menos de 0,1 km\n• Cargas de 0,1 kWh o menos\n\nEstos elementos siguen incluidos en totales, promedios y estadísticas. Activa este ajuste para ver todos los elementos en las listas.</string>

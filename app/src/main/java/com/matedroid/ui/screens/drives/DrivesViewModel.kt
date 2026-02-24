@@ -165,7 +165,14 @@ class DrivesViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = repository.getCarStatus(carId)) {
                 is ApiResult.Success -> {
-                    _uiState.update { it.copy(units = result.data.units) }
+                    val apiUnits = result.data.units
+                    val override = settingsDataStore.unitsOverride.first()
+                    val effectiveUnits = when (override) {
+                        "imperial" -> apiUnits?.copy(unitOfLength = "mi")
+                        "metric"   -> apiUnits?.copy(unitOfLength = "km")
+                        else       -> apiUnits  // "auto": use units received from API
+                    }
+                    _uiState.update { it.copy(units = effectiveUnits) }
                 }
                 is ApiResult.Error -> { /* ignore, units will default to metric */ }
             }

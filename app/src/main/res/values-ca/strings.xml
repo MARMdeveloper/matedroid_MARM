@@ -203,6 +203,13 @@
     <string name="settings_show_short_hint">Mostra viatges molt curts i càrregues mínimes a les llistes</string>
     <string name="more_information">Més informació</string>
 
+    <!-- Units selector -->
+    <string name="settings_units_hint">Substitueix les unitats rebudes de l\'API</string>
+    <string name="settings_units_label">Unitats preferides</string>
+    <string name="settings_units_auto">Auto</string>
+    <string name="settings_units_metric">Mètriques</string>
+    <string name="settings_units_imperial">Imperials</string>
+
     <!-- Short drives/charges info dialog -->
     <string name="settings_short_dialog_title">Viatges i càrregues curts</string>
     <string name="settings_short_dialog_text">Quan està desactivat (per defecte), els següents elements estan ocults de les llistes:\n\n• Viatges de menys d\'1 minut o menys de 0,1 km\n• Càrregues de 0,1 kWh o menys\n\nAquests elements segueixen inclosos als totals, mitjanes i estadístiques. Activa aquesta configuració per veure tots els elements a les llistes.</string>

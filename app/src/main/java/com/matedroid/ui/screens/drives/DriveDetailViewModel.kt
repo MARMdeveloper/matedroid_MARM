@@ -5,12 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.DriveDetail
 import com.matedroid.data.api.models.DrivePosition
 import com.matedroid.data.api.models.Units
+import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
 import com.matedroid.data.repository.WeatherPoint
 import com.matedroid.data.repository.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -53,7 +55,8 @@ data class DriveDetailStats(
 @HiltViewModel
 class DriveDetailViewModel @Inject constructor(
     private val repository: TeslamateRepository,
-    private val weatherRepository: WeatherRepository
+    private val weatherRepository: WeatherRepository,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DriveDetailUiState())
@@ -78,7 +81,15 @@ class DriveDetailViewModel @Inject constructor(
             val statusResult = repository.getCarStatus(carId)
 
             val units = when (statusResult) {
-                is ApiResult.Success -> statusResult.data.units
+                is ApiResult.Success -> {
+                    val apiUnits = statusResult.data.units
+                    val override = settingsDataStore.unitsOverride.first()
+                    when (override) {
+                        "imperial" -> apiUnits?.copy(unitOfLength = "mi")
+                        "metric"   -> apiUnits?.copy(unitOfLength = "km")
+                        else       -> apiUnits
+                    }
+                }
                 is ApiResult.Error -> null
             }
 

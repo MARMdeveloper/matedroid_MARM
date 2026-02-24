@@ -68,6 +68,15 @@ class DashboardViewModel @Inject constructor(
     private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
+    private suspend fun resolveUnits(apiUnits: Units?): Units? {
+        val override = settingsDataStore.unitsOverride.first()
+        return when (override) {
+            "imperial" -> apiUnits?.copy(unitOfLength = "mi")
+            "metric"   -> apiUnits?.copy(unitOfLength = "km")
+            else       -> apiUnits
+        }
+    }
+
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
@@ -178,7 +187,7 @@ class DashboardViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             carStatus = status,
-                            units = result.data.units,
+                            units = resolveUnits(result.data.units),
                             error = null
                         )
                     }
@@ -201,7 +210,7 @@ class DashboardViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             carStatus = status,
-                            units = result.data.units,
+                            units = resolveUnits(result.data.units),
                             error = null
                         )
                     }
@@ -269,7 +278,7 @@ class DashboardViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 carStatus = status,
-                                units = result.data.units
+                                units = resolveUnits(result.data.units)
                             )
                         }
                         // Update address if location changed
