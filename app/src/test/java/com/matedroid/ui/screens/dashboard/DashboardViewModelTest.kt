@@ -80,6 +80,7 @@ class DashboardViewModelTest {
         // Default: no previously selected car
         every { settingsDataStore.settings } returns flowOf(AppSettings())
         every { settingsDataStore.carImageOverrides } returns flowOf(emptyMap())
+        every { settingsDataStore.unitsOverride } returns flowOf("auto")
         coEvery { settingsDataStore.saveLastSelectedCarId(any()) } returns Unit
         // Mock global settings fetch (called after successful car load)
         coEvery { repository.getGlobalSettings() } returns ApiResult.Success(
