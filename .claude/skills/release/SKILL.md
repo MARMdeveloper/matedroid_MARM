@@ -25,7 +25,7 @@ Ask the user what type of release:
 ### 2. Update Version in build.gradle.kts
 
 Edit `app/build.gradle.kts`:
-- Increment `versionCode` by 1
+- Run `./scripts/bump-version-code.sh` to generate a new monotonic `versionCode` (epoch/10). The script updates `build.gradle.kts` in-place and prints the new code to stdout.
 - Update `versionName` to the new version
 
 ### 3. Update CHANGELOG.md
