@@ -131,7 +131,8 @@ fun SettingsScreen(
                 onForceResync = viewModel::forceResync,
                 onSimulateTpmsWarning = viewModel::simulateTpmsWarning,
                 onClearTpmsWarning = viewModel::clearTpmsWarning,
-                onRunTpmsCheckNow = viewModel::runTpmsCheckNow
+                onRunTpmsCheckNow = viewModel::runTpmsCheckNow,
+                onSimulateSentryEvent = viewModel::simulateSentryEvent
             )
         }
     }
@@ -212,7 +213,8 @@ private fun SettingsContent(
     onForceResync: () -> Unit = {},
     onSimulateTpmsWarning: (TirePosition) -> Unit = {},
     onClearTpmsWarning: () -> Unit = {},
-    onRunTpmsCheckNow: () -> Unit = {}
+    onRunTpmsCheckNow: () -> Unit = {},
+    onSimulateSentryEvent: () -> Unit = {}
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     var currencyDropdownExpanded by remember { mutableStateOf(false) }
@@ -688,12 +690,24 @@ private fun SettingsContent(
             ) {
                 Text(stringResource(R.string.debug_tpms_run_now))
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Sentry Debug: Simulate Event
+            OutlinedButton(
+                onClick = onSimulateSentryEvent,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.debug_sentry_simulate_event))
+            }
         }
 
         // Version number and issue link at bottom
         Spacer(modifier = Modifier.height(48.dp))
         Text(
-            text = "v${com.matedroid.BuildConfig.VERSION_NAME}",
+            text = "v${com.matedroid.BuildConfig.VERSION_NAME} (${com.matedroid.BuildConfig.GIT_SHA})",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier.align(Alignment.CenterHorizontally)
