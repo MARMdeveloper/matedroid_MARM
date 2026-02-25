@@ -803,6 +803,7 @@ private fun RecordsCard(
     val distUnit  = if (isImperial) "mi" else "km"
     val speedUnit = if (isImperial) "mph" else "km/h"
     val effUnit   = if (isImperial) "Wh/mi" else "Wh/km"
+    val elevUnit = if (isImperial) "ft" else "m"
 
     // Category 1: Drives
     val driveRecords = mutableListOf<RecordData>()
@@ -855,10 +856,10 @@ private fun RecordsCard(
     // Category 3: Weather & Altitude
     val weatherRecords = mutableListOf<RecordData>()
     deepStats?.driveWithMaxElevation?.let { record ->
-        weatherRecords.add(RecordData("🏔️", labelHighestPoint, "%,d m".format(record.elevationM), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
+        weatherRecords.add(RecordData("🏔️", labelHighestPoint, "%,d $elevUnit".format(if (isImperial) (record.elevationM * 3.28084).toInt() else record.elevationM), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
     }
     deepStats?.driveWithMostClimbing?.let { record ->
-        weatherRecords.add(RecordData("⛰️", labelMostClimbing, record.elevationGainM?.let { "+%,d m".format(it) } ?: "N/A", record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
+        weatherRecords.add(RecordData("⛰️", labelMostClimbing, record.elevationGainM?.let { "+%,d $elevUnit".format(if (isImperial) (it * 3.28084).toInt() else it) } ?: "N/A", record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
     }
     deepStats?.hottestDrive?.let { record ->
         weatherRecords.add(RecordData("🌡️", labelHottestDrive, "%.1f°C".format(record.tempC), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })

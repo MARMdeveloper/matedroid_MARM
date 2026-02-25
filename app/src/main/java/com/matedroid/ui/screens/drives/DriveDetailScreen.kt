@@ -172,6 +172,8 @@ private fun DriveDetailContent(
 ) {
     val scrollState = rememberScrollState()
     var sharedXFraction by remember { mutableStateOf<Float?>(null) }
+    val elevUnit = if (units?.isImperial == true) "ft" else "m"
+    fun fmtElev(v: Int) = "%,d $elevUnit".format(if (units?.isImperial == true) (v * 3.28084).toInt() else v)
 
     LaunchedEffect(scrollState) {
         snapshotFlow { scrollState.isScrollInProgress }
@@ -247,10 +249,10 @@ private fun DriveDetailContent(
                     title = stringResource(R.string.elevation),
                     icon = Icons.Default.Landscape,
                     stats = listOf(
-                        StatItem(stringResource(R.string.maximum), "%,d m".format(s.elevationMax)),
-                        StatItem(stringResource(R.string.minimum), "%,d m".format(s.elevationMin)),
-                        StatItem(stringResource(R.string.gain), "+%,d m".format(s.elevationGain)),
-                        StatItem(stringResource(R.string.loss), "-%,d m".format(s.elevationLoss))
+                        StatItem(stringResource(R.string.maximum), fmtElev(s.elevationMax)),
+                        StatItem(stringResource(R.string.minimum), fmtElev(s.elevationMin)),
+                        StatItem(stringResource(R.string.gain), "+${fmtElev(s.elevationGain)}"),
+                        StatItem(stringResource(R.string.loss), "-${fmtElev(s.elevationLoss)}")
                     )
                 )
             }
@@ -313,6 +315,7 @@ private fun DriveDetailContent(
                     ElevationChartCard(
                         positions = detail.positions,
                         timeLabels = timeLabels,
+                        isImperial = units?.isImperial == true,
                         externalSelectedFraction = sharedXFraction,
                         onXSelected = { sharedXFraction = it },
                         fractionToTimeLabel = fractionToTimeLabel
@@ -746,6 +749,7 @@ private fun BatteryChartCard(
 private fun ElevationChartCard(
     positions: List<DrivePosition>,
     timeLabels: List<String>,
+    isImperial: Boolean,
     externalSelectedFraction: Float? = null,
     onXSelected: ((Float?) -> Unit)? = null,
     fractionToTimeLabel: ((Float) -> String)? = null
@@ -758,7 +762,8 @@ private fun ElevationChartCard(
         icon = Icons.Default.Landscape,
         data = elevations,
         color = Color(0xFF8B4513), // Brown color for terrain
-        unit = "m",
+        unit = if (isImperial) "ft" else "m",
+        convertValue = { if (isImperial) (it * 3.28084f) else it },
         timeLabels = timeLabels,
         externalSelectedFraction = externalSelectedFraction,
         onXSelected = onXSelected,
