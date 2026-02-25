@@ -2,6 +2,7 @@ package com.matedroid.widget
 
 import com.matedroid.data.api.models.CarData
 import com.matedroid.data.api.models.CarStatus
+import com.matedroid.data.local.CarImageOverride
 
 /**
  * Data class encapsulating all fields shown on the dashboard battery card.
@@ -40,6 +41,8 @@ data class CarWidgetDisplayData(
     val chargerActualCurrent: Int?,
     val acPhases: Int?,
     val sentryEventCount: Int = 0,
+    // --- Image override (from car image picker) ---
+    val imageOverride: CarImageOverride? = null,
 ) {
     companion object {
         fun from(carData: CarData, status: CarStatus): CarWidgetDisplayData {

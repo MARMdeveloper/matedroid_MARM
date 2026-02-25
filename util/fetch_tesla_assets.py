@@ -50,7 +50,7 @@ LEGACY_M3 = {
     "file_prefix": "m3",
     "name": "Model 3 (Legacy)",
     "colors": ["PBSB", "PMNG", "PMSS", "PPSW", "PPSB", "PPMR", "PMBL"],
-    "wheels": ["W38B", "W39B", "W32P"],
+    "wheels": ["W38B", "W39B", "W32P", "W32D"],
     "compositor": "old",
 }
 

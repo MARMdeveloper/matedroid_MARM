@@ -16,9 +16,11 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.matedroid.BuildConfig
+import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.SentryStateRepository
 import com.matedroid.data.repository.TeslamateRepository
+import kotlinx.coroutines.flow.firstOrNull
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.concurrent.TimeUnit
@@ -36,6 +38,7 @@ class CarWidgetUpdateWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val teslamateRepository: TeslamateRepository,
     private val sentryStateRepository: SentryStateRepository,
+    private val settingsDataStore: SettingsDataStore,
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -122,6 +125,9 @@ class CarWidgetUpdateWorker @AssistedInject constructor(
             return Result.success()
         }
 
+        // Read image overrides once (same source as the dashboard)
+        val imageOverrides = settingsDataStore.carImageOverrides.firstOrNull() ?: emptyMap()
+
         // Fetch all cars once to avoid redundant API calls
         val carsResult = teslamateRepository.getCars()
         val cars = when (carsResult) {
@@ -150,7 +156,8 @@ class CarWidgetUpdateWorker @AssistedInject constructor(
 
                 val sentryEventCount = sentryStateRepository.getEventCount(carId)
                 val displayData = CarWidgetDisplayData.from(car, status).copy(
-                    sentryEventCount = sentryEventCount
+                    sentryEventCount = sentryEventCount,
+                    imageOverride = imageOverrides[carId]
                 )
                 CarWidget().updateWidget(appContext, glanceId, displayData)
                 Log.d(TAG, "Updated widget for car $carId (${car.displayName})")

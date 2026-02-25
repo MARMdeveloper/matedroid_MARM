@@ -131,6 +131,7 @@ object CarImageResolver {
         "aeroturbine19" to "W39B",
         "stiletto19" to "W39B",
         "sport19" to "W39B",
+        "uberturbine20" to "W32D",
         "performance20" to "W32P",
         "19" to "W39B",
         "20" to "W32P",
@@ -522,6 +523,7 @@ object CarImageResolver {
         "W38B" to "18\" Aero",
         "W39B" to "19\" Sport",
         "W32P" to "20\" Performance",
+        "W32D" to "20\" Überturbine",
         // Highland Model 3
         "W38A" to "18\" Photon",
         "W30P" to "20\" Performance",
@@ -548,7 +550,7 @@ object CarImageResolver {
 
     // Available wheel codes per variant
     private val VARIANT_WHEELS = mapOf(
-        "m3" to listOf("W38B", "W39B", "W32P"),
+        "m3" to listOf("W38B", "W39B", "W32P", "W32D"),
         "m3h" to listOf("W38A"),
         "m3hp" to listOf("W30P"),
         "my" to listOf("WY18B", "WY19B", "WY20P"),

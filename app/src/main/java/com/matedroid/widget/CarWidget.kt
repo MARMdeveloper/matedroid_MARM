@@ -106,6 +106,8 @@ class CarWidget : GlanceAppWidget() {
         val CHARGER_CURRENT_KEY = intPreferencesKey("charger_current")       // -1 if null
         val AC_PHASES_KEY = intPreferencesKey("ac_phases")                   // -1 if null
         val SENTRY_EVENT_COUNT_KEY = intPreferencesKey("sentry_event_count")   // 0 = none
+        val IMAGE_OVERRIDE_VARIANT_KEY = stringPreferencesKey("image_override_variant")
+        val IMAGE_OVERRIDE_WHEEL_KEY = stringPreferencesKey("image_override_wheel")
     }
 
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
@@ -360,6 +362,13 @@ class CarWidget : GlanceAppWidget() {
                 this[CHARGER_CURRENT_KEY] = data.chargerActualCurrent ?: -1
                 this[AC_PHASES_KEY] = data.acPhases ?: -1
                 this[SENTRY_EVENT_COUNT_KEY] = data.sentryEventCount
+                if (data.imageOverride != null) {
+                    this[IMAGE_OVERRIDE_VARIANT_KEY] = data.imageOverride.variant
+                    this[IMAGE_OVERRIDE_WHEEL_KEY] = data.imageOverride.wheelCode
+                } else {
+                    remove(IMAGE_OVERRIDE_VARIANT_KEY)
+                    remove(IMAGE_OVERRIDE_WHEEL_KEY)
+                }
             }
         }
         update(context, glanceId)
@@ -391,6 +400,8 @@ class CarWidget : GlanceAppWidget() {
         val model = prefs[MODEL_KEY]
         val trimBadging = prefs[TRIM_BADGING_KEY]
         val wheelType = prefs[WHEEL_TYPE_KEY]
+        val overrideVariant = prefs[IMAGE_OVERRIDE_VARIANT_KEY]
+        val overrideWheel = prefs[IMAGE_OVERRIDE_WHEEL_KEY]
         val state = prefs[STATE_KEY]
         val isLocked = prefs[IS_LOCKED_KEY] ?: false
         val sentryMode = prefs[SENTRY_MODE_KEY] ?: false
@@ -428,7 +439,7 @@ class CarWidget : GlanceAppWidget() {
         // The larger scale factor ensures neither dimension is left uncovered;
         // overflow is clipped by the canvas bounds.  The status bar, scrim and
         // progress bar are all drawn on top, so no space needs to be reserved.
-        val carBitmap = loadCarBitmap(context, model, exteriorColor, wheelType, trimBadging)
+        val carBitmap = loadCarBitmap(context, model, exteriorColor, wheelType, trimBadging, overrideVariant, overrideWheel)
         if (carBitmap != null) {
             val scaleByWidth = width.toFloat() / carBitmap.width
             val scaleByHeight = height.toFloat() / carBitmap.height
@@ -679,9 +690,16 @@ class CarWidget : GlanceAppWidget() {
         model: String?,
         exteriorColor: String?,
         wheelType: String?,
-        trimBadging: String?
+        trimBadging: String?,
+        overrideVariant: String? = null,
+        overrideWheel: String? = null
     ): Bitmap? {
-        val assetPath = CarImageResolver.getAssetPath(model, exteriorColor, wheelType, trimBadging)
+        val colorCode = CarImageResolver.mapColor(exteriorColor)
+        val assetPath = if (overrideVariant != null && overrideWheel != null) {
+            CarImageResolver.getAssetPathForOverride(overrideVariant, colorCode, overrideWheel)
+        } else {
+            CarImageResolver.getAssetPath(model, exteriorColor, wheelType, trimBadging)
+        }
         return try {
             context.assets.open(assetPath).use { BitmapFactory.decodeStream(it) }
         } catch (_: IOException) {
