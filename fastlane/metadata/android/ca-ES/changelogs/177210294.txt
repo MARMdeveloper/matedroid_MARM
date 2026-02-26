@@ -1,0 +1,6 @@
+Tres grans novetats en aquesta beta.
+
+Afegit:
+- Widget de pantalla d'inici amb nivell de bateria, autonomia i detalls de càrrega
+- Detecció d'esdeveniments Sentry amb notificacions i comptador d'esdeveniments
+- Llisca esquerra/dreta sobre la imatge del cotxe al tauler per canviar de vehicle

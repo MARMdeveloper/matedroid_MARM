@@ -1,0 +1,6 @@
+Three big new features in this beta.
+
+Added:
+- Home screen widget with battery, range, and charging details
+- Sentry event detection with heads-up notifications and event counter
+- Swipe left/right on the dashboard car image to switch between vehicles

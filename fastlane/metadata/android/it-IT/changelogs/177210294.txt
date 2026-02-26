@@ -1,0 +1,6 @@
+Tre grandi novità in questa beta.
+
+Aggiunto:
+- Widget per la schermata Home con livello batteria, autonomia e dettagli di ricarica
+- Rilevamento eventi Sentry con notifiche e contatore degli eventi
+- Scorri sinistra/destra sull'immagine dell'auto in Dashboard per cambiare veicolo
