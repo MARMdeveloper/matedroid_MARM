@@ -4,7 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+//import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -61,16 +61,29 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.matedroid.data.api.models.Units
 import com.matedroid.R
+import com.matedroid.data.api.models.DriveData
+import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.components.BarChartData
 import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
+import com.matedroid.ui.theme.MateDroidTheme
 import com.matedroid.ui.theme.StatusSuccess
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.YearMonth
 import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 private val ChartBlue = Color(0xFF42A5F5)
@@ -187,6 +200,8 @@ fun MileageScreen(
                     monthData = monthData,
                     dailyData = uiState.dailyData,
                     dailyChartData = viewModel.getDailyChartData(),
+                    currencySymbol = uiState.currencySymbol,
+                    units = uiState.units,
                     palette = palette,
                     onClose = { viewModel.clearSelectedMonth() },
                     onDayClick = { viewModel.selectDay(it) }
@@ -204,6 +219,8 @@ fun MileageScreen(
                 DayDetailScreen(
                     dayData = dayData,
                     palette = palette,
+                    currencySymbol = uiState.currencySymbol,
+                    units = uiState.units,
                     onClose = { viewModel.clearSelectedDay() },
                     onDriveClick = onNavigateToDriveDetail
                 )
@@ -236,8 +253,13 @@ private fun YearOverviewContent(
                 avgDistance = uiState.avgYearlyDistance,
                 avgLabel = stringResource(R.string.mileage_avg_year),
                 driveCount = uiState.totalLifetimeDriveCount,
+                totalEnergyUsed = uiState.totalLifetimeEnergy,
+                totalEnergyCost = uiState.totalLifetimeEnergyCost ?: 0.0,
+                avgEnergyDistance = uiState.avgLifetimeEnergyDistance,
                 palette = palette,
-                firstDriveDate = uiState.firstDriveDate
+                firstDriveDate = uiState.firstDriveDate,
+                currencySymbol = uiState.currencySymbol,
+                units = uiState.units,
             )
         }
 
@@ -326,6 +348,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
 @Composable
 private fun YearRow(
     yearData: YearlyMileage,
+    currencySymbol: String = "€",
     onClick: () -> Unit
 ) {
     Card(
@@ -377,6 +400,20 @@ private fun YearRow(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "%,d".format(yearData.driveCount),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+//                    Icon(
+//                        imageVector = Icons.Filled.AttachMoney,
+//                        contentDescription = null,
+//                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+//                        modifier = Modifier.size(16.dp)
+//                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = yearData.totalEnergyCost?.let { "%.0f %s".format(it, currencySymbol) } ?: "N/A",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -435,7 +472,12 @@ private fun YearDetailScreen(
                     avgDistance = uiState.avgMonthlyDistance,
                     avgLabel = stringResource(R.string.mileage_avg_month),
                     driveCount = uiState.yearDriveCount,
-                    palette = palette
+                    totalEnergyUsed = uiState.yearTotalEnergy,
+                    totalEnergyCost = uiState.yearTotalEnergyCost ?: 0.0,
+                    avgEnergyDistance = uiState.avgYearEnergyDistance,
+                    palette = palette,
+                    currencySymbol = uiState.currencySymbol,
+                    units = uiState.units,
                 )
             }
 
@@ -523,6 +565,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
 @Composable
 private fun MonthRow(
     monthData: MonthlyMileage,
+    currencySymbol: String = "€",
     onClick: () -> Unit
 ) {
     Card(
@@ -585,6 +628,20 @@ private fun MonthRow(
                     )
                 }
 
+                Row(verticalAlignment = Alignment.CenterVertically) {
+//                    Icon(
+//                        imageVector = Icons.Filled.AttachMoney,
+//                        contentDescription = null,
+//                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+//                        modifier = Modifier.size(16.dp)
+//                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = monthData.totalEnergyCost?.let { "%.2f %s".format(it, currencySymbol) } ?: "N/A",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = stringResource(R.string.view_details),
@@ -607,6 +664,8 @@ private fun MonthDetailScreen(
     monthData: MonthlyMileage?,
     dailyData: List<DailyMileage>,
     dailyChartData: List<Pair<Int, Double>>,
+    currencySymbol: String = "€",
+    units: Units? = null,
     palette: CarColorPalette,
     onClose: () -> Unit,
     onDayClick: (LocalDate) -> Unit
@@ -640,6 +699,8 @@ private fun MonthDetailScreen(
                 MonthSummaryCard(
                     yearMonth = yearMonth,
                     monthData = monthData,
+                    currencySymbol = currencySymbol,
+                    units = units,
                     palette = palette
                 )
             }
@@ -681,6 +742,8 @@ private fun MonthDetailScreen(
 private fun MonthSummaryCard(
     yearMonth: YearMonth,
     monthData: MonthlyMileage?,
+    currencySymbol: String = "€",
+    units: Units? = null,
     palette: CarColorPalette
 ) {
     val totalDistance = monthData?.totalDistance ?: 0.0
@@ -689,6 +752,7 @@ private fun MonthSummaryCard(
     val totalBatteryUsage = monthData?.totalBatteryUsage ?: 0.0
     val totalEnergy = monthData?.totalEnergy ?: 0.0
     val avgEnergy = if (driveCount > 0) totalEnergy / driveCount else 0.0
+    val avgEfficiency = if (totalDistance > 0) (totalEnergy * 1000.0) / totalDistance else 0.0
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -765,8 +829,27 @@ private fun MonthSummaryCard(
                 )
                 StatChip(
                     prefix = "Ø",
+                    //icon = Icons.Filled.ElectricBolt,
+                    //value = "%.1f kWh".format(avgEnergy),
+                    value = UnitFormatter.formatEfficiency(avgEfficiency, units),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatChip(
                     icon = Icons.Filled.ElectricBolt,
-                    value = "%.1f kWh".format(avgEnergy),
+                    value = formatEnergy(totalEnergy),
+                    modifier = Modifier.weight(1f)
+                )
+                StatChip(
+                    icon = Icons.Filled.AttachMoney,
+                    value = monthData?.totalEnergyCost?.let { "%.2f %s".format(it, currencySymbol) } ?: "N/A",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -784,6 +867,11 @@ private fun SummaryRow(
     avgDistance: Double,
     avgLabel: String,
     driveCount: Int,
+    totalEnergyUsed: Double,
+    totalEnergyCost: Double,
+    avgEnergyDistance: Double,
+    currencySymbol: String,
+    units: Units? = null,
     palette: CarColorPalette? = null,
     firstDriveDate: LocalDate? = null
 ) {
@@ -802,7 +890,7 @@ private fun SummaryRow(
     if (showAvgInfoDialog && firstDriveDate != null) {
         val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
         val formattedDate = firstDriveDate.format(dateFormatter)
-        val daysSinceFirst = java.time.temporal.ChronoUnit.DAYS.between(firstDriveDate, LocalDate.now()).toInt()
+        val daysSinceFirst = ChronoUnit.DAYS.between(firstDriveDate, LocalDate.now()).toInt()
         val dialogMessage = stringResource(R.string.mileage_avg_year_message, formattedDate, daysSinceFirst)
 
         AlertDialog(
@@ -827,7 +915,7 @@ private fun SummaryRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.spacedBy(30.dp, alignment = Alignment.CenterHorizontally)
         ) {
             SummaryItem(
                 icon = Icons.Outlined.AllInclusive,
@@ -856,6 +944,45 @@ private fun SummaryRow(
                 labelColor = labelColor
             )
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterHorizontally)
+        ) {
+            SummaryItem(
+                icon = Icons.Outlined.Calculate,
+                value = UnitFormatter.formatEfficiency(avgEnergyDistance, units),
+                label = "Consumo medio",
+                iconColor = iconColor,
+                valueColor = valueColor,
+                labelColor = labelColor
+            )
+            SummaryItem(
+                icon = Icons.Filled.AttachMoney,
+                value = totalEnergyCost?.let { "%.2f %s".format(it, currencySymbol) } ?: "N/A",
+                label = stringResource(R.string.mileage_total),
+                iconColor = iconColor,
+                valueColor = valueColor,
+                labelColor = labelColor
+            )
+            SummaryItem(
+                icon = Icons.Outlined.BatteryChargingFull,
+                value = formatEnergy(totalEnergyUsed),
+                label = stringResource(R.string.mileage_total),
+                iconColor = iconColor,
+                valueColor = valueColor,
+                labelColor = labelColor
+            )
+        }
+    }
+}
+
+private fun formatEnergy(kwh: Double): String {
+    return if (kwh >= 1000) {
+        "%.1f MWh".format(kwh / 1000)
+    } else {
+        "%.0f kWh".format(kwh)
     }
 }
 
@@ -1057,6 +1184,7 @@ private fun DailyChartCard(
 @Composable
 private fun DayTripRow(
     dayData: DailyMileage,
+    currencySymbol: String = "€",
     onClick: () -> Unit
 ) {
     val dayOfWeek = dayData.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
@@ -1180,6 +1308,8 @@ private fun DayTripRow(
 private fun DayDetailScreen(
     dayData: DailyMileage,
     palette: CarColorPalette,
+    currencySymbol: String = "€",
+    units: Units? = null,
     onClose: () -> Unit,
     onDriveClick: (Int) -> Unit
 ) {
@@ -1217,6 +1347,8 @@ private fun DayDetailScreen(
                 DaySummaryCard(
                     dayData = dayData,
                     dateStr = dateStr,
+                    currencySymbol = currencySymbol,
+                    units = units,
                     palette = palette
                 )
             }
@@ -1247,10 +1379,13 @@ private fun DayDetailScreen(
 private fun DaySummaryCard(
     dayData: DailyMileage,
     dateStr: String,
+    currencySymbol: String = "€",
+    units: Units? = null,
     palette: CarColorPalette
 ) {
     val avgDistance = if (dayData.driveCount > 0) dayData.totalDistance / dayData.driveCount else 0.0
     val avgEnergy = if (dayData.driveCount > 0) dayData.totalEnergy / dayData.driveCount else 0.0
+    val avgEfficiency = if (dayData.totalDistance > 0) (dayData.totalEnergy * 1000.0) / dayData.totalDistance else 0.0
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1322,8 +1457,26 @@ private fun DaySummaryCard(
                 )
                 StatChip(
                     prefix = "Ø",
+                    //icon = Icons.Filled.ElectricBolt,
+                    value = UnitFormatter.formatEfficiency(avgEfficiency, units),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatChip(
                     icon = Icons.Filled.ElectricBolt,
-                    value = "%.1f kWh".format(avgEnergy),
+                    value = formatEnergy(dayData.totalEnergy),
+                    modifier = Modifier.weight(1f)
+                )
+                StatChip(
+                    icon = Icons.Filled.AttachMoney,
+                    value = dayData?.totalEnergyCost?.let { "%.2f %s".format(it, currencySymbol) } ?: "N/A",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1333,7 +1486,7 @@ private fun DaySummaryCard(
 
 @Composable
 private fun DriveRow(
-    drive: com.matedroid.data.api.models.DriveData,
+    drive: DriveData,
     onClick: () -> Unit
 ) {
     val startTime = drive.startDate?.let { parseTime(it) } ?: ""
@@ -1435,14 +1588,58 @@ private fun DriveRow(
 
 private fun parseTime(dateStr: String): String {
     return try {
-        val dateTime = java.time.OffsetDateTime.parse(dateStr)
+        val dateTime = OffsetDateTime.parse(dateStr)
         "%02d:%02d".format(dateTime.hour, dateTime.minute)
     } catch (e: Exception) {
         try {
-            val dateTime = java.time.LocalDateTime.parse(dateStr.replace("Z", ""))
+            val dateTime = LocalDateTime.parse(dateStr.replace("Z", ""))
             "%02d:%02d".format(dateTime.hour, dateTime.minute)
         } catch (e2: Exception) {
             ""
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "SummaryRow Light")
+@Composable
+private fun SummaryRowPreview() {
+    MateDroidTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            SummaryRow(
+                totalDistance = 12500.0,
+                avgDistance = 34.2,
+                avgLabel = stringResource(R.string.mileage_avg_year),
+                driveCount = 450,
+                totalEnergyUsed = 3456.0,
+                totalEnergyCost = 36.61,
+                avgEnergyDistance = 146.2,
+                palette = CarColorPalettes.forExteriorColor(null, false),
+                firstDriveDate = LocalDate.now().minusYears(1),
+                currencySymbol = "€",
+                units = null
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "SummaryRow Dark")
+@Composable
+private fun SummaryRowDarkPreview() {
+    MateDroidTheme(darkTheme = true) {
+        Box(modifier = Modifier.padding(16.dp)) {
+            SummaryRow(
+                totalDistance = 12500.0,
+                avgDistance = 34.2,
+                avgLabel = stringResource(R.string.mileage_avg_year),
+                driveCount = 450,
+                totalEnergyUsed = 3456.0,
+                totalEnergyCost = 36.61,
+                avgEnergyDistance = 146.2,
+                palette = CarColorPalettes.forExteriorColor(null, true),
+                firstDriveDate = LocalDate.now().minusYears(1),
+                currencySymbol = "€",
+                units = null
+            )
         }
     }
 }

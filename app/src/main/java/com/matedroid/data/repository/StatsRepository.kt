@@ -23,6 +23,7 @@ import com.matedroid.domain.model.StreakRecord
 import com.matedroid.domain.model.YearFilter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -607,8 +608,24 @@ class StatsRepository @Inject constructor(
         }
         return results.map { it.toDriveLocation() }
     }
+    /**
+     * Get monthly costs
+     */
+    suspend fun getChargeCostForMonth(carId: Int, year: Int, month: Int): Double? {
+        val startDate = "%04d-%02d-01T00:00:00".format(year, month)
+        val endDate = if (month == 12) "${year + 1}-01-01T00:00:00"
+        else "%04d-%02d-01T00:00:00".format(year, month + 1)
+        return chargeSummaryDao.sumCostInRange(carId, startDate, endDate).takeIf { it > 0 }
+    }
+    /**
+     * Get monthly costs
+     */
+    suspend fun getChargeCostForDay(carId: Int, date: LocalDate): Double? {
+        val startDate = "${date}T00:00:00"
+        val endDate = "${date.plusDays(1)}T00:00:00"
+        return chargeSummaryDao.sumCostInRange(carId, startDate, endDate).takeIf { it > 0 }
+    }
 }
-
 /**
  * Convert ISO 3166-1 alpha-2 country code to flag emoji.
  * Uses Regional Indicator Symbols to create flag emojis.

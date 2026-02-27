@@ -3,12 +3,18 @@ package com.matedroid.ui.screens.mileage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.DriveData
+import com.matedroid.data.api.models.Units
+import com.matedroid.data.local.SettingsDataStore
+import com.matedroid.data.model.Currency
 import com.matedroid.data.repository.ApiResult
+import com.matedroid.data.repository.StatsRepository
 import com.matedroid.data.repository.TeslamateRepository
+import com.matedroid.domain.model.YearFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -23,6 +29,7 @@ data class YearlyMileage(
     val totalDistance: Double,
     val driveCount: Int,
     val totalEnergy: Double,
+    val totalEnergyCost: Double? = null,
     val totalBatteryUsage: Double,
     val drives: List<DriveData>
 )
@@ -32,6 +39,7 @@ data class MonthlyMileage(
     val totalDistance: Double,
     val driveCount: Int,
     val totalEnergy: Double,
+    val totalEnergyCost: Double? = null,
     val totalBatteryUsage: Double,
     val drives: List<DriveData>
 )
@@ -41,6 +49,7 @@ data class DailyMileage(
     val totalDistance: Double,
     val driveCount: Int,
     val totalEnergy: Double,
+    val totalEnergyCost: Double? = null,
     val totalBatteryUsage: Double,
     val drives: List<DriveData>
 )
@@ -50,6 +59,8 @@ data class MileageUiState(
     val isRefreshing: Boolean = false,
     val error: String? = null,
     val allDrives: List<DriveData> = emptyList(),
+    val currencySymbol: String = "€",
+    val units: Units? = null,
 
     // Lifetime totals (year overview)
     val yearlyData: List<YearlyMileage> = emptyList(),
@@ -57,6 +68,9 @@ data class MileageUiState(
     val avgYearlyDistance: Double = 0.0,
     val firstDriveDate: LocalDate? = null,
     val totalLifetimeDriveCount: Int = 0,
+    val totalLifetimeEnergy: Double = 0.0,
+    val avgLifetimeEnergyDistance: Double = 0.0,
+    val totalLifetimeEnergyCost: Double? = null,
 
     // Year detail view state
     val selectedYear: Int? = null,
@@ -64,6 +78,9 @@ data class MileageUiState(
     val yearTotalDistance: Double = 0.0,
     val avgMonthlyDistance: Double = 0.0,
     val yearDriveCount: Int = 0,
+    val yearTotalEnergy: Double = 0.0,
+    val avgYearEnergyDistance: Double = 0.0,
+    val yearTotalEnergyCost: Double? = null,
 
     // Month detail view state
     val selectedMonth: YearMonth? = null,
@@ -76,7 +93,9 @@ data class MileageUiState(
 
 @HiltViewModel
 class MileageViewModel @Inject constructor(
-    private val repository: TeslamateRepository
+    private val repository: TeslamateRepository,
+    private val statsRepository: StatsRepository,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MileageUiState())
@@ -84,9 +103,27 @@ class MileageViewModel @Inject constructor(
 
     private var carId: Int? = null
 
+    init {
+        loadSettings()
+    }
+
+    private fun loadSettings() {
+        viewModelScope.launch {
+            val settings = settingsDataStore.settings.first()
+            val currency = Currency.findByCode(settings.currencyCode)
+            _uiState.update { it.copy(currencySymbol = currency.symbol) }
+        }
+    }
+
     fun setCarId(id: Int) {
         if (carId != id) {
             carId = id
+            viewModelScope.launch {
+                val statusResult = repository.getCarStatus(id)
+                if (statusResult is ApiResult.Success) {
+                    _uiState.update { it.copy(units = statusResult.data.units) }
+                }
+            }
             loadAllDrives()
         }
     }
@@ -150,6 +187,46 @@ class MileageViewModel @Inject constructor(
         selectDay(date)
     }
 
+    private fun loadEnergyCosts() {
+        val id = carId ?: return
+        viewModelScope.launch {
+            try {
+                val allTimeStats = statsRepository.getStats(id, YearFilter.AllTime)
+                _uiState.update { it.copy(totalLifetimeEnergyCost = allTimeStats.quickStats.totalCost) }
+                val updatedYearlyData = _uiState.value.yearlyData.map { yearData ->
+                    val yearStats = statsRepository.getStats(id, YearFilter.Year(yearData.year))
+                    yearData.copy(totalEnergyCost = yearStats.quickStats.totalCost)
+                }
+                _uiState.update { it.copy(yearlyData = updatedYearlyData) }
+
+                val updatedMonthlyData = _uiState.value.monthlyData.map { monthData ->
+                    val cost = statsRepository.getChargeCostForMonth(
+                        id,
+                        monthData.yearMonth.year,
+                        monthData.yearMonth.monthValue
+                    )
+                    monthData.copy(totalEnergyCost = cost)
+                }
+                _uiState.update { it.copy(monthlyData = updatedMonthlyData) }
+
+                val updatedDailyData = _uiState.value.dailyData.map { dayData ->
+                    val cost = statsRepository.getChargeCostForDay(id, dayData.date)
+                    dayData.copy(totalEnergyCost = cost)
+                }
+                _uiState.update { it.copy(dailyData = updatedDailyData) }
+
+                // If there is a selected year, load the cost for that year as well
+                val selectedYear = _uiState.value.selectedYear
+                if (selectedYear != null) {
+                    val yearStats = statsRepository.getStats(id, YearFilter.Year(selectedYear))
+                    _uiState.update { it.copy(yearTotalEnergyCost = yearStats.quickStats.totalCost) }
+                }
+            } catch (e: Exception) {
+                // If this fails, we just don't show the cost
+            }
+        }
+    }
+
     private fun loadAllDrives() {
         val id = carId ?: return
 
@@ -197,6 +274,7 @@ class MileageViewModel @Inject constructor(
         val yearlyData = grouped.map { (year, yearDrives) ->
             val totalDistance = yearDrives.sumOf { it.distance ?: 0.0 }
             val totalEnergy = yearDrives.sumOf { it.energyConsumedNet ?: 0.0 }
+            val totalEnergyCost = null
             val batteryUsages = yearDrives.mapNotNull { drive ->
                 val start = drive.startBatteryLevel
                 val end = drive.endBatteryLevel
@@ -234,15 +312,24 @@ class MileageViewModel @Inject constructor(
             0.0
         }
 
+        val totalEnergyKwh = yearlyData.sumOf { it.totalEnergy }
+        val isImperial = _uiState.value.units?.isImperial == true
+        val distanceForEfficiency = if (isImperial) totalLifetimeDistance * 0.621371 else totalLifetimeDistance
+        val avgLifetimeEnergyDistance = if (distanceForEfficiency > 0)
+            (totalEnergyKwh * 1000.0) / distanceForEfficiency else 0.0
+
         _uiState.update {
             it.copy(
                 yearlyData = yearlyData,
                 totalLifetimeDistance = totalLifetimeDistance,
                 avgYearlyDistance = avgYearlyDistance,
                 firstDriveDate = firstDriveDate,
-                totalLifetimeDriveCount = totalLifetimeDriveCount
+                totalLifetimeDriveCount = totalLifetimeDriveCount,
+                totalLifetimeEnergy = yearlyData.sumOf { it.totalEnergy },
+                avgLifetimeEnergyDistance = avgLifetimeEnergyDistance
             )
         }
+        loadEnergyCosts()
     }
 
     private fun aggregateByMonth(year: Int) {
@@ -288,15 +375,23 @@ class MileageViewModel @Inject constructor(
         val yearTotalDistance = monthlyData.sumOf { it.totalDistance }
         val yearDriveCount = monthlyData.sumOf { it.driveCount }
         val avgMonthlyDistance = if (monthlyData.isNotEmpty()) yearTotalDistance / monthlyData.size else 0.0
+        val totalEnergyKwh = monthlyData.sumOf { it.totalEnergy }
+        val isImperial = _uiState.value.units?.isImperial == true
+        val distanceForEfficiency = if (isImperial) yearTotalDistance * 0.621371 else yearTotalDistance
+        val avgYearEnergyDistance = if (distanceForEfficiency > 0)
+            (totalEnergyKwh * 1000.0) / distanceForEfficiency else 0.0
 
         _uiState.update {
             it.copy(
                 monthlyData = monthlyData,
                 yearTotalDistance = yearTotalDistance,
                 avgMonthlyDistance = avgMonthlyDistance,
-                yearDriveCount = yearDriveCount
+                yearDriveCount = yearDriveCount,
+                yearTotalEnergy = monthlyData.sumOf { it.totalEnergy },
+                avgYearEnergyDistance = avgYearEnergyDistance
             )
         }
+        loadEnergyCosts()
     }
 
     private fun aggregateByDay(yearMonth: YearMonth) {
@@ -338,6 +433,7 @@ class MileageViewModel @Inject constructor(
         _uiState.update {
             it.copy(dailyData = dailyData)
         }
+        loadEnergyCosts()
     }
 
     private fun parseDateTime(dateStr: String?): LocalDateTime? {
