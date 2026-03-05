@@ -430,7 +430,7 @@ private fun YearRow(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(24.dp))
                 Column(horizontalAlignment = Alignment.End) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -671,6 +671,7 @@ private fun MonthRow(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.width(24.dp))
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = stringResource(R.string.view_details),
