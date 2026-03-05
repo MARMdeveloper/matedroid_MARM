@@ -838,6 +838,8 @@ private fun BatteryChartCard(
 ) {
     val batteryLevels = chargePoints.mapNotNull { it.batteryLevel?.toFloat() }
     if (batteryLevels.size < 2) return
+    val yMin = (kotlin.math.floor(batteryLevels.min() / 10.0) * 10).toFloat()
+    val yMax = (kotlin.math.ceil(batteryLevels.max() / 10.0) * 10).toFloat()
 
     ChartCard(
         title = title,
@@ -845,7 +847,7 @@ private fun BatteryChartCard(
         data = batteryLevels,
         color = MaterialTheme.colorScheme.primary,
         unit = "%",
-        fixedMinMax = Pair(0f, 100f),
+        fixedMinMax = Pair(yMin, yMax),
         timeLabels = timeLabels,
         externalSelectedFraction = externalSelectedFraction,
         onXSelected = onXSelected,
