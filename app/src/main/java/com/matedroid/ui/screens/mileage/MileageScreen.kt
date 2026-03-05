@@ -67,6 +67,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.isSystemInDarkTheme
+//import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Battery5Bar
 import androidx.compose.material.icons.filled.EnergySavingsLeaf
 import androidx.compose.material.icons.outlined.EnergySavingsLeaf
@@ -366,7 +367,7 @@ private fun YearRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(vertical = 16.dp, horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -375,12 +376,11 @@ private fun YearRow(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-
+            Spacer(modifier = Modifier.width(16.dp))
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(horizontalAlignment = Alignment.End) {
+                Column(modifier = Modifier.weight(1f),horizontalAlignment = Alignment.End) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = CustomIcons.Road,
@@ -408,7 +408,7 @@ private fun YearRow(
                         )
                     }
                 }
-                Column(horizontalAlignment = Alignment.End) {
+                Column(modifier = Modifier.weight(1f),horizontalAlignment = Alignment.End) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Filled.DirectionsCar,
@@ -424,26 +424,22 @@ private fun YearRow(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.AttachMoney,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "%,.2f %s".format(yearData.totalEnergyCost ?: 0.0, currencySymbol),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(horizontalAlignment = Alignment.End) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = stringResource(R.string.view_details),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.view_details),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(24.dp)
-            )
         }
     }
 }
@@ -601,7 +597,7 @@ private fun MonthRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding( 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -619,11 +615,13 @@ private fun MonthRow(
             }
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(horizontalAlignment = Alignment.End) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End) {
                         Icon(
                             imageVector = CustomIcons.Road,
                             contentDescription = null,
@@ -637,7 +635,8 @@ private fun MonthRow(
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End) {
                         Icon(
                             imageVector = Icons.Outlined.EnergySavingsLeaf,
                             contentDescription = null,
@@ -650,7 +649,7 @@ private fun MonthRow(
                         )
                     }
                 }
-                Column(horizontalAlignment = Alignment.End) {
+                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Filled.DirectionsCar,
@@ -666,26 +665,19 @@ private fun MonthRow(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.AttachMoney,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "%,.2f %s".format(monthData.totalEnergyCost ?: 0.0, currencySymbol),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = stringResource(R.string.view_details),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp)
+                )
             }
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.view_details),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(24.dp)
-            )
         }
     }
 }
@@ -985,7 +977,7 @@ private fun SummaryRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterHorizontally)
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             SummaryItem(
                 icon = Icons.Outlined.EnergySavingsLeaf,
@@ -1307,13 +1299,13 @@ private fun DayTripRow(
                     Spacer(modifier = Modifier.height(4.dp))
                     // Energy cost
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.AttachMoney,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+//                        Icon(
+//                            imageVector = Icons.Filled.AttachMoney,
+//                            contentDescription = null,
+//                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+//                            modifier = Modifier.size(14.dp)
+//                        )
+//                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "%,.2f %s".format(dayData.totalEnergyCost ?: 0.0, currencySymbol),
                             style = MaterialTheme.typography.bodySmall
@@ -1338,9 +1330,11 @@ private fun DayTripRow(
                     Spacer(modifier = Modifier.height(4.dp))
                     // Battery usage
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "🔋",
-                            style = MaterialTheme.typography.bodySmall
+                        Icon(
+                            imageVector = Icons.Filled.Battery5Bar,
+                            contentDescription = null,
+                            tint = StatusSuccess,
+                            modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(2.dp))
                         Text(
@@ -1449,7 +1443,7 @@ private fun DaySummaryCard(
     palette: CarColorPalette
 ) {
     val avgDistance = if (dayData.driveCount > 0) dayData.totalDistance / dayData.driveCount else 0.0
-    val avgEnergy = if (dayData.driveCount > 0) dayData.totalEnergy / dayData.driveCount else 0.0
+    //val avgEnergy = if (dayData.driveCount > 0) dayData.totalEnergy / dayData.driveCount else 0.0
     val avgEfficiency = if (dayData.totalDistance > 0) (dayData.totalEnergy * 1000.0) / dayData.totalDistance else 0.0
 
     Card(
@@ -1577,12 +1571,11 @@ private fun DriveRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-                //.weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Time info
-            Column(modifier = Modifier.width(60.dp)) {
+            Column(modifier = Modifier.width(50.dp)) {
                 Text(
                     text = startTime,
                     style = MaterialTheme.typography.titleMedium,
@@ -1593,6 +1586,19 @@ private fun DriveRow(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(//alignment = Alignment.End,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "⏱",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "${duration}m",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
             Column(horizontalAlignment = Alignment.End) {
                 // Distance
@@ -1652,20 +1658,6 @@ private fun DriveRow(
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
                         text = "%d%%".format(batteryUsage),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                // Duration
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "⏱",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = "${duration}m",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
