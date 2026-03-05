@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,11 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.outlined.AllInclusive
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.Calculate
+import com.matedroid.data.api.models.Units
+import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.icons.CustomIcons
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.AlertDialog
@@ -61,6 +67,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.icons.filled.EnergySavingsLeaf
+import androidx.compose.material.icons.outlined.EnergySavingsLeaf
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
 import com.matedroid.ui.components.BarChartData
@@ -187,6 +195,8 @@ fun MileageScreen(
                     monthData = monthData,
                     dailyData = uiState.dailyData,
                     dailyChartData = viewModel.getDailyChartData(),
+                    currencySymbol = uiState.currencySymbol,
+                    units = uiState.units,
                     palette = palette,
                     onClose = { viewModel.clearSelectedMonth() },
                     onDayClick = { viewModel.selectDay(it) }
@@ -203,6 +213,8 @@ fun MileageScreen(
             uiState.selectedDayData?.let { dayData ->
                 DayDetailScreen(
                     dayData = dayData,
+                    currencySymbol = uiState.currencySymbol,
+                    units = uiState.units,
                     palette = palette,
                     onClose = { viewModel.clearSelectedDay() },
                     onDriveClick = onNavigateToDriveDetail
@@ -236,6 +248,11 @@ private fun YearOverviewContent(
                 avgDistance = uiState.avgYearlyDistance,
                 avgLabel = stringResource(R.string.mileage_avg_year),
                 driveCount = uiState.totalLifetimeDriveCount,
+                totalEnergyUsed = uiState.totalLifetimeEnergy,
+                totalEnergyCost = uiState.totalLifetimeEnergyCost,
+                avgEnergyDistance = uiState.avgLifetimeEnergyDistance,
+                currencySymbol = uiState.currencySymbol,
+                units = uiState.units,
                 palette = palette,
                 firstDriveDate = uiState.firstDriveDate
             )
@@ -252,6 +269,7 @@ private fun YearOverviewContent(
         items(uiState.yearlyData) { yearData ->
             YearRow(
                 yearData = yearData,
+                currencySymbol = uiState.currencySymbol,
                 onClick = { onYearClick(yearData.year) }
             )
         }
@@ -326,8 +344,11 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
 @Composable
 private fun YearRow(
     yearData: YearlyMileage,
+    currencySymbol: String,
     onClick: () -> Unit
 ) {
+    val avgEfficiency = if (yearData.totalDistance > 0)
+        (yearData.totalEnergy * 1000.0) / yearData.totalDistance else 0.0
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -350,44 +371,73 @@ private fun YearRow(
             )
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = CustomIcons.Road,
-                        contentDescription = null,
-                        tint = ChartBlue,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "%,.0f km".format(yearData.totalDistance),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = CustomIcons.Road,
+                            contentDescription = null,
+                            tint = ChartBlue,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "%,.0f km".format(yearData.totalDistance),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.EnergySavingsLeaf,
+                            contentDescription = null,
+                            tint = StatusSuccess,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = UnitFormatter.formatEfficiency(avgEfficiency, null),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.DirectionsCar,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "%,d".format(yearData.driveCount),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.DirectionsCar,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "%,d".format(yearData.driveCount),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.AttachMoney,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "%,.2f %s".format(yearData.totalEnergyCost ?: 0.0, currencySymbol),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
-
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = stringResource(R.string.view_details),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(24.dp)
-                )
             }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = stringResource(R.string.view_details),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
@@ -435,6 +485,11 @@ private fun YearDetailScreen(
                     avgDistance = uiState.avgMonthlyDistance,
                     avgLabel = stringResource(R.string.mileage_avg_month),
                     driveCount = uiState.yearDriveCount,
+                    totalEnergyUsed = uiState.yearTotalEnergy,
+                    totalEnergyCost = uiState.yearTotalEnergyCost,
+                    avgEnergyDistance = uiState.avgYearEnergyDistance,
+                    currencySymbol = uiState.currencySymbol,
+                    units = uiState.units,
                     palette = palette
                 )
             }
@@ -448,6 +503,7 @@ private fun YearDetailScreen(
             items(uiState.monthlyData) { monthData ->
                 MonthRow(
                     monthData = monthData,
+                    currencySymbol = uiState.currencySymbol,
                     onClick = { onMonthClick(monthData.yearMonth) }
                 )
             }
@@ -523,8 +579,11 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
 @Composable
 private fun MonthRow(
     monthData: MonthlyMileage,
+    currencySymbol: String,
     onClick: () -> Unit
 ) {
+    val avgEfficiency = if (monthData.totalDistance > 0)
+        (monthData.totalEnergy * 1000.0) / monthData.totalDistance else 0.0
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -554,44 +613,73 @@ private fun MonthRow(
             }
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = CustomIcons.Road,
-                        contentDescription = null,
-                        tint = ChartBlue,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "%,.0f km".format(monthData.totalDistance),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = CustomIcons.Road,
+                            contentDescription = null,
+                            tint = ChartBlue,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "%,.0f km".format(monthData.totalDistance),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.EnergySavingsLeaf,
+                            contentDescription = null,
+                            tint = StatusSuccess,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = UnitFormatter.formatEfficiency(avgEfficiency, null),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.DirectionsCar,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "%,d".format(monthData.driveCount),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.DirectionsCar,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "%,d".format(monthData.driveCount),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.AttachMoney,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "%,.2f %s".format(monthData.totalEnergyCost ?: 0.0, currencySymbol),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
-
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = stringResource(R.string.view_details),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(24.dp)
-                )
             }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = stringResource(R.string.view_details),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
@@ -607,6 +695,8 @@ private fun MonthDetailScreen(
     monthData: MonthlyMileage?,
     dailyData: List<DailyMileage>,
     dailyChartData: List<Pair<Int, Double>>,
+    currencySymbol: String,
+    units: Units? = null,
     palette: CarColorPalette,
     onClose: () -> Unit,
     onDayClick: (LocalDate) -> Unit
@@ -640,6 +730,8 @@ private fun MonthDetailScreen(
                 MonthSummaryCard(
                     yearMonth = yearMonth,
                     monthData = monthData,
+                    currencySymbol = currencySymbol,
+                    units = units,
                     palette = palette
                 )
             }
@@ -669,6 +761,7 @@ private fun MonthDetailScreen(
                 items(dailyData) { dayData ->
                     DayTripRow(
                         dayData = dayData,
+                        currencySymbol = currencySymbol,
                         onClick = { onDayClick(dayData.date) }
                     )
                 }
@@ -681,6 +774,8 @@ private fun MonthDetailScreen(
 private fun MonthSummaryCard(
     yearMonth: YearMonth,
     monthData: MonthlyMileage?,
+    currencySymbol: String,
+    units: Units? = null,
     palette: CarColorPalette
 ) {
     val totalDistance = monthData?.totalDistance ?: 0.0
@@ -689,6 +784,7 @@ private fun MonthSummaryCard(
     val totalBatteryUsage = monthData?.totalBatteryUsage ?: 0.0
     val totalEnergy = monthData?.totalEnergy ?: 0.0
     val avgEnergy = if (driveCount > 0) totalEnergy / driveCount else 0.0
+    val avgEfficiency = if (totalDistance > 0) (totalEnergy * 1000.0) / totalDistance else 0.0
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -765,8 +861,26 @@ private fun MonthSummaryCard(
                 )
                 StatChip(
                     prefix = "Ø",
+                    icon = Icons.Outlined.EnergySavingsLeaf,
+                    value = UnitFormatter.formatEfficiency(avgEfficiency, units),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatChip(
                     icon = Icons.Filled.ElectricBolt,
-                    value = "%.1f kWh".format(avgEnergy),
+                    value = formatEnergy(totalEnergy),
+                    modifier = Modifier.weight(1f)
+                )
+                StatChip(
+                    icon = Icons.Filled.AttachMoney,
+                    value = "%,.2f %s".format(monthData?.totalEnergyCost ?: 0.0, currencySymbol),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -784,6 +898,11 @@ private fun SummaryRow(
     avgDistance: Double,
     avgLabel: String,
     driveCount: Int,
+    totalEnergyUsed: Double,
+    totalEnergyCost: Double?,
+    avgEnergyDistance: Double,
+    currencySymbol: String,
+    units: Units? = null,
     palette: CarColorPalette? = null,
     firstDriveDate: LocalDate? = null
 ) {
@@ -851,6 +970,37 @@ private fun SummaryRow(
                 icon = Icons.Filled.DirectionsCar,
                 value = "%,d".format(driveCount),
                 label = stringResource(R.string.mileage_drive_count),
+                iconColor = iconColor,
+                valueColor = valueColor,
+                labelColor = labelColor
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterHorizontally)
+        ) {
+            SummaryItem(
+                icon = Icons.Outlined.EnergySavingsLeaf,
+                value = UnitFormatter.formatEfficiency(avgEnergyDistance, units),
+                label = stringResource(R.string.stats_avg_efficiency),
+                iconColor = iconColor,
+                valueColor = valueColor,
+                labelColor = labelColor
+            )
+            SummaryItem(
+                icon = Icons.Filled.AttachMoney,
+                value = "%,.2f %s".format(totalEnergyCost ?: 0.0, currencySymbol),
+                label = stringResource(R.string.mileage_total),
+                iconColor = iconColor,
+                valueColor = valueColor,
+                labelColor = labelColor
+            )
+            SummaryItem(
+                icon = Icons.Outlined.BatteryChargingFull,
+                value = formatEnergy(totalEnergyUsed),
+                label = stringResource(R.string.mileage_total),
                 iconColor = iconColor,
                 valueColor = valueColor,
                 labelColor = labelColor
@@ -1057,6 +1207,7 @@ private fun DailyChartCard(
 @Composable
 private fun DayTripRow(
     dayData: DailyMileage,
+    currencySymbol: String,
     onClick: () -> Unit
 ) {
     val dayOfWeek = dayData.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
@@ -1064,7 +1215,8 @@ private fun DayTripRow(
         dayData.date.dayOfMonth,
         dayData.date.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
     )
-
+    val avgEfficiency = if (dayData.totalDistance > 0)
+        (dayData.totalEnergy * 1000.0) / dayData.totalDistance else 0.0
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1094,72 +1246,104 @@ private fun DayTripRow(
             }
 
             Spacer(modifier = Modifier.width(16.dp))
-
             // Stats
             Row(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Distance
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = CustomIcons.Road,
-                        contentDescription = null,
-                        tint = ChartBlue,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = "%,.1f km".format(dayData.totalDistance),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                Column(horizontalAlignment = Alignment.End) {
+                    // Distance
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = CustomIcons.Road,
+                            contentDescription = null,
+                            tint = ChartBlue,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = "%,.1f km".format(dayData.totalDistance),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // Efficiency
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.EnergySavingsLeaf,
+                            contentDescription = null,
+                            tint = StatusSuccess,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = UnitFormatter.formatEfficiency(avgEfficiency, null),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
-
-                // Drive count
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.DirectionsCar,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = dayData.driveCount.toString(),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                Column(horizontalAlignment = Alignment.End) {
+                    // Drive count
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.DirectionsCar,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = dayData.driveCount.toString(),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // Battery usage
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "🔋",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = "%.0f%%".format(dayData.totalBatteryUsage),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
-
-                // Battery usage
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "🔋",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = "%.0f%%".format(dayData.totalBatteryUsage),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                // Energy
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.ElectricBolt,
-                        contentDescription = null,
-                        tint = StatusSuccess,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = "%.1f kWh".format(dayData.totalEnergy),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                Column(horizontalAlignment = Alignment.End) {
+                    // Energy
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.ElectricBolt,
+                            contentDescription = null,
+                            tint = StatusSuccess,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = "%.1f kWh".format(dayData.totalEnergy),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // Energy cost
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.AttachMoney,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "%,.2f %s".format(dayData.totalEnergyCost ?: 0.0, currencySymbol),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
-
             // Arrow indicator
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -1171,6 +1355,9 @@ private fun DayTripRow(
     }
 }
 
+private fun formatEnergy(kwh: Double): String =
+    if (kwh >= 1000) "%,.1f MWh".format(kwh / 1000) else "%.0f kWh".format(kwh)
+
 // ============================================================================
 // Level 4: Day Detail
 // ============================================================================
@@ -1179,6 +1366,8 @@ private fun DayTripRow(
 @Composable
 private fun DayDetailScreen(
     dayData: DailyMileage,
+    currencySymbol: String,
+    units: Units? = null,
     palette: CarColorPalette,
     onClose: () -> Unit,
     onDriveClick: (Int) -> Unit
@@ -1217,6 +1406,8 @@ private fun DayDetailScreen(
                 DaySummaryCard(
                     dayData = dayData,
                     dateStr = dateStr,
+                    currencySymbol = currencySymbol,
+                    units = units,
                     palette = palette
                 )
             }
@@ -1247,10 +1438,13 @@ private fun DayDetailScreen(
 private fun DaySummaryCard(
     dayData: DailyMileage,
     dateStr: String,
+    currencySymbol: String,
+    units: Units? = null,
     palette: CarColorPalette
 ) {
     val avgDistance = if (dayData.driveCount > 0) dayData.totalDistance / dayData.driveCount else 0.0
     val avgEnergy = if (dayData.driveCount > 0) dayData.totalEnergy / dayData.driveCount else 0.0
+    val avgEfficiency = if (dayData.totalDistance > 0) (dayData.totalEnergy * 1000.0) / dayData.totalDistance else 0.0
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1322,8 +1516,26 @@ private fun DaySummaryCard(
                 )
                 StatChip(
                     prefix = "Ø",
+                    icon = Icons.Outlined.EnergySavingsLeaf,
+                    value = UnitFormatter.formatEfficiency(avgEfficiency, units),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatChip(
                     icon = Icons.Filled.ElectricBolt,
-                    value = "%.1f kWh".format(avgEnergy),
+                    value = formatEnergy(dayData.totalEnergy),
+                    modifier = Modifier.weight(1f)
+                )
+                StatChip(
+                    icon = Icons.Filled.AttachMoney,
+                    value = "%,.2f %s".format(dayData.totalEnergyCost ?: 0.0, currencySymbol),
                     modifier = Modifier.weight(1f)
                 )
             }
