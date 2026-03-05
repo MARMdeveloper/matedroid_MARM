@@ -1580,7 +1580,7 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
                     Icon(
                         imageVector = Icons.Filled.Terrain,
                         contentDescription = null,
-                        tint = palette.onSurfaceVariant
+                        tint = palette.accent
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
