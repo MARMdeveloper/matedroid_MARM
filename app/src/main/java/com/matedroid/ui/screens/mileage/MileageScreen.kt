@@ -67,18 +67,24 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.icons.filled.Battery5Bar
 import androidx.compose.material.icons.filled.EnergySavingsLeaf
 import androidx.compose.material.icons.outlined.EnergySavingsLeaf
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
+import com.matedroid.data.api.models.DriveData
 import com.matedroid.ui.components.BarChartData
 import com.matedroid.ui.components.InteractiveBarChart
+import com.matedroid.ui.screens.drives.DriveDetailStats
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import com.matedroid.ui.theme.StatusSuccess
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.YearMonth
 import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 private val ChartBlue = Color(0xFF42A5F5)
@@ -921,7 +927,7 @@ private fun SummaryRow(
     if (showAvgInfoDialog && firstDriveDate != null) {
         val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
         val formattedDate = firstDriveDate.format(dateFormatter)
-        val daysSinceFirst = java.time.temporal.ChronoUnit.DAYS.between(firstDriveDate, LocalDate.now()).toInt()
+        val daysSinceFirst = ChronoUnit.DAYS.between(firstDriveDate, LocalDate.now()).toInt()
         val dialogMessage = stringResource(R.string.mileage_avg_year_message, formattedDate, daysSinceFirst)
 
         AlertDialog(
@@ -1271,7 +1277,7 @@ private fun DayTripRow(
                     // Efficiency
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Filled.EnergySavingsLeaf,
+                            imageVector = Icons.Outlined.EnergySavingsLeaf,
                             contentDescription = null,
                             tint = StatusSuccess,
                             modifier = Modifier.size(14.dp)
@@ -1299,15 +1305,17 @@ private fun DayTripRow(
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    // Battery usage
+                    // Energy cost
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "🔋",
-                            style = MaterialTheme.typography.bodySmall
+                        Icon(
+                            imageVector = Icons.Filled.AttachMoney,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(2.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "%.0f%%".format(dayData.totalBatteryUsage),
+                            text = "%,.2f %s".format(dayData.totalEnergyCost ?: 0.0, currencySymbol),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -1328,17 +1336,15 @@ private fun DayTripRow(
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    // Energy cost
+                    // Battery usage
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.AttachMoney,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "%,.2f %s".format(dayData.totalEnergyCost ?: 0.0, currencySymbol),
+                            text = "🔋",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = "%.0f%%".format(dayData.totalBatteryUsage),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -1426,7 +1432,7 @@ private fun DayDetailScreen(
                 items(dayData.drives) { drive ->
                     DriveRow(
                         drive = drive,
-                        onClick = { onDriveClick(drive.driveId) }
+                        onClick = { onDriveClick(drive.driveId) },
                     )
                 }
             }
@@ -1545,7 +1551,8 @@ private fun DaySummaryCard(
 
 @Composable
 private fun DriveRow(
-    drive: com.matedroid.data.api.models.DriveData,
+    drive: DriveData,
+    units: Units? = null,
     onClick: () -> Unit
 ) {
     val startTime = drive.startDate?.let { parseTime(it) } ?: ""
@@ -1553,6 +1560,10 @@ private fun DriveRow(
     val distance = drive.distance ?: 0.0
     val duration = drive.durationMin ?: 0
     val energyUsed = drive.energyConsumedNet ?: 0.0
+    val batteryStart = drive.batteryDetails?.startBatteryLevel ?: 0
+    val batteryEnd = drive.batteryDetails?.endBatteryLevel ?: 0
+    val batteryUsage = batteryStart - batteryEnd
+    val efficiency = drive.efficiencyWhKm ?: 0.0
 
     Card(
         modifier = Modifier
@@ -1565,11 +1576,13 @@ private fun DriveRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
+                //.weight(1f),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Time info
-            Column(modifier = Modifier.width(70.dp)) {
+            Column(modifier = Modifier.width(60.dp)) {
                 Text(
                     text = startTime,
                     style = MaterialTheme.typography.titleMedium,
@@ -1581,15 +1594,7 @@ private fun DriveRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Stats
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column(horizontalAlignment = Alignment.End) {
                 // Distance
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -1604,20 +1609,23 @@ private fun DriveRow(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-
-                // Duration
+                Spacer(modifier = Modifier.height(4.dp))
+                // Efficiency
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "⏱",
-                        style = MaterialTheme.typography.bodySmall
+                    Icon(
+                        imageVector = Icons.Outlined.EnergySavingsLeaf,
+                        contentDescription = null,
+                        tint = StatusSuccess,
+                        modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "${duration}m",
+                        text = UnitFormatter.formatEfficiency(efficiency, units),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-
+            }
+            Column(horizontalAlignment = Alignment.End) {
                 // Energy
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -1632,8 +1640,36 @@ private fun DriveRow(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+                // Battery usage
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Battery5Bar,
+                        contentDescription = null,
+                        tint = StatusSuccess,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "%d%%".format(batteryUsage),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
-
+            Column(horizontalAlignment = Alignment.End) {
+                // Duration
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "⏱",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "${duration}m",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
             // Arrow indicator
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -1647,11 +1683,11 @@ private fun DriveRow(
 
 private fun parseTime(dateStr: String): String {
     return try {
-        val dateTime = java.time.OffsetDateTime.parse(dateStr)
+        val dateTime = OffsetDateTime.parse(dateStr)
         "%02d:%02d".format(dateTime.hour, dateTime.minute)
     } catch (e: Exception) {
         try {
-            val dateTime = java.time.LocalDateTime.parse(dateStr.replace("Z", ""))
+            val dateTime = LocalDateTime.parse(dateStr.replace("Z", ""))
             "%02d:%02d".format(dateTime.hour, dateTime.minute)
         } catch (e2: Exception) {
             ""
