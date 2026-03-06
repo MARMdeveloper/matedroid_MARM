@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-06
+
+### Added
+- **Sentry event detection**: Detects sentry mode alert events via polling when sentry mode is active. Fires a heads-up notification on a dedicated "Sentry Alerts" channel and shows a running event counter next to the sentry red dot on both the dashboard and the home screen widget. Counter resets when sentry mode turns off.
+- **Home screen widget**: Battery info widget for the Android home screen. Shows battery level, range, state, temperature, and charging details (power, voltage, current, phases, energy added, time to full) for any configured car. Features a dimmed car image background with a static glow effect when charging. One widget per car can be configured; updates every 15 minutes via WorkManager.
+- **Dashboard**: Swipe left/right on the car image to switch between vehicles when multiple cars are configured; dot indicators below the image show which car is selected
+
+### Fixed
+- **Home screen widget**: Tapping a widget now opens the app and selects the correct car instead of always showing the first car
+
 ## [1.2.0-beta1] - 2026-02-26
 
 ### Added
@@ -401,7 +411,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.0-beta1...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/vide/matedroid/compare/v1.1.0...v1.2.0
 [1.2.0-beta1]: https://github.com/vide/matedroid/compare/v1.1.0...v1.2.0-beta1
 [1.1.0]: https://github.com/vide/matedroid/compare/v1.0.0...v1.1.0
 [1.1.0-beta3]: https://github.com/vide/matedroid/compare/v1.1.0-beta2...v1.1.0-beta3

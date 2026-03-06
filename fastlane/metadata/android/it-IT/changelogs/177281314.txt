@@ -1,0 +1,9 @@
+Widget per la schermata home e avvisi Sentry sono arrivati!
+
+Aggiunto:
+- Widget batteria con immagine auto, stato live e dettagli di ricarica
+- Notifiche avvisi Sentry con contatore eventi su dashboard e widget
+- Scorri tra le auto nella dashboard
+
+Corretto:
+- Il tocco sul widget ora apre l'auto corretta

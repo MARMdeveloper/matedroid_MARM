@@ -1,0 +1,9 @@
+¡Los widgets de pantalla de inicio y las alertas Sentry ya están aquí!
+
+Añadido:
+- Widget de batería con imagen del coche, estado en vivo y detalles de carga
+- Notificaciones de alertas Sentry con contador de eventos en dashboard y widget
+- Desliza entre coches en el dashboard
+
+Corregido:
+- Al tocar un widget ahora se abre el coche correcto

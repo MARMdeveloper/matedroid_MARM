@@ -1,0 +1,9 @@
+Home screen widgets and sentry alerts are here!
+
+Added:
+- Battery widget with car image, live state and charging details
+- Sentry alert notifications with event counter on dashboard and widget
+- Swipe between cars on the dashboard
+
+Fixed:
+- Widget tap now opens the correct car
