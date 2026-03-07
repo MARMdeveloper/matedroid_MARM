@@ -1,0 +1,5 @@
+Correzioni di bug per le unità di misura e il layout del widget.
+
+Fixed:
+- Le unità di misura vengono ora rispettate in tutte le schermate e nel widget (distanze, velocità, efficienza, temperature)
+- Il testo della posizione nel widget non si sposta più verso l'alto durante la ricarica — rimane sulla riga inferiore insieme ai dettagli di ricarica

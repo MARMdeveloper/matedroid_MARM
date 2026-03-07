@@ -19,8 +19,8 @@ android {
         applicationId = "com.matedroid"
         minSdk = 28
         targetSdk = 36
-        versionCode = 177288688
-        versionName = "1.2.1"
+        versionCode = 177289788
+        versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

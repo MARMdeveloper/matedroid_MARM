@@ -1,0 +1,5 @@
+Correccions d'errors en les unitats i el disseny del widget.
+
+Fixed:
+- Les unitats ara es respecten a totes les pantalles i el widget (distàncies, velocitats, eficiència, temperatures)
+- El text de la ubicació del widget ja no puja quan s'està carregant — es manté a la línia inferior juntament amb els detalls de càrrega

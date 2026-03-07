@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-03-07
+
 ### Fixed
 - **Units system-wide**: All screens and the home screen widget now correctly respect the unit system configured in TeslamateAPI (metric vs imperial). Distances, speeds, efficiency, and temperatures are now consistently formatted across Drives, Stats, Mileage, Battery, Countries Visited, Regions Visited screens, and the widget range display (#176)
+- **Home screen widget**: Location text (geofence name or address) no longer shifts upward when the car is charging. When idle, it stays right-aligned on the same line as the SoC percentage; when charging, it shares the bottom row with the charging details
 
 ## [1.2.1] - 2026-03-07
 
@@ -420,7 +423,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/vide/matedroid/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/vide/matedroid/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/vide/matedroid/compare/v1.1.0...v1.2.0
 [1.2.0-beta1]: https://github.com/vide/matedroid/compare/v1.1.0...v1.2.0-beta1

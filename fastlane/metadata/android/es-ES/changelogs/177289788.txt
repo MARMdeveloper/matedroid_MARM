@@ -1,0 +1,5 @@
+Correcciones de errores en las unidades y el diseño del widget.
+
+Fixed:
+- Las unidades se respetan ahora en todas las pantallas y el widget (distancias, velocidades, eficiencia, temperaturas)
+- El texto de ubicación del widget ya no sube cuando se está cargando — permanece en la línea inferior junto a los detalles de carga

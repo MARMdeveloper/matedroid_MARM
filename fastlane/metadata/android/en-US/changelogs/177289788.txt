@@ -1,0 +1,5 @@
+Bug fixes for units and widget layout.
+
+Fixed:
+- Units now respected on all screens and the widget (distances, speeds, efficiency, temperatures)
+- Widget location text no longer shifts up when charging — stays on the bottom line alongside charging details
