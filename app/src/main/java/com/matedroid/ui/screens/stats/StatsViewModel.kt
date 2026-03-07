@@ -9,10 +9,13 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
+import com.matedroid.data.api.models.Units
 import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.model.Currency
+import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.GeocodeProgressInfo
 import com.matedroid.data.repository.StatsRepository
+import com.matedroid.data.repository.TeslamateRepository
 import com.matedroid.data.sync.DataSyncWorker
 import com.matedroid.data.sync.SyncLogCollector
 import com.matedroid.data.sync.SyncManager
@@ -44,6 +47,7 @@ data class StatsUiState(
     val geocodeProgress: GeocodeProgressInfo? = null,
     val isGeocoding: Boolean = false,
     val currencySymbol: String = "€",
+    val units: Units? = null,
     val error: String? = null,
     val isUpdating: Boolean = false
 )
@@ -52,6 +56,7 @@ data class StatsUiState(
 class StatsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val statsRepository: StatsRepository,
+    private val teslamateRepository: TeslamateRepository,
     private val syncManager: SyncManager,
     private val syncLogCollector: SyncLogCollector,
     private val settingsDataStore: SettingsDataStore
@@ -86,9 +91,19 @@ class StatsViewModel @Inject constructor(
     fun setCarId(id: Int) {
         carId = id
         loadStats()
+        loadUnits(id)
         startObservingSyncStatus()
         startObservingProgress(id)
         startObservingGeocodeProgress(id)
+    }
+
+    private fun loadUnits(carId: Int) {
+        viewModelScope.launch {
+            when (val result = teslamateRepository.getCarStatus(carId)) {
+                is ApiResult.Success -> _uiState.update { it.copy(units = result.data.units) }
+                is ApiResult.Error -> { /* default to metric */ }
+            }
+        }
     }
 
     /**

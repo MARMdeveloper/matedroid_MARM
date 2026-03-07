@@ -67,6 +67,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
 import com.matedroid.data.api.models.DriveData
 import com.matedroid.data.api.models.Units
+import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.components.BarChartData
 import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalette
@@ -207,7 +208,7 @@ private fun DrivesContent(
         }
 
         item {
-            SummaryCard(summary = summary, palette = palette)
+            SummaryCard(summary = summary, units = units, palette = palette)
         }
 
         // Drives charts (daily/weekly/monthly based on date range) - swipeable
@@ -257,6 +258,7 @@ private fun DrivesContent(
             items(drives, key = { it.id }) { drive ->
                 DriveItem(
                     drive = drive,
+                    units = units,
                     onClick = { onDriveClick(drive.id) }
                 )
             }
@@ -325,7 +327,7 @@ private fun DistanceFilterChips(
 }
 
 @Composable
-private fun SummaryCard(summary: DrivesSummary, palette: CarColorPalette) {
+private fun SummaryCard(summary: DrivesSummary, units: Units?, palette: CarColorPalette) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -357,7 +359,7 @@ private fun SummaryCard(summary: DrivesSummary, palette: CarColorPalette) {
                 SummaryItem(
                     icon = CustomIcons.SteeringWheel,
                     label = stringResource(R.string.total_distance),
-                    value = "%,.1f km".format(summary.totalDistanceKm),
+                    value = UnitFormatter.formatDistance(summary.totalDistanceKm, units),
                     palette = palette,
                     modifier = Modifier.weight(0.8f)
                 )
@@ -378,7 +380,7 @@ private fun SummaryCard(summary: DrivesSummary, palette: CarColorPalette) {
                 SummaryItem(
                     icon = Icons.Default.Speed,
                     label = stringResource(R.string.max_speed),
-                    value = "${summary.maxSpeedKmh} km/h",
+                    value = UnitFormatter.formatSpeed(summary.maxSpeedKmh.toDouble(), units),
                     palette = palette,
                     modifier = Modifier.weight(0.8f)
                 )
@@ -425,6 +427,7 @@ private fun SummaryItem(
 @Composable
 private fun DriveItem(
     drive: DriveData,
+    units: Units?,
     onClick: () -> Unit
 ) {
     Card(
@@ -503,8 +506,8 @@ private fun DriveItem(
                 // Distance
                 DriveStatCard(
                     icon = CustomIcons.SteeringWheel,
-                    value = "%.1f".format(drive.distance ?: 0.0),
-                    unit = "km",
+                    value = "%.1f".format(UnitFormatter.formatDistanceValue(drive.distance ?: 0.0, units)),
+                    unit = UnitFormatter.getDistanceUnit(units),
                     label = stringResource(R.string.distance),
                     modifier = Modifier.weight(1f)
                 )
@@ -526,8 +529,8 @@ private fun DriveItem(
                 // Max Speed
                 DriveStatCard(
                     icon = Icons.Default.Speed,
-                    value = "${drive.speedMax ?: 0}",
-                    unit = "km/h",
+                    value = if (units?.isImperial == true) "${((drive.speedMax ?: 0) * 0.621371).toInt()}" else "${drive.speedMax ?: 0}",
+                    unit = UnitFormatter.getSpeedUnit(units),
                     label = stringResource(R.string.max_speed),
                     modifier = Modifier.weight(1f)
                 )

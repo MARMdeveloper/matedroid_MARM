@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Units system-wide**: All screens and the home screen widget now correctly respect the unit system configured in TeslamateAPI (metric vs imperial). Distances, speeds, efficiency, and temperatures are now consistently formatted across Drives, Stats, Mileage, Battery, Countries Visited, Regions Visited screens, and the widget range display (#176)
+
 ## [1.2.1] - 2026-03-07
 
 ### Added

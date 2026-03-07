@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Info
+import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.icons.CustomIcons
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
@@ -142,6 +143,7 @@ fun BatteryScreen(
                     if (stats != null) {
                         BatteryHealthContent(
                             stats = stats,
+                            units = uiState.units,
                             palette = palette,
                             onCardClick = { viewModel.showDetail() }
                         )
@@ -171,6 +173,7 @@ fun BatteryScreen(
             if (stats != null) {
                 BatteryDetailScreen(
                     stats = stats,
+                    units = uiState.units,
                     onClose = { viewModel.hideDetail() }
                 )
             }
@@ -181,6 +184,7 @@ fun BatteryScreen(
 @Composable
 private fun BatteryHealthContent(
     stats: BatteryStats,
+    units: com.matedroid.data.api.models.Units?,
     palette: CarColorPalette,
     onCardClick: () -> Unit
 ) {
@@ -192,18 +196,18 @@ private fun BatteryHealthContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Capacity Section
-        CapacityCard(stats = stats, palette = palette, onClick = onCardClick)
+        CapacityCard(stats = stats, units = units, palette = palette, onClick = onCardClick)
 
         // Degradation Section
         DegradationCard(stats = stats, palette = palette, onClick = onCardClick)
 
         // Range Section
-        RangeCard(stats = stats, palette = palette, onClick = onCardClick)
+        RangeCard(stats = stats, units = units, palette = palette, onClick = onCardClick)
     }
 }
 
 @Composable
-private fun CapacityCard(stats: BatteryStats, palette: CarColorPalette, onClick: () -> Unit) {
+private fun CapacityCard(stats: BatteryStats, units: com.matedroid.data.api.models.Units?, palette: CarColorPalette, onClick: () -> Unit) {
     var showTooltip by remember { mutableStateOf(false) }
     val capacityTitle = stringResource(R.string.battery_capacity_title)
     val capacityMessage = stringResource(R.string.battery_capacity_message)
@@ -300,7 +304,7 @@ private fun CapacityCard(stats: BatteryStats, palette: CarColorPalette, onClick:
                 Spacer(modifier = Modifier.width(8.dp))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "%.1f Wh/km".format(stats.ratedEfficiency),
+                        text = UnitFormatter.formatEfficiency(stats.ratedEfficiency, units),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = palette.onSurface
@@ -515,7 +519,7 @@ private fun LossValueCard(
 }
 
 @Composable
-private fun RangeCard(stats: BatteryStats, palette: CarColorPalette, onClick: () -> Unit) {
+private fun RangeCard(stats: BatteryStats, units: com.matedroid.data.api.models.Units?, palette: CarColorPalette, onClick: () -> Unit) {
     val rangeLabel = stringResource(R.string.range)
     val maxRangeNewLabel = stringResource(R.string.max_range_new)
     val maxRangeNowLabel = stringResource(R.string.max_range_now)
@@ -548,13 +552,13 @@ private fun RangeCard(stats: BatteryStats, palette: CarColorPalette, onClick: ()
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 RangeValueCard(
-                    value = "%,.1f km".format(stats.maxRangeNew),
+                    value = UnitFormatter.formatDistance(stats.maxRangeNew, units),
                     label = maxRangeNewLabel,
                     iconColor = CapacityGreen,
                     modifier = Modifier.weight(1f)
                 )
                 RangeValueCard(
-                    value = "%,.1f km".format(stats.maxRangeNow),
+                    value = UnitFormatter.formatDistance(stats.maxRangeNow, units),
                     label = maxRangeNowLabel,
                     iconColor = CapacityYellow,
                     modifier = Modifier.weight(1f)
@@ -578,7 +582,7 @@ private fun RangeCard(stats: BatteryStats, palette: CarColorPalette, onClick: ()
                 Spacer(modifier = Modifier.width(8.dp))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "%,.1f km".format(stats.rangeLoss),
+                        text = UnitFormatter.formatDistance(stats.rangeLoss, units),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = palette.onSurface
@@ -639,6 +643,7 @@ private fun RangeValueCard(
 @Composable
 private fun BatteryDetailScreen(
     stats: BatteryStats,
+    units: com.matedroid.data.api.models.Units?,
     onClose: () -> Unit
 ) {
     Scaffold(
@@ -671,10 +676,10 @@ private fun BatteryDetailScreen(
             BatteryStatusCard(stats = stats)
 
             // Range Information Section
-            RangeInformationCard(stats = stats)
+            RangeInformationCard(stats = stats, units = units)
 
             // Estimated Total Capacity Section
-            EstimatedCapacityCard(stats = stats)
+            EstimatedCapacityCard(stats = stats, units = units)
         }
     }
 }
@@ -781,7 +786,7 @@ private fun BatteryStatusCard(stats: BatteryStats) {
 }
 
 @Composable
-private fun RangeInformationCard(stats: BatteryStats) {
+private fun RangeInformationCard(stats: BatteryStats, units: com.matedroid.data.api.models.Units?) {
     var showTooltip by remember { mutableStateOf(false) }
     val rangeInfoTitle = stringResource(R.string.range_information_title)
     val rangeInfoMessage = stringResource(R.string.range_information_message)
@@ -839,7 +844,7 @@ private fun RangeInformationCard(stats: BatteryStats) {
             RangeInfoRow(
                 title = estimatedRangeLabel,
                 subtitle = estimatedRangeSubtitle,
-                value = "%,.1f km".format(stats.estimatedRange),
+                value = UnitFormatter.formatDistance(stats.estimatedRange, units),
                 valueColor = RangeBlue
             )
 
@@ -848,7 +853,7 @@ private fun RangeInformationCard(stats: BatteryStats) {
             RangeInfoRow(
                 title = ratedRangeLabel,
                 subtitle = ratedRangeSubtitle,
-                value = "%,.1f km".format(stats.ratedRange),
+                value = UnitFormatter.formatDistance(stats.ratedRange, units),
                 valueColor = RangeBlue
             )
 
@@ -857,7 +862,7 @@ private fun RangeInformationCard(stats: BatteryStats) {
             RangeInfoRow(
                 title = idealRangeLabel,
                 subtitle = idealRangeSubtitle,
-                value = "%,.1f km".format(stats.idealRange),
+                value = UnitFormatter.formatDistance(stats.idealRange, units),
                 valueColor = RangeBlue
             )
         }
@@ -914,7 +919,7 @@ private fun RangeInfoRow(
 }
 
 @Composable
-private fun EstimatedCapacityCard(stats: BatteryStats) {
+private fun EstimatedCapacityCard(stats: BatteryStats, units: com.matedroid.data.api.models.Units?) {
     var showTooltip by remember { mutableStateOf(false) }
     val estimatedCapacityTitle = stringResource(R.string.estimated_total_capacity_title)
     val estimatedCapacityMessage = stringResource(R.string.estimated_total_capacity_message, stats.batteryLevel)
@@ -991,7 +996,7 @@ private fun EstimatedCapacityCard(stats: BatteryStats) {
                 }
 
                 Text(
-                    text = "%,.1f km".format(stats.rangeAt100),
+                    text = UnitFormatter.formatDistance(stats.rangeAt100, units),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = StatusSuccess

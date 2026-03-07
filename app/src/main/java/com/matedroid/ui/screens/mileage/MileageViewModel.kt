@@ -3,6 +3,7 @@ package com.matedroid.ui.screens.mileage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.DriveData
+import com.matedroid.data.api.models.Units
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,6 +50,7 @@ data class MileageUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val error: String? = null,
+    val units: Units? = null,
     val allDrives: List<DriveData> = emptyList(),
 
     // Lifetime totals (year overview)
@@ -87,7 +89,17 @@ class MileageViewModel @Inject constructor(
     fun setCarId(id: Int) {
         if (carId != id) {
             carId = id
+            loadUnits(id)
             loadAllDrives()
+        }
+    }
+
+    private fun loadUnits(carId: Int) {
+        viewModelScope.launch {
+            when (val result = repository.getCarStatus(carId)) {
+                is ApiResult.Success -> _uiState.update { it.copy(units = result.data.units) }
+                is ApiResult.Error -> { /* default to metric */ }
+            }
         }
     }
 

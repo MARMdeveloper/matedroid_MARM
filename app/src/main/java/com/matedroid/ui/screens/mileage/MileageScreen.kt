@@ -63,6 +63,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
+import com.matedroid.data.api.models.Units
+import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.components.BarChartData
 import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalette
@@ -188,6 +190,7 @@ fun MileageScreen(
                     dailyData = uiState.dailyData,
                     dailyChartData = viewModel.getDailyChartData(),
                     palette = palette,
+                    units = uiState.units,
                     onClose = { viewModel.clearSelectedMonth() },
                     onDayClick = { viewModel.selectDay(it) }
                 )
@@ -204,6 +207,7 @@ fun MileageScreen(
                 DayDetailScreen(
                     dayData = dayData,
                     palette = palette,
+                    units = uiState.units,
                     onClose = { viewModel.clearSelectedDay() },
                     onDriveClick = onNavigateToDriveDetail
                 )
@@ -237,14 +241,15 @@ private fun YearOverviewContent(
                 avgLabel = stringResource(R.string.mileage_avg_year),
                 driveCount = uiState.totalLifetimeDriveCount,
                 palette = palette,
-                firstDriveDate = uiState.firstDriveDate
+                firstDriveDate = uiState.firstDriveDate,
+                units = uiState.units
             )
         }
 
         // Yearly chart
         if (chartData.isNotEmpty()) {
             item {
-                YearlyChartCard(chartData = chartData, palette = palette)
+                YearlyChartCard(chartData = chartData, palette = palette, units = uiState.units)
             }
         }
 
@@ -252,6 +257,7 @@ private fun YearOverviewContent(
         items(uiState.yearlyData) { yearData ->
             YearRow(
                 yearData = yearData,
+                units = uiState.units,
                 onClick = { onYearClick(yearData.year) }
             )
         }
@@ -277,7 +283,7 @@ private fun YearOverviewContent(
 }
 
 @Composable
-private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColorPalette) {
+private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColorPalette, units: Units?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -307,7 +313,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
                 BarChartData(
                     label = year.toString(),
                     value = distance,
-                    displayValue = "%,.1f km".format(distance)
+                    displayValue = UnitFormatter.formatDistance(distance, units)
                 )
             }
 
@@ -316,7 +322,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                valueFormatter = { "%,.1f km".format(it) },
+                valueFormatter = { UnitFormatter.formatDistance(it, units) },
                 yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
@@ -326,6 +332,7 @@ private fun YearlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColo
 @Composable
 private fun YearRow(
     yearData: YearlyMileage,
+    units: Units?,
     onClick: () -> Unit
 ) {
     Card(
@@ -362,7 +369,7 @@ private fun YearRow(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "%,.0f km".format(yearData.totalDistance),
+                        text = UnitFormatter.formatDistance(yearData.totalDistance, units, 0),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -435,19 +442,21 @@ private fun YearDetailScreen(
                     avgDistance = uiState.avgMonthlyDistance,
                     avgLabel = stringResource(R.string.mileage_avg_month),
                     driveCount = uiState.yearDriveCount,
-                    palette = palette
+                    palette = palette,
+                    units = uiState.units
                 )
             }
 
             // Monthly chart
             item {
-                MonthlyChartCard(chartData = chartData, palette = palette)
+                MonthlyChartCard(chartData = chartData, palette = palette, units = uiState.units)
             }
 
             // Monthly list
             items(uiState.monthlyData) { monthData ->
                 MonthRow(
                     monthData = monthData,
+                    units = uiState.units,
                     onClick = { onMonthClick(monthData.yearMonth) }
                 )
             }
@@ -474,7 +483,7 @@ private fun YearDetailScreen(
 }
 
 @Composable
-private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColorPalette) {
+private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarColorPalette, units: Units?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -504,7 +513,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
                 BarChartData(
                     label = month.toString(),
                     value = distance,
-                    displayValue = "%,.1f km".format(distance)
+                    displayValue = UnitFormatter.formatDistance(distance, units)
                 )
             }
 
@@ -513,7 +522,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                valueFormatter = { "%,.1f km".format(it) },
+                valueFormatter = { UnitFormatter.formatDistance(it, units) },
                 yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
@@ -523,6 +532,7 @@ private fun MonthlyChartCard(chartData: List<Pair<Int, Double>>, palette: CarCol
 @Composable
 private fun MonthRow(
     monthData: MonthlyMileage,
+    units: Units?,
     onClick: () -> Unit
 ) {
     Card(
@@ -566,7 +576,7 @@ private fun MonthRow(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "%,.0f km".format(monthData.totalDistance),
+                        text = UnitFormatter.formatDistance(monthData.totalDistance, units, 0),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -608,6 +618,7 @@ private fun MonthDetailScreen(
     dailyData: List<DailyMileage>,
     dailyChartData: List<Pair<Int, Double>>,
     palette: CarColorPalette,
+    units: Units?,
     onClose: () -> Unit,
     onDayClick: (LocalDate) -> Unit
 ) {
@@ -640,7 +651,8 @@ private fun MonthDetailScreen(
                 MonthSummaryCard(
                     yearMonth = yearMonth,
                     monthData = monthData,
-                    palette = palette
+                    palette = palette,
+                    units = units
                 )
             }
 
@@ -650,7 +662,8 @@ private fun MonthDetailScreen(
                     DailyChartCard(
                         chartData = dailyChartData,
                         daysWithData = dailyData.size,
-                        palette = palette
+                        palette = palette,
+                        units = units
                     )
                 }
             }
@@ -669,6 +682,7 @@ private fun MonthDetailScreen(
                 items(dailyData) { dayData ->
                     DayTripRow(
                         dayData = dayData,
+                        units = units,
                         onClick = { onDayClick(dayData.date) }
                     )
                 }
@@ -681,7 +695,8 @@ private fun MonthDetailScreen(
 private fun MonthSummaryCard(
     yearMonth: YearMonth,
     monthData: MonthlyMileage?,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    units: Units?
 ) {
     val totalDistance = monthData?.totalDistance ?: 0.0
     val driveCount = monthData?.driveCount ?: 0
@@ -741,13 +756,13 @@ private fun MonthSummaryCard(
             ) {
                 StatChip(
                     icon = CustomIcons.Road,
-                    value = "%,.1f km".format(totalDistance),
+                    value = UnitFormatter.formatDistance(totalDistance, units),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     prefix = "Ø",
                     icon = CustomIcons.Road,
-                    value = "%,.1f km".format(avgDistance),
+                    value = UnitFormatter.formatDistance(avgDistance, units),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -785,7 +800,8 @@ private fun SummaryRow(
     avgLabel: String,
     driveCount: Int,
     palette: CarColorPalette? = null,
-    firstDriveDate: LocalDate? = null
+    firstDriveDate: LocalDate? = null,
+    units: Units? = null
 ) {
     val containerColor = palette?.surface ?: MaterialTheme.colorScheme.surfaceVariant
     val iconColor = palette?.accent ?: ChartBlue
@@ -831,7 +847,7 @@ private fun SummaryRow(
         ) {
             SummaryItem(
                 icon = Icons.Outlined.AllInclusive,
-                value = "%,.0f km".format(totalDistance),
+                value = UnitFormatter.formatDistance(totalDistance, units, 0),
                 label = stringResource(R.string.mileage_total),
                 iconColor = iconColor,
                 valueColor = valueColor,
@@ -839,7 +855,7 @@ private fun SummaryRow(
             )
             SummaryItemWithInfo(
                 icon = Icons.Filled.Speed,
-                value = "%,.0f km".format(avgDistance),
+                value = UnitFormatter.formatDistance(avgDistance, units, 0),
                 label = avgLabel,
                 iconColor = iconColor,
                 valueColor = valueColor,
@@ -996,7 +1012,8 @@ private fun StatChip(
 private fun DailyChartCard(
     chartData: List<Pair<Int, Double>>,
     daysWithData: Int,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    units: Units?
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1038,7 +1055,7 @@ private fun DailyChartCard(
                 BarChartData(
                     label = day.toString(),
                     value = distance,
-                    displayValue = "%,.1f km".format(distance)
+                    displayValue = UnitFormatter.formatDistance(distance, units)
                 )
             }
 
@@ -1047,7 +1064,7 @@ private fun DailyChartCard(
                 modifier = Modifier.fillMaxWidth(),
                 barColor = palette.accent,
                 labelColor = palette.onSurfaceVariant,
-                valueFormatter = { "%,.1f km".format(it) },
+                valueFormatter = { UnitFormatter.formatDistance(it, units) },
                 yAxisFormatter = { if (it >= 1000) "%.0fk".format(it / 1000) else "%.0f".format(it) }
             )
         }
@@ -1057,6 +1074,7 @@ private fun DailyChartCard(
 @Composable
 private fun DayTripRow(
     dayData: DailyMileage,
+    units: Units?,
     onClick: () -> Unit
 ) {
     val dayOfWeek = dayData.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
@@ -1111,7 +1129,7 @@ private fun DayTripRow(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "%,.1f km".format(dayData.totalDistance),
+                        text = UnitFormatter.formatDistance(dayData.totalDistance, units),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -1180,6 +1198,7 @@ private fun DayTripRow(
 private fun DayDetailScreen(
     dayData: DailyMileage,
     palette: CarColorPalette,
+    units: Units?,
     onClose: () -> Unit,
     onDriveClick: (Int) -> Unit
 ) {
@@ -1217,7 +1236,8 @@ private fun DayDetailScreen(
                 DaySummaryCard(
                     dayData = dayData,
                     dateStr = dateStr,
-                    palette = palette
+                    palette = palette,
+                    units = units
                 )
             }
 
@@ -1235,6 +1255,7 @@ private fun DayDetailScreen(
                 items(dayData.drives) { drive ->
                     DriveRow(
                         drive = drive,
+                        units = units,
                         onClick = { onDriveClick(drive.driveId) }
                     )
                 }
@@ -1247,7 +1268,8 @@ private fun DayDetailScreen(
 private fun DaySummaryCard(
     dayData: DailyMileage,
     dateStr: String,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    units: Units?
 ) {
     val avgDistance = if (dayData.driveCount > 0) dayData.totalDistance / dayData.driveCount else 0.0
     val avgEnergy = if (dayData.driveCount > 0) dayData.totalEnergy / dayData.driveCount else 0.0
@@ -1298,13 +1320,13 @@ private fun DaySummaryCard(
             ) {
                 StatChip(
                     icon = CustomIcons.Road,
-                    value = "%,.1f km".format(dayData.totalDistance),
+                    value = UnitFormatter.formatDistance(dayData.totalDistance, units),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     prefix = "Ø",
                     icon = CustomIcons.Road,
-                    value = "%,.1f km".format(avgDistance),
+                    value = UnitFormatter.formatDistance(avgDistance, units),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1334,6 +1356,7 @@ private fun DaySummaryCard(
 @Composable
 private fun DriveRow(
     drive: com.matedroid.data.api.models.DriveData,
+    units: Units?,
     onClick: () -> Unit
 ) {
     val startTime = drive.startDate?.let { parseTime(it) } ?: ""
@@ -1388,7 +1411,7 @@ private fun DriveRow(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "%,.1f km".format(distance),
+                        text = UnitFormatter.formatDistance(distance, units),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

@@ -84,6 +84,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
+import com.matedroid.data.api.models.Units
 import com.matedroid.data.local.entity.DriveSummary
 import com.matedroid.data.repository.GeocodeProgressInfo
 import com.matedroid.domain.model.CarStats
@@ -91,6 +92,7 @@ import com.matedroid.domain.model.DeepStats
 import com.matedroid.domain.model.MaxDistanceBetweenChargesRecord
 import com.matedroid.domain.model.QuickStats
 import com.matedroid.domain.model.SyncPhase
+import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.domain.model.YearFilter
 import com.matedroid.ui.icons.CustomIcons
 import com.matedroid.ui.theme.CarColorPalette
@@ -170,6 +172,7 @@ fun StatsScreen(
             drives = rangeRecordDrives,
             isLoading = isLoadingRangeRecordDrives,
             palette = palette,
+            units = uiState.units,
             onDriveClick = { driveId ->
                 rangeRecordToShow = null
                 onNavigateToDriveDetail(driveId)
@@ -247,6 +250,7 @@ fun StatsScreen(
                     isGeocoding = uiState.isGeocoding,
                     palette = palette,
                     currencySymbol = uiState.currencySymbol,
+                    units = uiState.units,
                     recordsSelectedCategory = recordsSelectedCategory,
                     onRecordsCategoryChanged = { recordsSelectedCategory = it },
                     onYearFilterSelected = { viewModel.setYearFilter(it) },
@@ -355,6 +359,7 @@ private fun StatsContent(
     isGeocoding: Boolean,
     palette: CarColorPalette,
     currencySymbol: String,
+    units: Units?,
     recordsSelectedCategory: String,
     onRecordsCategoryChanged: (String) -> Unit,
     onYearFilterSelected: (YearFilter) -> Unit,
@@ -411,6 +416,7 @@ private fun StatsContent(
                     deepStats = stats.deepStats,
                     palette = palette,
                     currencySymbol = currencySymbol,
+                    units = units,
                     selectedCategory = recordsSelectedCategory,
                     onCategoryChanged = onRecordsCategoryChanged,
                     onDriveClick = onNavigateToDriveDetail,
@@ -430,7 +436,8 @@ private fun StatsContent(
                 QuickStatsDrivesCard(
                     quickStats = stats.quickStats,
                     palette = palette,
-                    currencySymbol = currencySymbol
+                    currencySymbol = currencySymbol,
+                    units = units
                 )
             }
 
@@ -454,7 +461,7 @@ private fun StatsContent(
             stats.deepStats?.let { deepStats ->
                 // Temperature Stats
                 item {
-                    TemperatureStatsCard(deepStats = deepStats, palette = palette)
+                    TemperatureStatsCard(deepStats = deepStats, palette = palette, units = units)
                 }
             }
         }
@@ -624,7 +631,7 @@ private fun GeocodeProgressCard(
 // ======== Quick Stats Cards ========
 
 @Composable
-private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalette, currencySymbol: String) {
+private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalette, currencySymbol: String, units: Units?) {
     // Calculate cost per 100 km: (totalCost / totalDistanceKm) * 100
     val costPer100Km = if (quickStats.totalCost != null && quickStats.totalCost > 0 && quickStats.totalDistanceKm > 0) {
         (quickStats.totalCost / quickStats.totalDistanceKm) * 100
@@ -653,7 +660,7 @@ private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalett
         Row(modifier = Modifier.fillMaxWidth()) {
             StatItem(
                 label = stringResource(R.string.total_distance),
-                value = "%,.0f km".format(quickStats.totalDistanceKm),
+                value = UnitFormatter.formatDistance(quickStats.totalDistanceKm, units, 0),
                 modifier = Modifier.weight(1f)
             )
             StatItem(
@@ -666,11 +673,11 @@ private fun QuickStatsDrivesCard(quickStats: QuickStats, palette: CarColorPalett
         Row(modifier = Modifier.fillMaxWidth()) {
             StatItem(
                 label = stringResource(R.string.stats_avg_efficiency),
-                value = "%.0f Wh/km".format(quickStats.avgEfficiencyWhKm),
+                value = UnitFormatter.formatEfficiency(quickStats.avgEfficiencyWhKm, units, 0),
                 modifier = Modifier.weight(1f)
             )
             StatItem(
-                label = stringResource(R.string.stats_cost_per_distance, "km"),
+                label = stringResource(R.string.stats_cost_per_distance, UnitFormatter.getDistanceUnit(units)),
                 value = costPer100Km?.let { "%.2f %s".format(it, currencySymbol) } ?: "N/A",
                 modifier = Modifier.weight(1f)
             )
@@ -746,6 +753,7 @@ private fun RecordsCard(
     deepStats: DeepStats?,
     palette: CarColorPalette,
     currencySymbol: String,
+    units: Units?,
     selectedCategory: String,
     onCategoryChanged: (String) -> Unit,
     onDriveClick: (Int) -> Unit,
@@ -788,13 +796,13 @@ private fun RecordsCard(
     // Category 1: Drives
     val driveRecords = mutableListOf<RecordData>()
     quickStats.longestDrive?.let { drive ->
-        driveRecords.add(RecordData("📏", labelLongestDrive, "%,.1f km".format(drive.distance), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
+        driveRecords.add(RecordData("📏", labelLongestDrive, UnitFormatter.formatDistance(drive.distance, units), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
     }
     quickStats.fastestDrive?.let { drive ->
-        driveRecords.add(RecordData("🏎️", labelTopSpeed, "${drive.speedMax} km/h", drive.startDate.take(10)) { onDriveClick(drive.driveId) })
+        driveRecords.add(RecordData("🏎️", labelTopSpeed, UnitFormatter.formatSpeed(drive.speedMax.toDouble(), units), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
     }
     quickStats.mostEfficientDrive?.let { drive ->
-        driveRecords.add(RecordData("🌱", labelMostEfficient, "%.0f Wh/km".format(drive.efficiency ?: 0.0), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
+        driveRecords.add(RecordData("🌱", labelMostEfficient, UnitFormatter.formatEfficiency(drive.efficiency ?: 0.0, units, 0), drive.startDate.take(10)) { onDriveClick(drive.driveId) })
     }
     quickStats.longestDrivingStreak?.let { streak ->
         driveRecords.add(RecordData("🔥", labelLongestStreak, stringResource(R.string.format_days_count, streak.streakDays), "${streak.startDate} → ${streak.endDate}", null))
@@ -842,22 +850,22 @@ private fun RecordsCard(
         weatherRecords.add(RecordData("⛰️", labelMostClimbing, record.elevationGainM?.let { "+%,d m".format(it) } ?: "N/A", record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
     }
     deepStats?.hottestDrive?.let { record ->
-        weatherRecords.add(RecordData("🌡️", labelHottestDrive, "%.1f°C".format(record.tempC), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
+        weatherRecords.add(RecordData("🌡️", labelHottestDrive, UnitFormatter.formatTemperature(record.tempC, units, 1), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
     }
     deepStats?.coldestDrive?.let { record ->
-        weatherRecords.add(RecordData("🧊", labelColdestDrive, "%.1f°C".format(record.tempC), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
+        weatherRecords.add(RecordData("🧊", labelColdestDrive, UnitFormatter.formatTemperature(record.tempC, units, 1), record.date?.take(10) ?: "") { onDriveClick(record.driveId) })
     }
     deepStats?.hottestCharge?.let { record ->
-        weatherRecords.add(RecordData("☀️", labelHottestCharge, "%.1f°C".format(record.tempC), record.date?.take(10) ?: "") { onChargeClick(record.chargeId) })
+        weatherRecords.add(RecordData("☀️", labelHottestCharge, UnitFormatter.formatTemperature(record.tempC, units, 1), record.date?.take(10) ?: "") { onChargeClick(record.chargeId) })
     }
     deepStats?.coldestCharge?.let { record ->
-        weatherRecords.add(RecordData("❄️", labelColdestCharge, "%.1f°C".format(record.tempC), record.date?.take(10) ?: "") { onChargeClick(record.chargeId) })
+        weatherRecords.add(RecordData("❄️", labelColdestCharge, UnitFormatter.formatTemperature(record.tempC, units, 1), record.date?.take(10) ?: "") { onChargeClick(record.chargeId) })
     }
 
     // Category 4: Miscelaneous
     val miscRecords = mutableListOf<RecordData>()
     quickStats.maxDistanceBetweenCharges?.let { record ->
-        miscRecords.add(RecordData("🔋", labelLongestRange, "%,.1f km".format(record.distance), "${record.fromDate.take(10)} → ${record.toDate.take(10)}") { onRangeRecordClick(record) })
+        miscRecords.add(RecordData("🔋", labelLongestRange, UnitFormatter.formatDistance(record.distance, units), "${record.fromDate.take(10)} → ${record.toDate.take(10)}") { onRangeRecordClick(record) })
     }
     quickStats.longestGapWithoutCharging?.let { gap ->
         miscRecords.add(RecordData("⏰", labelNoCharging, stringResource(R.string.format_days, gap.gapDays), "${gap.fromDate.take(10)} → ${gap.toDate.take(10)}") { onGapRecordClick(gap.gapDays, gap.fromDate, gap.toDate, gapTypeCharging) })
@@ -866,7 +874,7 @@ private fun RecordsCard(
         miscRecords.add(RecordData("🅿️", labelNoDriving, stringResource(R.string.format_days, gap.gapDays), "${gap.fromDate.take(10)} → ${gap.toDate.take(10)}") { onGapRecordClick(gap.gapDays, gap.fromDate, gap.toDate, gapTypeDriving) })
     }
     quickStats.mostDistanceDay?.let { day ->
-        miscRecords.add(RecordData("🛣️", labelMostDistanceDay, "%,.1f km".format(day.totalDistance), day.day) { onDayClick(day.day) })
+        miscRecords.add(RecordData("🛣️", labelMostDistanceDay, UnitFormatter.formatDistance(day.totalDistance, units), day.day) { onDayClick(day.day) })
     }
 
     // Build list of all categories with their records
@@ -1082,7 +1090,7 @@ private fun RecordCategoryPage(
 // Note: ElevationStatsCard removed - highest point now shown in Records section
 
 @Composable
-private fun TemperatureStatsCard(deepStats: DeepStats, palette: CarColorPalette) {
+private fun TemperatureStatsCard(deepStats: DeepStats, palette: CarColorPalette, units: Units?) {
     if (deepStats.maxOutsideTempDrivingC == null && deepStats.minOutsideTempDrivingC == null) {
         return // No temperature data
     }
@@ -1102,12 +1110,12 @@ private fun TemperatureStatsCard(deepStats: DeepStats, palette: CarColorPalette)
         Row(modifier = Modifier.fillMaxWidth()) {
             StatItem(
                 label = stringResource(R.string.stats_hottest),
-                value = deepStats.maxOutsideTempDrivingC?.let { "%.1f°C".format(it) } ?: "N/A",
+                value = deepStats.maxOutsideTempDrivingC?.let { UnitFormatter.formatTemperature(it, units, 1) } ?: "N/A",
                 modifier = Modifier.weight(1f)
             )
             StatItem(
                 label = stringResource(R.string.stats_coldest),
-                value = deepStats.minOutsideTempDrivingC?.let { "%.1f°C".format(it) } ?: "N/A",
+                value = deepStats.minOutsideTempDrivingC?.let { UnitFormatter.formatTemperature(it, units, 1) } ?: "N/A",
                 modifier = Modifier.weight(1f)
             )
         }
@@ -1124,12 +1132,12 @@ private fun TemperatureStatsCard(deepStats: DeepStats, palette: CarColorPalette)
             Row(modifier = Modifier.fillMaxWidth()) {
                 StatItem(
                     label = stringResource(R.string.stats_hottest),
-                    value = deepStats.maxCabinTempC?.let { "%.1f°C".format(it) } ?: "N/A",
+                    value = deepStats.maxCabinTempC?.let { UnitFormatter.formatTemperature(it, units, 1) } ?: "N/A",
                     modifier = Modifier.weight(1f)
                 )
                 StatItem(
                     label = stringResource(R.string.stats_coldest),
-                    value = deepStats.minCabinTempC?.let { "%.1f°C".format(it) } ?: "N/A",
+                    value = deepStats.minCabinTempC?.let { UnitFormatter.formatTemperature(it, units, 1) } ?: "N/A",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1575,6 +1583,7 @@ private fun RangeRecordDialog(
     drives: List<DriveSummary>,
     isLoading: Boolean,
     palette: CarColorPalette,
+    units: Units?,
     onDriveClick: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -1609,7 +1618,7 @@ private fun RangeRecordDialog(
                                 color = palette.onSurfaceVariant
                             )
                             Text(
-                                text = "%,.1f km".format(record.distance),
+                                text = UnitFormatter.formatDistance(record.distance, units),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = palette.onSurface
@@ -1693,6 +1702,7 @@ private fun RangeRecordDialog(
                                 DriveListItem(
                                     drive = drive,
                                     palette = palette,
+                                    units = units,
                                     onClick = { onDriveClick(drive.driveId) }
                                 )
                             }
@@ -1716,6 +1726,7 @@ private fun RangeRecordDialog(
 private fun DriveListItem(
     drive: DriveSummary,
     palette: CarColorPalette,
+    units: Units?,
     onClick: () -> Unit
 ) {
     Card(
@@ -1754,7 +1765,7 @@ private fun DriveListItem(
             Spacer(modifier = Modifier.width(8.dp))
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "%,.1f km".format(drive.distance),
+                    text = UnitFormatter.formatDistance(drive.distance, units),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = palette.onSurface

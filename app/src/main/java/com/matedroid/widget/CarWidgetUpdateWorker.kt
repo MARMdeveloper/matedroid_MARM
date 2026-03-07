@@ -149,8 +149,8 @@ class CarWidgetUpdateWorker @AssistedInject constructor(
 
                 val car = cars.find { it.carId == carId } ?: continue
                 val statusResult = teslamateRepository.getCarStatus(carId)
-                val status = when (statusResult) {
-                    is ApiResult.Success -> statusResult.data.status
+                val (status, isImperial) = when (statusResult) {
+                    is ApiResult.Success -> statusResult.data.status to (statusResult.data.units.isImperial)
                     is ApiResult.Error -> {
                         Log.e(TAG, "Failed to fetch status for car $carId: ${statusResult.message}")
                         continue
@@ -162,7 +162,8 @@ class CarWidgetUpdateWorker @AssistedInject constructor(
                 val displayData = CarWidgetDisplayData.from(car, status).copy(
                     sentryEventCount = sentryEventCount,
                     imageOverride = imageOverrides[carId],
-                    locationText = locationText
+                    locationText = locationText,
+                    isImperial = isImperial
                 )
                 CarWidget().updateWidget(appContext, glanceId, displayData)
                 Log.d(TAG, "Updated widget for car $carId (${car.displayName})")

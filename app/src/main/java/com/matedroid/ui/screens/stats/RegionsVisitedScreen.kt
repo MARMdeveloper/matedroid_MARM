@@ -73,10 +73,12 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
 import com.matedroid.data.repository.CountryBoundary
+import com.matedroid.data.api.models.Units
 import com.matedroid.domain.model.ChargeLocation
 import com.matedroid.domain.model.CountryRecord
 import com.matedroid.domain.model.DriveLocation
 import com.matedroid.domain.model.RegionRecord
+import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.domain.model.YearFilter
 import com.matedroid.ui.icons.CustomIcons
 import com.matedroid.ui.theme.CarColorPalette
@@ -223,7 +225,8 @@ fun RegionsVisitedScreen(
                         onMapViewModeChange = { viewModel.setMapViewMode(it) },
                         onChargeTypeFilterToggle = { viewModel.toggleChargeTypeFilter(it) },
                         onMapYearChange = { viewModel.setMapYearFilter(it) },
-                        palette = palette
+                        palette = palette,
+                        units = uiState.units
                     )
                 }
             }
@@ -247,7 +250,8 @@ private fun RegionsContent(
     onMapViewModeChange: (MapViewMode) -> Unit,
     onChargeTypeFilterToggle: (ChargeTypeFilter) -> Unit,
     onMapYearChange: (Int?) -> Unit,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    units: Units?
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -259,7 +263,8 @@ private fun RegionsContent(
                 CountrySummaryCard(
                     country = country,
                     localizedName = getLocalizedCountryName(country.countryCode),
-                    palette = palette
+                    palette = palette,
+                    units = units
                 )
             }
         }
@@ -287,14 +292,15 @@ private fun RegionsContent(
                     chargeTypeFilter = chargeTypeFilter,
                     onMapViewModeChange = onMapViewModeChange,
                     onChargeTypeFilterToggle = onChargeTypeFilterToggle,
-                    palette = palette
+                    palette = palette,
+                    units = units
                 )
             }
         }
 
         // Region cards
         items(regions, key = { it.regionName }) { region ->
-            RegionCard(region = region, palette = palette)
+            RegionCard(region = region, palette = palette, units = units)
         }
     }
 }
@@ -303,7 +309,8 @@ private fun RegionsContent(
 private fun CountrySummaryCard(
     country: CountryRecord,
     localizedName: String,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    units: Units?
 ) {
     val cardShape = RoundedCornerShape(20.dp)
 
@@ -391,7 +398,7 @@ private fun CountrySummaryCard(
             ) {
                 StatChip(
                     icon = Icons.Default.Route,
-                    value = "%,.0f km".format(country.totalDistanceKm),
+                    value = UnitFormatter.formatDistance(country.totalDistanceKm, units, 0),
                     palette = palette,
                     modifier = Modifier.weight(1f)
                 )
@@ -477,7 +484,8 @@ private fun CountryMapCard(
     chargeTypeFilter: ChargeTypeFilter,
     onMapViewModeChange: (MapViewMode) -> Unit,
     onChargeTypeFilterToggle: (ChargeTypeFilter) -> Unit,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    units: Units? = null
 ) {
     val cardShape = RoundedCornerShape(20.dp)
     val chargeCount = chargeLocations.size
@@ -617,7 +625,7 @@ private fun CountryMapCard(
                                         position = geoPoint
                                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
                                         title = drive.address
-                                        snippet = "%,.1f km".format(drive.distanceKm)
+                                        snippet = UnitFormatter.formatDistance(drive.distanceKm, units)
 
                                         val dotDrawable = GradientDrawable().apply {
                                             shape = GradientDrawable.OVAL
@@ -948,7 +956,8 @@ private fun createCountryHighlightOverlays(boundary: CountryBoundary, accentColo
 @Composable
 private fun RegionCard(
     region: RegionRecord,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    units: Units?
 ) {
     val cardShape = RoundedCornerShape(16.dp)
 
@@ -1010,7 +1019,7 @@ private fun RegionCard(
             ) {
                 StatChip(
                     icon = Icons.Default.Route,
-                    value = "%,.0f km".format(region.totalDistanceKm),
+                    value = UnitFormatter.formatDistance(region.totalDistanceKm, units, 0),
                     palette = palette,
                     modifier = Modifier.weight(1f)
                 )

@@ -45,6 +45,8 @@ data class CarWidgetDisplayData(
     val imageOverride: CarImageOverride? = null,
     // --- Location (pre-resolved for widget display) ---
     val locationText: String? = null,
+    // --- Unit preference ---
+    val isImperial: Boolean = false,
 ) {
     companion object {
         fun from(carData: CarData, status: CarStatus): CarWidgetDisplayData {

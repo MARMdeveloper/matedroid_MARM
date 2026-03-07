@@ -57,7 +57,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
+import com.matedroid.data.api.models.Units
 import com.matedroid.domain.model.CountryRecord
+import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.domain.model.YearFilter
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
@@ -180,6 +182,7 @@ fun CountriesVisitedScreen(
                     CountriesList(
                         countries = uiState.countries,
                         palette = palette,
+                        units = uiState.units,
                         onCountryClick = onNavigateToRegions
                     )
                 }
@@ -192,6 +195,7 @@ fun CountriesVisitedScreen(
 private fun CountriesList(
     countries: List<CountryRecord>,
     palette: CarColorPalette,
+    units: Units?,
     onCountryClick: (countryCode: String, countryName: String) -> Unit
 ) {
     LazyColumn(
@@ -204,6 +208,7 @@ private fun CountriesList(
                 country = country,
                 localizedName = localizedName,
                 palette = palette,
+                units = units,
                 onClick = { onCountryClick(country.countryCode, localizedName) }
             )
         }
@@ -215,6 +220,7 @@ private fun CountryCard(
     country: CountryRecord,
     localizedName: String,
     palette: CarColorPalette,
+    units: Units?,
     onClick: () -> Unit
 ) {
     val cardShape = RoundedCornerShape(20.dp)
@@ -297,7 +303,7 @@ private fun CountryCard(
                 // Distance chip
                 StatChip(
                     icon = Icons.Default.Route,
-                    value = "%,.0f km".format(country.totalDistanceKm),
+                    value = UnitFormatter.formatDistance(country.totalDistanceKm, units, 0),
                     palette = palette,
                     modifier = Modifier.weight(1f)
                 )

@@ -113,6 +113,7 @@ class CarWidget : GlanceAppWidget() {
         val IMAGE_OVERRIDE_VARIANT_KEY = stringPreferencesKey("image_override_variant")
         val IMAGE_OVERRIDE_WHEEL_KEY = stringPreferencesKey("image_override_wheel")
         val LOCATION_TEXT_KEY = stringPreferencesKey("location_text")
+        val IS_IMPERIAL_KEY = booleanPreferencesKey("is_imperial")
     }
 
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
@@ -192,6 +193,7 @@ class CarWidget : GlanceAppWidget() {
                             val isDcCharging = prefs[IS_DC_CHARGING_KEY] ?: false
                             val carName = prefs[CAR_NAME_KEY] ?: ""
                             val ratedRange = prefs[RATED_RANGE_KEY]?.takeIf { it >= 0f }
+                            val isImperial = prefs[IS_IMPERIAL_KEY] ?: false
                             val chargeLimit = prefs[CHARGE_LIMIT_KEY]?.takeIf { it >= 0 }
                             val locationText = prefs[LOCATION_TEXT_KEY]
                             val chargeEnergyAdded = prefs[CHARGE_ENERGY_ADDED_KEY]?.takeIf { it >= 0f }
@@ -296,8 +298,11 @@ class CarWidget : GlanceAppWidget() {
                                         // Lock screen / small sizes: right-aligned range + charge limit
                                         Spacer(modifier = GlanceModifier.defaultWeight())
                                         val rightParts = buildList<String> {
-                                            if (layout.showMileage && ratedRange != null)
-                                                add("${ratedRange.roundToInt()} km")
+                                            if (layout.showMileage && ratedRange != null) {
+                                                val rangeValue = if (isImperial) (ratedRange * 0.621371f).roundToInt() else ratedRange.roundToInt()
+                                                val rangeUnit = if (isImperial) "mi" else "km"
+                                                add("$rangeValue $rangeUnit")
+                                            }
                                             if (layout.showChargeLimit && chargeLimit != null)
                                                 add("Limit: $chargeLimit%")
                                         }.joinToString("  ")
@@ -360,7 +365,7 @@ class CarWidget : GlanceAppWidget() {
                                     contentAlignment = Alignment.TopCenter
                                 ) {
                                     Text(
-                                        text = "${ratedRange.roundToInt()} km",
+                                        text = "${if (isImperial) (ratedRange * 0.621371f).roundToInt() else ratedRange.roundToInt()} ${if (isImperial) "mi" else "km"}",
                                         style = TextStyle(
                                             color = ColorProvider(Color.White.copy(alpha = 0.85f)),
                                             fontSize = 12.sp
@@ -408,6 +413,7 @@ class CarWidget : GlanceAppWidget() {
                 this[CHARGER_CURRENT_KEY] = data.chargerActualCurrent ?: -1
                 this[AC_PHASES_KEY] = data.acPhases ?: -1
                 this[SENTRY_EVENT_COUNT_KEY] = data.sentryEventCount
+                this[IS_IMPERIAL_KEY] = data.isImperial
                 if (data.imageOverride != null) {
                     this[IMAGE_OVERRIDE_VARIANT_KEY] = data.imageOverride.variant
                     this[IMAGE_OVERRIDE_WHEEL_KEY] = data.imageOverride.wheelCode

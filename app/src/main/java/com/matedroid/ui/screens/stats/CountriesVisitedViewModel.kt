@@ -2,7 +2,10 @@ package com.matedroid.ui.screens.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.matedroid.data.api.models.Units
+import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.StatsRepository
+import com.matedroid.data.repository.TeslamateRepository
 import com.matedroid.domain.model.CountryRecord
 import com.matedroid.domain.model.YearFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,12 +32,14 @@ data class CountriesVisitedUiState(
     val isLoading: Boolean = true,
     val countries: List<CountryRecord> = emptyList(),
     val sortOrder: CountrySortOrder = CountrySortOrder.FIRST_VISIT,
+    val units: Units? = null,
     val error: String? = null
 )
 
 @HiltViewModel
 class CountriesVisitedViewModel @Inject constructor(
-    private val statsRepository: StatsRepository
+    private val statsRepository: StatsRepository,
+    private val teslamateRepository: TeslamateRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CountriesVisitedUiState())
@@ -45,6 +50,14 @@ class CountriesVisitedViewModel @Inject constructor(
     fun loadCountries(carId: Int, yearFilter: YearFilter) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
+
+            // Fetch units alongside countries
+            launch {
+                when (val result = teslamateRepository.getCarStatus(carId)) {
+                    is ApiResult.Success -> _uiState.update { it.copy(units = result.data.units) }
+                    is ApiResult.Error -> { /* default to metric */ }
+                }
+            }
 
             try {
                 originalCountries = statsRepository.getCountriesVisited(carId, yearFilter)
