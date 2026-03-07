@@ -1,0 +1,6 @@
+Il widget ora sa dov'è la tua auto — ma solo quando vuoi tu.
+
+Aggiunto:
+- Il widget (2×2/3×2) mostra la posizione attuale nella schermata home: nome geofence, indirizzo o coordinate
+- La posizione è nascosta intenzionalmente nella schermata di blocco per privacy e sicurezza
+- L'autonomia residua è stata spostata in alto al centro, sulla stessa riga delle icone di stato

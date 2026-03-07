@@ -1,0 +1,6 @@
+El widget ahora sabe dónde está tu coche — pero solo cuando tú quieres.
+
+Añadido:
+- El widget (2×2/3×2) muestra la ubicación actual en la pantalla de inicio: nombre de geovalla, dirección o coordenadas
+- La ubicación se oculta intencionalmente en la pantalla de bloqueo por privacidad y seguridad
+- La autonomía restante se ha movido al centro superior, en la misma línea que los iconos de estado

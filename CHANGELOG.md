@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-03-07
+
+### Added
+- **Home screen widget**: On 2×2 and 3×2 sizes, the widget now shows the car's current location (geofence name, or reverse-geocoded address, or raw coordinates as fallback) in the lower right corner. For privacy and security, this is intentionally shown only on the home screen — the lock screen widget retains its previous layout without location data.
+- **Home screen widget**: Remaining range is now shown in the top center of 2×2 and 3×2 widgets, on the same line as the status icons, replacing the charge limit label (which is still visible as a zone on the battery bar).
+
 ## [1.2.0] - 2026-03-06
 
 ### Added
@@ -411,7 +417,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/vide/matedroid/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/vide/matedroid/compare/v1.1.0...v1.2.0
 [1.2.0-beta1]: https://github.com/vide/matedroid/compare/v1.1.0...v1.2.0-beta1
 [1.1.0]: https://github.com/vide/matedroid/compare/v1.0.0...v1.1.0

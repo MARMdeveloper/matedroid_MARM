@@ -1,0 +1,6 @@
+Your widget now knows where your car is — but only when you want it to.
+
+Added:
+- Widget (2×2/3×2) shows current location on the home screen: geofence name, reverse-geocoded address, or coordinates
+- Location is intentionally hidden on the lock screen for privacy and security
+- Remaining range moved to the top center of the widget, on the same line as status icons

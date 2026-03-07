@@ -1,0 +1,6 @@
+El widget ara sap on és el teu cotxe — però només quan tu vols.
+
+Afegit:
+- El widget (2×2/3×2) mostra la ubicació actual a la pantalla d'inici: nom de geofence, adreça o coordenades
+- La ubicació s'oculta intencionadament a la pantalla de bloqueig per privacitat i seguretat
+- L'autonomia restant s'ha mogut al centre superior, a la mateixa línia que les icones d'estat
