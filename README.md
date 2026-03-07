@@ -14,7 +14,8 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 ## Features
 
 - **Dashboard** - Real-time vehicle status at a glance with 3D car image matching your vehicle's color and wheels. Long tap it to change the picture.
-- **Notifications** - Live notification (Android 16+) of charging sessions and pressure alert notification
+- **Notifications** - Sentry events notification, tyres pressure alert and Live notification (Android 16+) of charging sessions.
+- **Widget** - Home/lock screen widget for easy and safe read-only access to your car status. No more trunks opened due to a misstap!
 - **Stats for Nerds** - Tap car image for advanced statistics: records, extremes, AC/DC ratio and much more!
 - **Charging History** - View all charging sessions with statistics and charts
 - **Charge Details** - Interactive map and detailed power/voltage/temperature charts
@@ -42,6 +43,9 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 <p>
 <img src="docs/screenshots/stats-for-nerds.jpg" alt="Stats for nerds" height="300">
 <img src="docs/screenshots/visited-countries.jpg" alt="Visited countries" height="300">
+</p>
+<p>
+<img src="app/src/main/res/drawable-nodpi/widget_preview.png" alt="Home screen widget" height="200">
 </p>
 
 ### Feature Guide
