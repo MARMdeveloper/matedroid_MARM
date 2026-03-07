@@ -19,6 +19,9 @@ class StartDestinationViewModel @Inject constructor(
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination: StateFlow<String?> = _startDestination.asStateFlow()
 
+    private val _notificationPermissionAsked = MutableStateFlow(true) // default true to avoid flash
+    val notificationPermissionAsked: StateFlow<Boolean> = _notificationPermissionAsked.asStateFlow()
+
     init {
         viewModelScope.launch {
             val settings = settingsDataStore.settings.first()
@@ -28,5 +31,14 @@ class StartDestinationViewModel @Inject constructor(
                 Screen.Settings.route
             }
         }
+        viewModelScope.launch {
+            settingsDataStore.notificationPermissionAsked.collect {
+                _notificationPermissionAsked.value = it
+            }
+        }
+    }
+
+    suspend fun markNotificationPermissionAsked() {
+        settingsDataStore.saveNotificationPermissionAsked()
     }
 }

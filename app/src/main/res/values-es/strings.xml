@@ -1075,4 +1075,9 @@
     <string name="widget_loading">Cargando…</string>
     <string name="widget_error_configure">Toca para configurar</string>
     <string name="widget_tap_to_open">Toca para abrir MateDroid</string>
+
+    <!-- ==================== Diálogo de permiso de notificaciones ==================== -->
+    <string name="notification_permission_title">Mantente informado</string>
+    <string name="notification_permission_message">MateDroid puede notificarte sobre eventos del modo centinela, avisos de presión de neumáticos y estado de carga. Activa las notificaciones para estar al día sobre tu coche.</string>
+    <string name="notification_permission_grant">Activar notificaciones</string>
 </resources>

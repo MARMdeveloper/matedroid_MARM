@@ -1075,4 +1075,9 @@
     <string name="widget_loading">Carregant…</string>
     <string name="widget_error_configure">Toca per configurar</string>
     <string name="widget_tap_to_open">Toca per obrir MateDroid</string>
+
+    <!-- ==================== Diàleg de permís de notificacions ==================== -->
+    <string name="notification_permission_title">Mantingues-te informat</string>
+    <string name="notification_permission_message">MateDroid pot avisar-te sobre esdeveniments del mode sentinella, avisos de pressió dels pneumàtics i estat de càrrega. Activa les notificacions per estar al dia sobre el teu cotxe.</string>
+    <string name="notification_permission_grant">Activar notificacions</string>
 </resources>

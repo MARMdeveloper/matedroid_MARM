@@ -1075,4 +1075,9 @@
     <string name="widget_loading">Caricamento…</string>
     <string name="widget_error_configure">Tocca per configurare</string>
     <string name="widget_tap_to_open">Tocca per aprire MateDroid</string>
+
+    <!-- ==================== Finestra permesso notifiche ==================== -->
+    <string name="notification_permission_title">Resta informato</string>
+    <string name="notification_permission_message">MateDroid può avvisarti su eventi della modalità sentinella, avvisi di pressione pneumatici e stato di ricarica. Abilita le notifiche per restare aggiornato sulla tua auto.</string>
+    <string name="notification_permission_grant">Abilita notifiche</string>
 </resources>

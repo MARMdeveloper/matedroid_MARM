@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Notifications**: One-time permission dialog at startup explaining notification features (sentry events, tyre pressure, charging status) before requesting Android 13+ POST_NOTIFICATIONS permission
+
 ## [1.2.2] - 2026-03-07
 
 ### Fixed
