@@ -120,6 +120,10 @@
     <!-- Content description for warning icon when battery is above 90% -->
     <string name="high_charge_level">High charge level</string>
 
+    <!-- Title and message for the high SoC info dialog shown when tapping the warning icon -->
+    <string name="high_soc_warning_title">High State of Charge</string>
+    <string name="high_soc_warning_message">Keeping your battery at or near 100% for extended periods can accelerate degradation.\n\n• NCM batteries (most Tesla models): charge to 80–90% for daily use. Only charge to 100% before long trips.\n• LFP batteries (Standard Range Model 3/Y): designed to be charged to 100% regularly — Tesla recommends it for battery calibration.\n\nAvoid leaving the car parked at full charge for long periods whenever possible.</string>
+
     <!-- Location card section title -->
     <string name="location">Location</string>
 

@@ -120,6 +120,10 @@
     <!-- Content description for warning icon when battery is above 90% -->
     <string name="high_charge_level">Nivell de càrrega alt</string>
 
+    <!-- Title and message for the high SoC info dialog shown when tapping the warning icon -->
+    <string name="high_soc_warning_title">Nivell de càrrega elevat</string>
+    <string name="high_soc_warning_message">Mantenir la bateria al 100% o prop d\'aquest valor durant períodes prolongats pot accelerar la degradació.\n\n• Bateries NCM (la majoria dels models Tesla): es recomana carregar fins al 80–90% per a l\'ús diari. Carrega al 100% només abans de viatges llargs.\n• Bateries LFP (Model 3/Y Standard Range): dissenyades per carregar-se regularment al 100% — Tesla ho recomana per a la calibració de la bateria.\n\nEvita deixar el cotxe aparcat amb la càrrega completa durant períodes llargs sempre que sigui possible.</string>
+
     <!-- Location card section title -->
     <string name="location">Ubicació</string>
 

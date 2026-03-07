@@ -1004,6 +1004,31 @@ private fun BatteryCard(
         else -> palette.onSurface
     }
     val chargeLimit = status.chargeLimitSoc ?: 100
+    var showHighSocDialog by remember { mutableStateOf(false) }
+
+    if (showHighSocDialog) {
+        AlertDialog(
+            onDismissRequest = { showHighSocDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.high_soc_warning_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.high_soc_warning_message),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showHighSocDialog = false }) {
+                    Text(stringResource(R.string.got_it))
+                }
+            }
+        )
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1151,7 +1176,9 @@ private fun BatteryCard(
                         Icon(
                             imageVector = Icons.Filled.Warning,
                             contentDescription = stringResource(R.string.high_charge_level),
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable { showHighSocDialog = true },
                             tint = StatusWarning
                         )
                     }
