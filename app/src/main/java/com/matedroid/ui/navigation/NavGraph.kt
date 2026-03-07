@@ -1,15 +1,26 @@
 package com.matedroid.ui.navigation
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.matedroid.R
 import com.matedroid.ui.screens.battery.BatteryScreen
 import com.matedroid.ui.screens.charges.ChargeDetailScreen
 import com.matedroid.ui.screens.charges.ChargesScreen
@@ -28,7 +39,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import com.matedroid.ui.screens.updates.SoftwareVersionsScreen
 import com.matedroid.domain.model.YearFilter
-import android.content.Intent
+import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
@@ -152,9 +163,38 @@ fun NavGraph(
 ) {
     val navController = rememberNavController()
     val startDestination by startViewModel.startDestination.collectAsState()
+    val notificationPermissionAsked by startViewModel.notificationPermissionAsked.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     if (startDestination == null) {
         return // Wait for determination
+    }
+
+    // One-time notification permission dialog (Android 13+)
+    if (startDestination == Screen.Dashboard.route &&
+        !notificationPermissionAsked &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    ) {
+        val permissionLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) {
+            coroutineScope.launch { startViewModel.markNotificationPermissionAsked() }
+        }
+
+        AlertDialog(
+            onDismissRequest = {
+                coroutineScope.launch { startViewModel.markNotificationPermissionAsked() }
+            },
+            title = { Text(stringResource(R.string.notification_permission_title)) },
+            text = { Text(stringResource(R.string.notification_permission_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }) {
+                    Text(stringResource(R.string.notification_permission_grant))
+                }
+            }
+        )
     }
 
     // Handle deep-link from notification or adb intent

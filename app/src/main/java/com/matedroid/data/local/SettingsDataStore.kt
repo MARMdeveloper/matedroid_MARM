@@ -74,6 +74,11 @@ class SettingsDataStore @Inject constructor(
     private val teslamateBaseUrlKey = stringPreferencesKey("teslamate_base_url")
     private val lastSelectedCarIdKey = intPreferencesKey("last_selected_car_id")
     private val carImageOverridesKey = stringPreferencesKey("car_image_overrides")
+    private val notificationPermissionAskedKey = booleanPreferencesKey("notification_permission_asked")
+
+    val notificationPermissionAsked: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[notificationPermissionAskedKey] ?: false
+    }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { preferences ->
         AppSettings(
@@ -190,6 +195,12 @@ class SettingsDataStore @Inject constructor(
             }
 
             preferences[carImageOverridesKey] = overridesToJson(currentMap)
+        }
+    }
+
+    suspend fun saveNotificationPermissionAsked() {
+        context.dataStore.edit { preferences ->
+            preferences[notificationPermissionAskedKey] = true
         }
     }
 

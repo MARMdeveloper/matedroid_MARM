@@ -1086,4 +1086,12 @@
 
     <!-- Tap hint shown on the widget (accessibility / tooltip) -->
     <string name="widget_tap_to_open">Tap to open MateDroid</string>
+
+    <!-- ==================== Notification Permission Dialog ==================== -->
+    <!-- Title of the one-time dialog asking the user to enable notifications -->
+    <string name="notification_permission_title">Stay informed</string>
+    <!-- Body text explaining why notifications are useful -->
+    <string name="notification_permission_message">MateDroid can notify you about sentry mode events, tyre pressure warnings, and charging status. Enable notifications to stay informed about your car.</string>
+    <!-- Confirm button to trigger the system notification permission prompt -->
+    <string name="notification_permission_grant">Enable notifications</string>
 </resources>
