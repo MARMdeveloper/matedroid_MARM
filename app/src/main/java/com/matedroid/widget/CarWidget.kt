@@ -280,7 +280,19 @@ class CarWidget : GlanceAppWidget() {
                                             )
                                         )
                                     }
-                                    if (layout.showMileage || layout.showChargeLimit) {
+                                    if (useHomeLayout && !isCharging && !locationText.isNullOrBlank()) {
+                                        // Home screen, not charging: location right-aligned in SoC row
+                                        // (keeps SoC on the bottom line of the widget).
+                                        Spacer(modifier = GlanceModifier.defaultWeight())
+                                        Text(
+                                            text = locationText,
+                                            style = TextStyle(
+                                                color = ColorProvider(Color.White.copy(alpha = 0.7f)),
+                                                fontSize = 10.sp
+                                            ),
+                                            maxLines = 1
+                                        )
+                                    } else if (!useHomeLayout && (layout.showMileage || layout.showChargeLimit)) {
                                         // Lock screen / small sizes: right-aligned range + charge limit
                                         Spacer(modifier = GlanceModifier.defaultWeight())
                                         val rightParts = buildList<String> {
@@ -303,10 +315,8 @@ class CarWidget : GlanceAppWidget() {
                                     }
                                 }
 
-                                // Charging details:
-                                //   kWh added + time to full  → all sizes when charging
-                                //   voltage / current / phases → 2×2 and 3×2 only
-                                if (isCharging) {
+                                // Build charging details text (kWh + time to full, optionally voltage/current).
+                                val chargingText = if (isCharging) {
                                     val kwhTimePart = buildString {
                                         if (chargeEnergyAdded != null)
                                             append("+%.1f kWh".format(chargeEnergyAdded))
@@ -316,7 +326,7 @@ class CarWidget : GlanceAppWidget() {
                                             append(if (h > 0) " ${h}h ${m}m" else " ${m}m")
                                         }
                                     }.trim()
-                                    val chargingText = if (layout.showVoltageCurrentPhases) {
+                                    if (layout.showVoltageCurrentPhases) {
                                         val voltPart = buildString {
                                             if (chargerVoltage != null) append("${chargerVoltage}V")
                                             if (chargerCurrent != null) append(" ${chargerCurrent}A")
@@ -328,29 +338,48 @@ class CarWidget : GlanceAppWidget() {
                                     } else {
                                         kwhTimePart
                                     }
-                                    if (chargingText.isNotEmpty()) {
+                                } else ""
+
+                                // Bottom line (only when charging):
+                                //   home 2×2+ → single Row: charge details (left) + location (right, 1 line)
+                                //   lock screen / small → charge details text only
+                                // When not charging, location is already in the SoC row above.
+                                if (isCharging) {
+                                    if (useHomeLayout) {
+                                        if (chargingText.isNotEmpty() || !locationText.isNullOrBlank()) {
+                                            Row(
+                                                modifier = GlanceModifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                if (chargingText.isNotEmpty()) {
+                                                    Text(
+                                                        text = chargingText,
+                                                        style = TextStyle(
+                                                            color = ColorProvider(Color.White.copy(alpha = 0.9f)),
+                                                            fontSize = if (isCompact) 9.sp else 11.sp
+                                                        )
+                                                    )
+                                                }
+                                                if (!locationText.isNullOrBlank()) {
+                                                    Spacer(modifier = GlanceModifier.defaultWeight())
+                                                    Text(
+                                                        text = locationText,
+                                                        style = TextStyle(
+                                                            color = ColorProvider(Color.White.copy(alpha = 0.7f)),
+                                                            fontSize = 10.sp
+                                                        ),
+                                                        maxLines = 1
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else if (chargingText.isNotEmpty()) {
                                         Text(
                                             text = chargingText,
                                             style = TextStyle(
                                                 color = ColorProvider(Color.White.copy(alpha = 0.9f)),
                                                 fontSize = if (isCompact) 9.sp else 11.sp
                                             )
-                                        )
-                                    }
-                                }
-
-                                // Home screen 2×2+: location right-aligned, always at the bottom
-                                // regardless of whether charging details are shown above it.
-                                if (useHomeLayout && !locationText.isNullOrBlank()) {
-                                    Row(modifier = GlanceModifier.fillMaxWidth()) {
-                                        Spacer(modifier = GlanceModifier.defaultWeight())
-                                        Text(
-                                            text = locationText,
-                                            style = TextStyle(
-                                                color = ColorProvider(Color.White.copy(alpha = 0.7f)),
-                                                fontSize = 10.sp
-                                            ),
-                                            maxLines = 2
                                         )
                                     }
                                 }
