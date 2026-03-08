@@ -1,0 +1,7 @@
+Correzioni di bug e nuova finestra di dialogo per i permessi delle notifiche.
+
+Aggiunto:
+- Finestra di dialogo all'avvio che spiega le notifiche sentry, pressione pneumatici e ricarica prima di richiedere il permesso
+
+Corretto:
+- Distorsione delle proporzioni del widget su Nova Launcher e altri launcher di terze parti

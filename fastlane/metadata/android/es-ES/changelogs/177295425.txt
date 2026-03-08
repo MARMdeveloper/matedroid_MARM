@@ -1,0 +1,7 @@
+Correcciones de errores y nuevo diálogo de permisos de notificaciones.
+
+Añadido:
+- Diálogo al inicio que explica las notificaciones de sentry, presión de neumáticos y carga antes de solicitar el permiso
+
+Corregido:
+- Distorsión de proporciones del widget en Nova Launcher y otros launchers de terceros

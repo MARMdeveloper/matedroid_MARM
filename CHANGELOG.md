@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-03-08
+
 ### Added
 - **Notifications**: One-time permission dialog at startup explaining notification features (sentry events, tyre pressure, charging status) before requesting Android 13+ POST_NOTIFICATIONS permission
+
+### Fixed
+- **Home screen widget**: Fixed aspect-ratio distortion on Nova Launcher and other third-party launchers that report widget dimensions inconsistently. Status bar icons and temperatures are now rendered as Glance composables instead of being drawn into the background bitmap.
 
 ## [1.2.2] - 2026-03-07
 
@@ -426,7 +431,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.3...HEAD
+[1.2.3]: https://github.com/vide/matedroid/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/vide/matedroid/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/vide/matedroid/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/vide/matedroid/compare/v1.1.0...v1.2.0

@@ -1,0 +1,7 @@
+Bug fixes and a new notification permission dialog.
+
+Added:
+- Notification permission dialog at startup explaining sentry, tyre pressure, and charging alerts before requesting permission
+
+Fixed:
+- Widget aspect-ratio distortion on Nova Launcher and other third-party launchers

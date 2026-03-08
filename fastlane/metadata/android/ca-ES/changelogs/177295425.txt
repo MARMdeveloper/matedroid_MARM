@@ -1,0 +1,7 @@
+Correccions d'errors i nou diàleg de permisos de notificacions.
+
+Afegit:
+- Diàleg a l'inici que explica les notificacions de sentry, pressió de pneumàtics i càrrega abans de sol·licitar el permís
+
+Corregit:
+- Distorsió de proporcions del widget a Nova Launcher i altres launchers de tercers
