@@ -9,8 +9,37 @@ import com.matedroid.data.api.models.Units
  * IMPORTANT: TeslamateAPI already returns all values pre-converted to the user's preferred
  * unit system. Do NOT apply any conversion here — just format the number and attach the
  * correct unit label.
+ *
+ * Exception: elevation units.  We need implement the conversion here until API/Teslamate do itself
  */
 object UnitFormatter {
+
+    /**
+     * Format elevation value with appropriate unit label.
+     * Value is also converted here as the API do not convert to ft when user select mi instead of km.
+     */
+    fun formatElevation(value: Int?, units: Units?): String {
+        val v = value ?: 0
+        return if (units?.isImperial == true) {
+            "%,d ft".format((v * 3.28084).toInt())
+        } else {
+            "%,d m".format(v)
+        }
+    }
+
+    /**
+     * Get the elevation value
+     */
+    fun getElevationValue(value: Float, units: Units?): Float {
+        return if (units?.isImperial == true) (value * 3.28084f) else value
+    }
+
+    /**
+     * Get the elevation unit label
+     */
+    fun getElevationUnit(units: Units?): String {
+        return if (units?.isImperial == true) "ft" else "m"
+    }
 
     /**
      * Format distance value with appropriate unit label.

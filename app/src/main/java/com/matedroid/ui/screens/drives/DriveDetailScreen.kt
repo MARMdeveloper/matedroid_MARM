@@ -247,10 +247,10 @@ private fun DriveDetailContent(
                     title = stringResource(R.string.elevation),
                     icon = Icons.Default.Landscape,
                     stats = listOf(
-                        StatItem(stringResource(R.string.maximum), "%,d m".format(s.elevationMax)),
-                        StatItem(stringResource(R.string.minimum), "%,d m".format(s.elevationMin)),
-                        StatItem(stringResource(R.string.gain), "+%,d m".format(s.elevationGain)),
-                        StatItem(stringResource(R.string.loss), "-%,d m".format(s.elevationLoss))
+                        StatItem(stringResource(R.string.maximum), UnitFormatter.formatElevation(s.elevationMax, units)),
+                        StatItem(stringResource(R.string.minimum), UnitFormatter.formatElevation(s.elevationMin, units)),
+                        StatItem(stringResource(R.string.gain), "+" + UnitFormatter.formatElevation(s.elevationGain, units)),
+                        StatItem(stringResource(R.string.loss), "-" + UnitFormatter.formatElevation(s.elevationLoss, units)),
                     )
                 )
             }
@@ -312,6 +312,7 @@ private fun DriveDetailContent(
                 if (detail.positions.any { it.elevation != null && it.elevation != 0 }) {
                     ElevationChartCard(
                         positions = detail.positions,
+                        units = units,
                         timeLabels = timeLabels,
                         externalSelectedFraction = sharedXFraction,
                         onXSelected = { sharedXFraction = it },
@@ -745,6 +746,7 @@ private fun BatteryChartCard(
 @Composable
 private fun ElevationChartCard(
     positions: List<DrivePosition>,
+    units: Units?,
     timeLabels: List<String>,
     externalSelectedFraction: Float? = null,
     onXSelected: ((Float?) -> Unit)? = null,
@@ -758,11 +760,12 @@ private fun ElevationChartCard(
         icon = Icons.Default.Landscape,
         data = elevations,
         color = Color(0xFF8B4513), // Brown color for terrain
-        unit = "m",
+        unit = UnitFormatter.getElevationUnit(units),
         timeLabels = timeLabels,
         externalSelectedFraction = externalSelectedFraction,
         onXSelected = onXSelected,
-        fractionToTimeLabel = fractionToTimeLabel
+        fractionToTimeLabel = fractionToTimeLabel,
+        convertValue = { UnitFormatter.getElevationValue(it, units) }
     )
 }
 

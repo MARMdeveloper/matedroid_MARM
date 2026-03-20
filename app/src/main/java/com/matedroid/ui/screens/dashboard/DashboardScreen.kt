@@ -127,9 +127,9 @@ import com.matedroid.data.api.models.CarExterior
 import com.matedroid.data.api.models.CarGeodata
 import com.matedroid.data.api.models.CarStatus
 import com.matedroid.domain.model.CarImageResolver
+import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.data.api.models.CarStatusDetails
 import com.matedroid.data.api.models.Units
-import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.data.api.models.CarVersions
 import com.matedroid.data.api.models.ChargingDetails
 import com.matedroid.data.api.models.TpmsDetails
@@ -1544,17 +1544,6 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
             }
         }
 
-    // Format elevation with unit conversion
-    val elevationText = elevation?.let {
-        val isImperial = units?.unitOfLength == "mi"
-        if (isImperial) {
-            val feet = (it * 3.28084).toInt()
-            "%,d ft".format(feet)
-        } else {
-            "%,d m".format(it)
-        }
-    }
-
     fun openInMaps() {
         if (latitude != null && longitude != null) {
             val geoUri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude")
@@ -1615,13 +1604,13 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
             }
 
             // Elevation row - icon aligned with location icon, text aligned with location text
-            if (elevationText != null) {
+            if (elevation != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.Terrain,
                         contentDescription = null,
-                        tint = palette.onSurfaceVariant
+                        tint = palette.accent
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
@@ -1631,7 +1620,7 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = elevationText,
+                        text = UnitFormatter.formatElevation(elevation, units),
                         style = MaterialTheme.typography.bodyMedium,
                         color = palette.onSurface,
                         maxLines = 1,
