@@ -156,10 +156,6 @@ dependencies {
     // Glance (home screen widgets)
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
-
-    // Charts
-    implementation(libs.vico.compose.m3)
-
     // Maps
     implementation(libs.osmdroid)
 

@@ -14,7 +14,6 @@ okhttp = "4.12.0"
 moshi = "1.15.1"
 datastore = "1.1.1"
 securityCrypto = "1.1.0-alpha06"
-vico = "2.0.0-beta.2"
 osmdroid = "6.1.18"
 junit = "4.13.2"
 junitExt = "1.2.1"
@@ -76,9 +75,6 @@ hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.
 # Glance (home screen widgets)
 glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
 glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
-
-# Charts
-vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 
 # Maps
 osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
