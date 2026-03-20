@@ -128,13 +128,22 @@ data class DrivePosition(
     @Json(name = "power") val power: Int? = null,
     @Json(name = "battery_level") val batteryLevel: Int? = null,
     @Json(name = "elevation") val elevation: Int? = null,
-    @Json(name = "climate_info") val climateInfo: DriveClimateInfo? = null
+    @Json(name = "climate_info") val climateInfo: DriveClimateInfo? = null,
+    @Json(name = "battery_info") val batteryInfo: DriveBatteryInfo? = null
 ) {
     // Convenience accessors
     val insideTemp: Double? get() = climateInfo?.insideTemp
     val outsideTemp: Double? get() = climateInfo?.outsideTemp
     val isClimateOn: Boolean get() = climateInfo?.isClimateOn == true
+    val isBatteryHeaterOn: Boolean get() = batteryInfo?.batteryHeater == true
 }
+
+@JsonClass(generateAdapter = true)
+data class DriveBatteryInfo(
+    @Json(name = "battery_heater") val batteryHeater: Boolean? = null,
+    @Json(name = "battery_heater_on") val batteryHeaterOn: Boolean? = null,
+    @Json(name = "battery_heater_no_power") val batteryHeaterNoPower: Boolean? = null
+)
 
 @JsonClass(generateAdapter = true)
 data class DriveClimateInfo(

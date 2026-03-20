@@ -63,7 +63,8 @@ fun OptimizedLineChart(
     chartHeight: Dp = 120.dp,
     externalSelectedFraction: Float? = null,
     onXSelected: ((Float?) -> Unit)? = null,
-    fractionToTimeLabel: ((Float) -> String)? = null
+    fractionToTimeLabel: ((Float) -> String)? = null,
+    annotationRanges: List<AnnotationRange> = emptyList()
 ) {
     if (data.size < 2) return
 
@@ -180,6 +181,11 @@ fun OptimizedLineChart(
 
             // Dashed grid lines (3 interior lines)
             drawGridLines(gridColor, width, chartHeightPx)
+
+            // Annotation ranges (Grafana-style bands behind the data)
+            if (annotationRanges.isNotEmpty()) {
+                drawAnnotationRanges(annotationRanges, width, chartHeightPx)
+            }
 
             // Zero line if needed (for power chart with negative values)
             if (showZeroLine && chartData.minValue < 0 && chartData.maxValue > 0) {

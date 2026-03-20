@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -49,6 +50,17 @@ data class DualSelectedPoint(
     val valueLeft: Float?,
     val valueRight: Float?,
     val position: Offset
+)
+
+/**
+ * Represents an annotation range to highlight on a chart.
+ * Fractions are normalized 0.0–1.0 across the X axis.
+ */
+data class AnnotationRange(
+    val startFraction: Float,
+    val endFraction: Float,
+    val color: Color,
+    val label: String? = null
 )
 
 // ── Data Preparation ────────────────────────────────────────────────────────
@@ -243,6 +255,45 @@ private fun computeMonotoneTangents(xs: FloatArray, ys: FloatArray): FloatArray 
 
 private val dashEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 4f))
 private val crosshairDashEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))
+
+/**
+ * Draws Grafana-style annotation bands on the chart.
+ * Each range is rendered as a semi-transparent vertical band spanning the full chart height,
+ * with thin border lines at the start and end edges.
+ */
+fun DrawScope.drawAnnotationRanges(
+    ranges: List<AnnotationRange>,
+    width: Float,
+    chartHeight: Float
+) {
+    for (range in ranges) {
+        val startX = range.startFraction * width
+        val endX = range.endFraction * width
+        val bandWidth = (endX - startX).coerceAtLeast(1f)
+
+        // Semi-transparent fill band
+        drawRect(
+            color = range.color.copy(alpha = 0.12f),
+            topLeft = Offset(startX, 0f),
+            size = Size(bandWidth, chartHeight)
+        )
+
+        // Thin border lines at edges
+        val edgeColor = range.color.copy(alpha = 0.4f)
+        drawLine(
+            color = edgeColor,
+            start = Offset(startX, 0f),
+            end = Offset(startX, chartHeight),
+            strokeWidth = 1f
+        )
+        drawLine(
+            color = edgeColor,
+            start = Offset(endX, 0f),
+            end = Offset(endX, chartHeight),
+            strokeWidth = 1f
+        )
+    }
+}
 
 /**
  * Draws dashed grid lines at 25%, 50%, 75% positions (3 interior lines).

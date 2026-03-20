@@ -60,7 +60,8 @@ fun FullscreenLineChart(
     convertValue: (Float) -> Float = { it },
     externalSelectedFraction: Float? = null,
     onXSelected: ((Float?) -> Unit)? = null,
-    fractionToTimeLabel: ((Float) -> String)? = null
+    fractionToTimeLabel: ((Float) -> String)? = null,
+    annotationRanges: List<AnnotationRange> = emptyList()
 ) {
     if (data.size < 2) return
 
@@ -81,6 +82,7 @@ fun FullscreenLineChart(
             externalSelectedFraction = externalSelectedFraction,
             onXSelected = onXSelected,
             fractionToTimeLabel = fractionToTimeLabel,
+            annotationRanges = annotationRanges,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -119,6 +121,7 @@ fun FullscreenLineChart(
             fixedMinMax = fixedMinMax,
             timeLabels = timeLabels,
             convertValue = convertValue,
+            annotationRanges = annotationRanges,
             activity = activity,
             onDismiss = { isFullscreen = false }
         )
@@ -134,6 +137,7 @@ private fun FullscreenChartOverlay(
     fixedMinMax: Pair<Float, Float>?,
     timeLabels: List<String>,
     convertValue: (Float) -> Float,
+    annotationRanges: List<AnnotationRange>,
     activity: Activity?,
     onDismiss: () -> Unit
 ) {
@@ -219,6 +223,7 @@ private fun FullscreenChartOverlay(
                 fixedMinMax = fixedMinMax,
                 timeLabels = timeLabels,
                 convertValue = convertValue,
+                annotationRanges = annotationRanges,
                 chartHeight = availableChartHeight,
                 modifier = Modifier
                     .fillMaxWidth()

@@ -77,6 +77,7 @@ import com.matedroid.data.api.models.DrivePosition
 import com.matedroid.data.api.models.Units
 import com.matedroid.data.repository.WeatherPoint
 import com.matedroid.domain.model.UnitFormatter
+import com.matedroid.ui.components.AnnotationRange
 import com.matedroid.ui.components.FullscreenLineChart
 import com.matedroid.ui.theme.CarColorPalettes
 import org.osmdroid.config.Configuration
@@ -287,6 +288,11 @@ private fun DriveDetailContent(
                     } ?: ""
                 }
 
+                // Compute battery heater annotation ranges
+                val heaterAnnotations = remember(positions) {
+                    computeBatteryHeaterRanges(positions)
+                }
+
                 SpeedChartCard(
                     positions = detail.positions,
                     units = units,
@@ -300,14 +306,16 @@ private fun DriveDetailContent(
                     timeLabels = timeLabels,
                     externalSelectedFraction = sharedXFraction,
                     onXSelected = { sharedXFraction = it },
-                    fractionToTimeLabel = fractionToTimeLabel
+                    fractionToTimeLabel = fractionToTimeLabel,
+                    annotationRanges = heaterAnnotations
                 )
                 BatteryChartCard(
                     positions = detail.positions,
                     timeLabels = timeLabels,
                     externalSelectedFraction = sharedXFraction,
                     onXSelected = { sharedXFraction = it },
-                    fractionToTimeLabel = fractionToTimeLabel
+                    fractionToTimeLabel = fractionToTimeLabel,
+                    annotationRanges = heaterAnnotations
                 )
                 if (detail.positions.any { it.elevation != null && it.elevation != 0 }) {
                     ElevationChartCard(
@@ -699,7 +707,8 @@ private fun PowerChartCard(
     timeLabels: List<String>,
     externalSelectedFraction: Float? = null,
     onXSelected: ((Float?) -> Unit)? = null,
-    fractionToTimeLabel: ((Float) -> String)? = null
+    fractionToTimeLabel: ((Float) -> String)? = null,
+    annotationRanges: List<AnnotationRange> = emptyList()
 ) {
     val powers = positions.mapNotNull { it.power?.toFloat() }
     if (powers.size < 2) return
@@ -714,7 +723,8 @@ private fun PowerChartCard(
         timeLabels = timeLabels,
         externalSelectedFraction = externalSelectedFraction,
         onXSelected = onXSelected,
-        fractionToTimeLabel = fractionToTimeLabel
+        fractionToTimeLabel = fractionToTimeLabel,
+        annotationRanges = annotationRanges
     )
 }
 
@@ -724,7 +734,8 @@ private fun BatteryChartCard(
     timeLabels: List<String>,
     externalSelectedFraction: Float? = null,
     onXSelected: ((Float?) -> Unit)? = null,
-    fractionToTimeLabel: ((Float) -> String)? = null
+    fractionToTimeLabel: ((Float) -> String)? = null,
+    annotationRanges: List<AnnotationRange> = emptyList()
 ) {
     val batteryLevels = positions.mapNotNull { it.batteryLevel?.toFloat() }
     if (batteryLevels.size < 2) return
@@ -739,7 +750,8 @@ private fun BatteryChartCard(
         timeLabels = timeLabels,
         externalSelectedFraction = externalSelectedFraction,
         onXSelected = onXSelected,
-        fractionToTimeLabel = fractionToTimeLabel
+        fractionToTimeLabel = fractionToTimeLabel,
+        annotationRanges = annotationRanges
     )
 }
 
@@ -782,7 +794,8 @@ private fun ChartCard(
     convertValue: (Float) -> Float = { it },
     externalSelectedFraction: Float? = null,
     onXSelected: ((Float?) -> Unit)? = null,
-    fractionToTimeLabel: ((Float) -> String)? = null
+    fractionToTimeLabel: ((Float) -> String)? = null,
+    annotationRanges: List<AnnotationRange> = emptyList()
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -822,6 +835,7 @@ private fun ChartCard(
                 externalSelectedFraction = externalSelectedFraction,
                 onXSelected = onXSelected,
                 fractionToTimeLabel = fractionToTimeLabel,
+                annotationRanges = annotationRanges,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -881,4 +895,61 @@ private fun formatDuration(minutes: Int): String {
     val hours = minutes / 60
     val mins = minutes % 60
     return "%d:%02d".format(hours, mins)
+}
+
+/**
+ * Computes annotation ranges for periods where the battery heater was active.
+ *
+ * The battery_heater field tends to flap (single-point true surrounded by false/null gaps
+ * of ~30-60 positions) because the heater cycles on/off rapidly. To produce clean Grafana-style
+ * bands, nearby true-runs separated by gaps smaller than [mergeGap] positions are merged
+ * into a single continuous range.
+ *
+ * Returns fractional ranges (0.0–1.0) suitable for chart annotation overlays.
+ */
+private fun computeBatteryHeaterRanges(
+    positions: List<DrivePosition>,
+    mergeGap: Int = 80
+): List<AnnotationRange> {
+    if (positions.size < 2) return emptyList()
+
+    // Collect indices where heater is on
+    val heaterIndices = positions.indices.filter { positions[it].isBatteryHeaterOn }
+    if (heaterIndices.isEmpty()) return emptyList()
+
+    val heaterColor = Color(0xFFFF9800) // Material Orange
+    val lastIndex = positions.lastIndex.toFloat()
+
+    // Merge nearby indices into contiguous ranges
+    val ranges = mutableListOf<AnnotationRange>()
+    var rangeStart = heaterIndices[0]
+    var rangeEnd = heaterIndices[0]
+
+    for (i in 1 until heaterIndices.size) {
+        if (heaterIndices[i] - rangeEnd <= mergeGap) {
+            // Close enough — extend current range
+            rangeEnd = heaterIndices[i]
+        } else {
+            // Gap too large — emit current range and start a new one
+            ranges.add(
+                AnnotationRange(
+                    startFraction = rangeStart / lastIndex,
+                    endFraction = rangeEnd / lastIndex,
+                    color = heaterColor
+                )
+            )
+            rangeStart = heaterIndices[i]
+            rangeEnd = heaterIndices[i]
+        }
+    }
+    // Emit last range
+    ranges.add(
+        AnnotationRange(
+            startFraction = rangeStart / lastIndex,
+            endFraction = rangeEnd / lastIndex,
+            color = heaterColor
+        )
+    )
+
+    return ranges
 }
