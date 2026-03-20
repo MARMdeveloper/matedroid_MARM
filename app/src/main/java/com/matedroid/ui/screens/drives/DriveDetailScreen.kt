@@ -78,7 +78,9 @@ import com.matedroid.data.api.models.Units
 import com.matedroid.data.repository.WeatherPoint
 import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.components.AnnotationRange
+import com.matedroid.ui.components.BarChartData
 import com.matedroid.ui.components.FullscreenLineChart
+import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalettes
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -327,6 +329,11 @@ private fun DriveDetailContent(
                         fractionToTimeLabel = fractionToTimeLabel
                     )
                 }
+
+                SpeedHistogramCard(
+                    positions = detail.positions,
+                    units = units
+                )
             }
         }
 
@@ -779,6 +786,103 @@ private fun ElevationChartCard(
         fractionToTimeLabel = fractionToTimeLabel,
         convertValue = { UnitFormatter.getElevationValue(it, units) }
     )
+}
+
+@Composable
+private fun SpeedHistogramCard(
+    positions: List<DrivePosition>,
+    units: Units?
+) {
+    val speeds = positions.mapNotNull { it.speed }
+    if (speeds.size < 2) return
+
+    val isImperial = units?.isImperial == true
+    val bucketSize = if (isImperial) 5 else 10
+    val speedUnit = UnitFormatter.getSpeedUnit(units)
+
+    val histogramData = remember(speeds, bucketSize) {
+        buildSpeedHistogram(speeds, bucketSize)
+    }
+
+    if (histogramData.isEmpty()) return
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Speed,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.speed_distribution),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            InteractiveBarChart(
+                data = histogramData,
+                barColor = MaterialTheme.colorScheme.primary,
+                showEveryNthLabel = if (histogramData.size > 8) 2 else 1,
+                valueFormatter = { pct ->
+                    if (pct < 10.0) "%.1f%%".format(pct) else "%.0f%%".format(pct)
+                },
+                yAxisFormatter = { pct ->
+                    if (pct < 10.0) "%.1f%%".format(pct) else "%.0f%%".format(pct)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+/**
+ * Builds speed histogram data with buckets of [bucketSize] units.
+ * Returns bar chart data with percentage values.
+ *
+ * Note: The TeslaMate API pre-converts speed to the user's unit system,
+ * so speeds are already in km/h or mph — no conversion needed here.
+ */
+private fun buildSpeedHistogram(
+    speeds: List<Int>,
+    bucketSize: Int
+): List<BarChartData> {
+    if (speeds.isEmpty()) return emptyList()
+
+    val minSpeed = (speeds.min() / bucketSize) * bucketSize
+    val maxSpeed = ((speeds.max() / bucketSize) + 1) * bucketSize
+    val total = speeds.size.toDouble()
+
+    val buckets = mutableListOf<BarChartData>()
+    var bucketStart = minSpeed
+    while (bucketStart < maxSpeed) {
+        val bucketEnd = bucketStart + bucketSize
+        val count = speeds.count { it >= bucketStart && it < bucketEnd }
+        val pct = (count / total) * 100.0
+        buckets.add(
+            BarChartData(
+                label = "$bucketStart",
+                value = pct,
+                displayValue = if (pct < 10.0) "%.1f%%".format(pct) else "%.0f%%".format(pct)
+            )
+        )
+        bucketStart = bucketEnd
+    }
+
+    return buckets
 }
 
 @Composable

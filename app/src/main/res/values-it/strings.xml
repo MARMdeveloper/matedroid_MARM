@@ -346,6 +346,8 @@
     <string name="power_profile">Profilo potenza</string>
     <string name="battery_level">Livello batteria</string>
     <string name="elevation_profile">Profilo altitudine</string>
+    <!-- Title for the speed distribution histogram in drive details -->
+    <string name="speed_distribution">Distribuzione velocità</string>
 
     <!-- Weather section -->
     <string name="weather_along_way">Meteo lungo il percorso</string>
