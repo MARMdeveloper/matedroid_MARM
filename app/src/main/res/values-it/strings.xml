@@ -359,6 +359,10 @@
     <!-- Section title for charge history list -->
     <string name="charge_history">Cronologia ricariche</string>
 
+    <!-- Filter location -->
+    <string name="filter_location">Posizione</string>
+    <string name="search">Ricerca</string>
+
     <!-- Empty state when no charges match filters -->
     <string name="no_charges_found">Nessuna ricarica trovata per il periodo selezionato</string>
 

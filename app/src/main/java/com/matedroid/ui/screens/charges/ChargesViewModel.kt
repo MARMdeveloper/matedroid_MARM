@@ -45,6 +45,8 @@ enum class ChargeTypeFilter(val label: String) {
     DC("DC")
 }
 
+data class LocationFilter(val name: String) // null name = All locations
+
 data class ChargeChartData(
     val label: String,
     val count: Int,
@@ -64,6 +66,8 @@ data class ChargesUiState(
     val isRefreshing: Boolean = false,
     val charges: List<ChargeData> = emptyList(),
     val dcChargeIds: Set<Int> = emptySet(),
+    val availableLocations: List<String> = emptyList(),
+    val selectedLocations: Set<String> = emptySet(),  // null = All locations
     val processedChargeIds: Set<Int> = emptySet(),  // Charges that have aggregate data
     val chartData: List<ChargeChartData> = emptyList(),
     val chartGranularity: ChartGranularity = ChartGranularity.MONTHLY,
@@ -164,6 +168,18 @@ class ChargesViewModel @Inject constructor(
         applyFiltersAndUpdateState()
     }
 
+    fun setLocationFilter(location: String) {
+        val current = _uiState.value.selectedLocations
+        val updated = if (location in current) current - location else current + location
+        _uiState.update { it.copy(selectedLocations = updated) }
+        applyFiltersAndUpdateState()
+    }
+
+    fun clearLocationFilter() {
+        _uiState.update { it.copy(selectedLocations = emptySet()) }
+        applyFiltersAndUpdateState()
+    }
+
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
@@ -259,15 +275,28 @@ class ChargesViewModel @Inject constructor(
             ChargeTypeFilter.AC -> allCharges.filter { it.chargeId !in dcChargeIds }
         }
 
+        // Extract unique locations from the complete set
+        val locations = allCharges.mapNotNull { it.address }.distinct().sorted()
+        // Apply location filter to displayCharges
+        val locationFilter = state.selectedLocations
+        val displayChargesFiltered = if (locationFilter.isNotEmpty())
+            displayCharges.filter {  it.address in locationFilter }
+        else displayCharges
+        // Apply location filter to Stats
+        val chargesForStatsFiltered = if (locationFilter.isNotEmpty())
+            chargesForStats.filter { it.address in locationFilter }
+        else chargesForStats
+
         // Calculate summary and chart data from filtered charges
-        val summary = calculateSummary(chargesForStats)
-        val chartData = calculateChartData(chargesForStats, granularity, state.startDate)
+        val summary = calculateSummary(chargesForStatsFiltered)
+        val chartData = calculateChartData(chargesForStatsFiltered, granularity, state.startDate)
 
         _uiState.update {
             it.copy(
                 isLoading = false,
                 isRefreshing = false,
-                charges = displayCharges,
+                charges = displayChargesFiltered,
+                availableLocations = locations,
                 summary = summary,
                 chartData = chartData
             )

@@ -359,6 +359,10 @@
     <!-- Section title for charge history list -->
     <string name="charge_history">Charge History</string>
 
+    <!-- Filter location -->
+    <string name="filter_location">Location</string>
+    <string name="search">Search</string>
+
     <!-- Empty state when no charges match filters -->
     <string name="no_charges_found">No charges found for selected period</string>
 
