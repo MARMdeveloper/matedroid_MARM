@@ -1,12 +1,12 @@
 ---
 name: translate
-description: Add a new translatable string to all locale files (English, Italian, Spanish, Catalan). Use when adding user-visible text to the app.
+description: Add a new translatable string to all locale files (English, Italian, Spanish, Catalan, Chinese). Use when adding user-visible text to the app.
 allowed-tools: Read, Edit
 ---
 
 # Translate Skill
 
-Add a new string resource to all 4 locale files.
+Add a new string resource to all 5 locale files.
 
 ## String Resource Files
 
@@ -16,6 +16,7 @@ Add a new string resource to all 4 locale files.
 | Italian | `app/src/main/res/values-it/strings.xml`      |
 | Spanish | `app/src/main/res/values-es/strings.xml`      |
 | Catalan | `app/src/main/res/values-ca/strings.xml`      |
+| Chinese | `app/src/main/res/values-zh/strings.xml`      |
 
 ## Process
 
@@ -24,9 +25,9 @@ Add a new string resource to all 4 locale files.
    - The English text
    - Context for translators (optional but recommended)
 
-2. Generate translations for Italian, Spanish, and Catalan
+2. Generate translations for Italian, Spanish, Catalan, and Chinese (Simplified)
 
-3. Add to all 4 files with an XML comment for context:
+3. Add to all 5 files with an XML comment for context:
    ```xml
    <!-- Context: Shown as the title of the drive details screen -->
    <string name="drive_details_title">Drive Details</string>
@@ -39,6 +40,8 @@ Add a new string resource to all 4 locale files.
 - Technical terms like AC, DC, kW, kWh should NOT be translated
 - Format specifiers (`%s`, `%d`, `%1$s`) must be preserved in translations
 - Keep translations natural - don't be overly literal
+- For Chinese: keep all unit symbols in Latin alphabet (kWh, kW, km/h, °C, bar) per Chinese national standard GB 3100-1993 and Tesla China convention. Do NOT use Chinese character equivalents (千瓦时, 公里, etc.)
+- For Chinese: plurals `one` and `other` should be identical (Chinese does not inflect for number)
 
 ## String with Parameters
 

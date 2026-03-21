@@ -71,6 +71,7 @@ Automatically translate the English changelog and write the translations to:
 - `fastlane/metadata/android/it-IT/changelogs/{versionCode}.txt` (Italian)
 - `fastlane/metadata/android/es-ES/changelogs/{versionCode}.txt` (Spanish)
 - `fastlane/metadata/android/ca-ES/changelogs/{versionCode}.txt` (Catalan)
+- `fastlane/metadata/android/zh-CN/changelogs/{versionCode}.txt` (Chinese Simplified)
 
 Do this immediately after creating the English changelog - no user interaction needed.
 
@@ -80,6 +81,7 @@ Translation guidelines:
 - Keep proper nouns unchanged: MateDroid, Teslamate, Tesla, GitHub, etc.
 - Maintain the same tone: engaging but concise
 - Each translation must also respect the 500 character limit
+- For Chinese: keep all unit symbols in Latin alphabet (kWh, kW, km/h, °C, bar) per GB 3100-1993 standard and Tesla China convention. Do NOT use Chinese character equivalents (千瓦时, 公里 etc.)
 
 All the changelogs in fastlane, for any language, MUST BE LESS THAN 500 characters. ALWAYS check with `wc` how long they are.
 
