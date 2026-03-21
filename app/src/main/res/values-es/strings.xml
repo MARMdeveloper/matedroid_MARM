@@ -1082,4 +1082,17 @@
     <string name="notification_permission_title">Mantente informado</string>
     <string name="notification_permission_message">MateDroid puede notificarte sobre eventos del modo centinela, avisos de presión de neumáticos y estado de carga. Activa las notificaciones para estar al día sobre tu coche.</string>
     <string name="notification_permission_grant">Activar notificaciones</string>
+
+    <!-- ==================== Where Was I Screen ==================== -->
+    <string name="where_was_i_title">Donde estaba ese dia?</string>
+    <string name="where_was_i_hint">Elige una fecha</string>
+    <string name="where_was_i_screen_title">Donde estaba?</string>
+    <string name="where_was_i_driving">Conduciendo</string>
+    <string name="where_was_i_charging">Cargando</string>
+    <string name="where_was_i_parked">Aparcado</string>
+    <string name="where_was_i_go">Ir!</string>
+    <string name="where_was_i_pick_date">Elige una fecha</string>
+    <string name="where_was_i_pick_time">Elige una hora</string>
+    <string name="where_was_i_tap_details">Toca para ver detalles</string>
+    <string name="where_was_i_no_data">No hay datos disponibles para esta fecha</string>
 </resources>

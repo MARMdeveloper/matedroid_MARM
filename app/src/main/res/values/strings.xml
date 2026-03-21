@@ -1096,4 +1096,28 @@
     <string name="notification_permission_message">MateDroid can notify you about sentry mode events, tyre pressure warnings, and charging status. Enable notifications to stay informed about your car.</string>
     <!-- Confirm button to trigger the system notification permission prompt -->
     <string name="notification_permission_grant">Enable notifications</string>
+
+    <!-- ==================== Where Was I Screen ==================== -->
+    <!-- Title of the "Where was I that day?" feature card on dashboard -->
+    <string name="where_was_i_title">Where was I that day?</string>
+    <!-- Hint text on the tappable chip to pick a date -->
+    <string name="where_was_i_hint">Pick a date</string>
+    <!-- Screen title for the Where Was I result screen -->
+    <string name="where_was_i_screen_title">Where was I?</string>
+    <!-- Label when the car was driving -->
+    <string name="where_was_i_driving">Driving</string>
+    <!-- Label when the car was charging -->
+    <string name="where_was_i_charging">Charging</string>
+    <!-- Label when the car was parked -->
+    <string name="where_was_i_parked">Parked</string>
+    <!-- Button to confirm date/time selection -->
+    <string name="where_was_i_go">Go!</string>
+    <!-- Date picker dialog title -->
+    <string name="where_was_i_pick_date">Pick a date</string>
+    <!-- Time picker dialog title -->
+    <string name="where_was_i_pick_time">Pick a time</string>
+    <!-- Tap hint on driving/charging state cards -->
+    <string name="where_was_i_tap_details">Tap for details</string>
+    <!-- Error when no data available for the selected date -->
+    <string name="where_was_i_no_data">No data available for this date</string>
 </resources>

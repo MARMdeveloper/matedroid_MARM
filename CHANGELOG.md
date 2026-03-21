@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Where was I that day?**: New feature on the dashboard to look up the car's position and activity at any past date and time. Shows map, location breadcrumb (country/region/city), car state (driving/charging/parked), state-specific details, and weather. Tapping a driving or charging card navigates to the corresponding detail screen.
+- **Line chart visual revamp**: Smooth cubic Bezier curves, gradient fills, dashed grid lines, vertical crosshair, glowing indicators, animated entrance, and theme-aware tooltips.
+- **Battery heater overlay**: Grafana-style orange annotation bands on drive detail Power and Battery charts highlighting battery pre-heating periods.
+- **Speed distribution histogram**: Drive details now include a speed histogram showing the percentage of time spent in each speed bucket (10 km/h or 5 mph).
+
 ## [1.2.3] - 2026-03-08
 
 ### Added

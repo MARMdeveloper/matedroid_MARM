@@ -1082,4 +1082,17 @@
     <string name="notification_permission_title">Resta informato</string>
     <string name="notification_permission_message">MateDroid può avvisarti su eventi della modalità sentinella, avvisi di pressione pneumatici e stato di ricarica. Abilita le notifiche per restare aggiornato sulla tua auto.</string>
     <string name="notification_permission_grant">Abilita notifiche</string>
+
+    <!-- ==================== Where Was I Screen ==================== -->
+    <string name="where_was_i_title">Dove ero quel giorno?</string>
+    <string name="where_was_i_hint">Scegli una data</string>
+    <string name="where_was_i_screen_title">Dove ero?</string>
+    <string name="where_was_i_driving">In marcia</string>
+    <string name="where_was_i_charging">In ricarica</string>
+    <string name="where_was_i_parked">Parcheggiato</string>
+    <string name="where_was_i_go">Vai!</string>
+    <string name="where_was_i_pick_date">Scegli una data</string>
+    <string name="where_was_i_pick_time">Scegli un orario</string>
+    <string name="where_was_i_tap_details">Tocca per dettagli</string>
+    <string name="where_was_i_no_data">Nessun dato disponibile per questa data</string>
 </resources>

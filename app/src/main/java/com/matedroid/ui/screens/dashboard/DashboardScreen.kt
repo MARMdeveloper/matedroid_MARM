@@ -48,6 +48,8 @@ import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.DriveEta
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
@@ -55,7 +57,14 @@ import androidx.compose.material.icons.filled.WbSunny
 import com.matedroid.ui.icons.CustomIcons
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
@@ -157,6 +166,7 @@ fun DashboardScreen(
     onNavigateToUpdates: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     onNavigateToStats: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     onNavigateToCurrentCharge: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
+    onNavigateToWhereWasI: (carId: Int, timestamp: String, exteriorColor: String?) -> Unit = { _, _, _ -> },
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -258,6 +268,11 @@ fun DashboardScreen(
                         },
                         onSaveCarImageOverride = { override ->
                             viewModel.saveCarImageOverride(override)
+                        },
+                        onNavigateToWhereWasI = { timestamp ->
+                            uiState.selectedCarId?.let { carId ->
+                                onNavigateToWhereWasI(carId, timestamp, uiState.selectedCarExterior?.exteriorColor)
+                            }
                         }
                     )
                 }
@@ -415,7 +430,8 @@ private fun DashboardContent(
     onNavigateToUpdates: () -> Unit = {},
     onNavigateToStats: () -> Unit = {},
     onNavigateToCurrentCharge: () -> Unit = {},
-    onSaveCarImageOverride: (CarImageOverride?) -> Unit = {}
+    onSaveCarImageOverride: (CarImageOverride?) -> Unit = {},
+    onNavigateToWhereWasI: (timestamp: String) -> Unit = {}
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val palette = CarColorPalettes.forExteriorColor(carExterior?.exteriorColor, isDarkTheme)
@@ -471,7 +487,13 @@ private fun DashboardContent(
 
         // Location Section - show if we have coordinates
         if (status.latitude != null && status.longitude != null) {
-            LocationCard(status = status, units = units, resolvedAddress = resolvedAddress, palette = palette)
+            LocationCard(
+                status = status,
+                units = units,
+                resolvedAddress = resolvedAddress,
+                palette = palette,
+                onNavigateToWhereWasI = onNavigateToWhereWasI
+            )
         }
 
         // Vehicle Info Card with navigation buttons
@@ -1525,15 +1547,20 @@ private fun ChargingDetailsRow(
 }
 
 @Composable
-private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: String? = null, palette: CarColorPalette) {
+@OptIn(ExperimentalMaterial3Api::class)
+private fun LocationCard(
+    status: CarStatus,
+    units: Units?,
+    resolvedAddress: String? = null,
+    palette: CarColorPalette,
+    onNavigateToWhereWasI: (timestamp: String) -> Unit = {}
+) {
     val context = LocalContext.current
     val latitude = status.latitude
     val longitude = status.longitude
     val geofence = status.geofence
     val elevation = status.elevation
 
-    // Location text: geofence name if available, then resolved address, then coordinates
-    // Use takeIf to handle empty strings (API may return "" instead of null)
     val locationText = geofence?.takeIf { it.isNotBlank() }
         ?: resolvedAddress?.takeIf { it.isNotBlank() }
         ?: run {
@@ -1552,83 +1579,198 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
         }
     }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { openInMaps() },
-        colors = CardDefaults.cardColors(
-            containerColor = palette.surface
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.LocationOn,
-                    contentDescription = null,
-                    tint = palette.accent
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.location),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = palette.onSurfaceVariant
-                    )
-                    Text(
-                        text = locationText,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = palette.onSurface
-                    )
-                }
-
-                // Small map showing car location
-                if (latitude != null && longitude != null) {
-                    Spacer(modifier = Modifier.width(12.dp))
-                    SmallLocationMap(
-                        latitude = latitude,
-                        longitude = longitude,
-                        onClick = { openInMaps() },
-                        modifier = Modifier
-                            .width(140.dp)
-                            .height(70.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                    )
-                }
+    // DateTimePicker state
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis <= System.currentTimeMillis()
             }
+        }
+    )
+    val timePickerState = rememberTimePickerState()
 
-            // Elevation row - icon aligned with location icon, text aligned with location text
-            if (elevation != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = palette.surface)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Location content (tappable to open maps)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { openInMaps() }
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) {
                     Icon(
-                        imageVector = Icons.Filled.Terrain,
+                        imageVector = Icons.Filled.LocationOn,
                         contentDescription = null,
                         tint = palette.accent
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.elevation),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = palette.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = UnitFormatter.formatElevation(elevation, units),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.onSurface,
-                        maxLines = 1,
-                        softWrap = false
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.location),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = palette.onSurfaceVariant
+                        )
+                        Text(
+                            text = locationText,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = palette.onSurface
+                        )
+                    }
+
+                    if (latitude != null && longitude != null) {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        SmallLocationMap(
+                            latitude = latitude,
+                            longitude = longitude,
+                            onClick = { openInMaps() },
+                            modifier = Modifier
+                                .width(140.dp)
+                                .height(70.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                        )
+                    }
+                }
+
+                if (elevation != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Terrain,
+                            contentDescription = null,
+                            tint = palette.accent
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(R.string.elevation),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = palette.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = UnitFormatter.formatElevation(elevation, units),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = palette.onSurface,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
                 }
             }
+
+            // Divider + "Where was I that day?" entrypoint
+            HorizontalDivider(color = palette.onSurfaceVariant.copy(alpha = 0.2f))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.History,
+                    contentDescription = null,
+                    tint = palette.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = stringResource(R.string.where_was_i_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                AssistChip(
+                    onClick = { showDatePicker = true },
+                    label = {
+                        Text(
+                            text = stringResource(R.string.where_was_i_hint),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                )
+            }
         }
+    }
+
+    // Date picker dialog
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDatePicker = false
+                    showTimePicker = true
+                }) {
+                    Text(stringResource(R.string.where_was_i_go))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // Time picker dialog
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showTimePicker = false
+                    val selectedMillis = datePickerState.selectedDateMillis ?: return@TextButton
+                    val selectedDate = java.time.Instant.ofEpochMilli(selectedMillis)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toLocalDate()
+                    val timestamp = "%sT%02d:%02d:00Z".format(
+                        selectedDate.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE),
+                        timePickerState.hour,
+                        timePickerState.minute
+                    )
+                    onNavigateToWhereWasI(timestamp)
+                }) {
+                    Text(stringResource(R.string.where_was_i_go))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+            title = {
+                val selectedMillis = datePickerState.selectedDateMillis
+                val dateText = if (selectedMillis != null) {
+                    val date = java.time.Instant.ofEpochMilli(selectedMillis)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toLocalDate()
+                    date.format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM))
+                } else ""
+                Text(dateText)
+            },
+            text = {
+                TimePicker(state = timePickerState)
+            }
+        )
     }
 }
 

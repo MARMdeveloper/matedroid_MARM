@@ -38,6 +38,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import com.matedroid.ui.screens.updates.SoftwareVersionsScreen
+import com.matedroid.ui.screens.wherewasi.WhereWasIScreen
 import com.matedroid.domain.model.YearFilter
 import kotlinx.coroutines.launch
 
@@ -154,6 +155,14 @@ sealed class Screen(val route: String) {
             return "stats/$carId/countries/$countryCode/regions?${params.joinToString("&")}"
         }
     }
+    data object WhereWasI : Screen("wherewasi/{carId}?timestamp={timestamp}&exteriorColor={exteriorColor}") {
+        fun createRoute(carId: Int, timestamp: String, exteriorColor: String? = null): String {
+            val encodedTimestamp = URLEncoder.encode(timestamp, StandardCharsets.UTF_8.toString())
+            val params = mutableListOf("timestamp=$encodedTimestamp")
+            if (exteriorColor != null) params.add("exteriorColor=$exteriorColor")
+            return "wherewasi/$carId?${params.joinToString("&")}"
+        }
+    }
 }
 
 @Composable
@@ -267,6 +276,9 @@ fun NavGraph(
                 },
                 onNavigateToCurrentCharge = { carId, exteriorColor ->
                     navController.navigate(Screen.CurrentCharge.createRoute(carId, exteriorColor))
+                },
+                onNavigateToWhereWasI = { carId, timestamp, exteriorColor ->
+                    navController.navigate(Screen.WhereWasI.createRoute(carId, timestamp, exteriorColor))
                 }
             )
         }
@@ -565,6 +577,44 @@ fun NavGraph(
                 yearFilter = yearFilter,
                 exteriorColor = exteriorColor,
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.WhereWasI.route,
+            arguments = listOf(
+                navArgument("carId") { type = NavType.IntType },
+                navArgument("timestamp") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("exteriorColor") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
+            val timestamp = backStackEntry.arguments?.getString("timestamp")?.let {
+                URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
+            } ?: return@composable
+            val exteriorColor = backStackEntry.arguments?.getString("exteriorColor")
+
+            WhereWasIScreen(
+                carId = carId,
+                targetTimestamp = timestamp,
+                exteriorColor = exteriorColor,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDriveDetail = { driveId ->
+                    navController.navigate(Screen.DriveDetail.createRoute(carId, driveId, exteriorColor))
+                },
+                onNavigateToChargeDetail = { chargeId ->
+                    navController.navigate(Screen.ChargeDetail.createRoute(carId, chargeId, exteriorColor))
+                },
+                onNavigateToCountriesVisited = {
+                    navController.navigate(Screen.CountriesVisited.createRoute(carId, exteriorColor))
+                }
             )
         }
     }
