@@ -1,0 +1,8 @@
+Gran actualització amb una nova funció, millores visuals i suport per al xinès.
+
+Novetats:
+- "On era aquell dia?" — cerca la posició i l'activitat del teu cotxe en qualsevol data/hora passada
+- Corbes cúbiques suaus, farciments degradats i animació d'entrada a tots els gràfics
+- Superposició del calentador de bateria als gràfics de viatge
+- Histograma de distribució de velocitat als detalls de viatge
+- Suport per al xinès simplificat

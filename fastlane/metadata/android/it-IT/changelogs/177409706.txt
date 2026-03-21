@@ -1,0 +1,8 @@
+Grande aggiornamento con una nuova funzione, miglioramenti grafici e supporto alla lingua cinese.
+
+Novità:
+- "Dove ero quel giorno?" — cerca la posizione e l'attività della tua auto in qualsiasi data/ora passata
+- Curve cubiche, riempimenti sfumati e animazioni d'ingresso su tutti i grafici
+- Overlay del riscaldatore batteria nei dettagli viaggio
+- Istogramma distribuzione velocità nei dettagli viaggio
+- Supporto alla lingua cinese semplificata

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta1] - 2026-03-21
+
 ### Added
 - **Where was I that day?**: New feature on the dashboard to look up the car's position and activity at any past date and time. Shows map, location breadcrumb (country/region/city), car state (driving/charging/parked), state-specific details, and weather. Tapping a driving or charging card navigates to the corresponding detail screen.
 - **Line chart visual revamp**: Smooth cubic Bezier curves, gradient fills, dashed grid lines, vertical crosshair, glowing indicators, animated entrance, and theme-aware tooltips.
@@ -438,7 +440,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.3...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.3.0-beta1...HEAD
+[1.3.0-beta1]: https://github.com/vide/matedroid/compare/v1.2.3...v1.3.0-beta1
 [1.2.3]: https://github.com/vide/matedroid/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/vide/matedroid/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/vide/matedroid/compare/v1.2.0...v1.2.1

@@ -1,0 +1,8 @@
+Big update with a new feature, visual improvements, and Chinese language support.
+
+Added:
+- "Where was I that day?" — look up your car's position and activity at any past date/time
+- Smooth cubic curves, gradient fills, and animated entrance on all line charts
+- Battery heater overlay on drive detail charts
+- Speed distribution histogram in drive details
+- Simplified Chinese language support

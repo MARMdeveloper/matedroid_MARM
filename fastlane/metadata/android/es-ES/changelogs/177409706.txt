@@ -1,0 +1,8 @@
+Gran actualización con una nueva función, mejoras visuales y soporte para chino.
+
+Novedades:
+- "Donde estaba ese dia?" — consulta la posición y actividad de tu coche en cualquier fecha/hora pasada
+- Curvas cúbicas suaves, rellenos degradados y animación de entrada en todos los gráficos
+- Superposición del calentador de batería en los gráficos de viaje
+- Histograma de distribución de velocidad en detalles de viaje
+- Soporte para chino simplificado
