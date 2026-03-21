@@ -1,0 +1,1127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name shown in launcher and system settings -->
+    <string name="app_name">MateDroid</string>
+
+    <!-- ==================== Common / Shared ==================== -->
+    <!-- Generic button labels used throughout the app -->
+    <string name="cancel">取消</string>
+    <string name="ok">确定</string>
+
+    <!-- Shown when a value is not available or loading -->
+    <string name="unknown">未知</string>
+
+    <!-- ==================== Dashboard Screen ==================== -->
+    <!-- Dialog title when user has multiple vehicles and can choose one -->
+    <string name="select_vehicle">选择车辆</string>
+
+    <!-- Fallback name for a car when no display name is set. %d is the car ID number -->
+    <string name="car_fallback_name">车辆 %d</string>
+
+    <!-- Content description for checkmark icon next to selected vehicle -->
+    <string name="selected">已选择</string>
+
+    <!-- Content description for dropdown arrow indicating car can be changed -->
+    <string name="select_car">选择车辆</string>
+
+    <!-- Content description for settings gear icon in top bar -->
+    <string name="settings">设置</string>
+
+    <!-- Shown with a spinner while fetching vehicle data from the server -->
+    <string name="loading_vehicle_data">正在加载车辆数据…</string>
+
+    <!-- Empty state: title when no vehicles are found in the account -->
+    <string name="no_vehicles_found">未找到车辆</string>
+
+    <!-- Empty state: subtitle explaining what to check -->
+    <string name="no_vehicles_hint">请确认 TeslaMate API 已正确配置</string>
+
+    <!-- Error state: title when data loading fails -->
+    <string name="error_loading_data">数据加载失败</string>
+
+    <!-- Error details: button to show technical error details -->
+    <string name="error_show_details">显示详情</string>
+
+    <!-- Error details: dialog title -->
+    <string name="error_details_title">错误详情</string>
+
+    <!-- Vehicle state shown when locked -->
+    <string name="locked">已锁定</string>
+
+    <!-- Vehicle state shown when unlocked -->
+    <string name="unlocked">已解锁</string>
+
+    <!-- Content description when car is plugged in but not charging -->
+    <string name="plugged_in">已插入充电线</string>
+
+    <!-- Vehicle state shown when driving -->
+    <string name="driving">行驶中</string>
+
+    <!-- Vehicle state shown when charging -->
+    <string name="charging">充电中</string>
+
+    <!-- Vehicle state shown when online -->
+    <string name="online">在线</string>
+
+    <!-- Content description when sentry mode is active -->
+    <string name="sentry_mode_active">哨兵模式已启用</string>
+
+    <!-- Content description for inside temperature indicator -->
+    <string name="inside_temp">车内温度</string>
+
+    <!-- Content description for outside temperature indicator -->
+    <string name="outside_temp">车外温度</string>
+
+    <!-- Label for external/outside temperature -->
+    <string name="temp_ext_label">外:</string>
+
+    <!-- Label for internal/inside temperature -->
+    <string name="temp_int_label">内:</string>
+
+    <!-- Tooltip shown when climate control is active -->
+    <string name="climate_active">空调已开启</string>
+
+    <!-- Tooltip shown when climate control is inactive -->
+    <string name="climate_inactive">空调已关闭</string>
+
+    <!-- Tooltip shown when car is asleep, %s is the time when it went to sleep -->
+    <string name="asleep_since">自 %s 起休眠</string>
+
+    <!-- Tooltip shown when car is offline, %s is the time when it went offline -->
+    <string name="offline_since">自 %s 起离线</string>
+
+    <!-- Word for yesterday used in timestamps -->
+    <string name="yesterday">昨天</string>
+
+    <!-- Content description for the car image, indicates it's tappable -->
+    <string name="car_image_tap_for_stats">车辆图片 - 点击查看统计</string>
+
+    <!-- Content description for arrow button leading to stats screen -->
+    <string name="view_stats">查看统计</string>
+
+    <!-- Content description for battery icon, indicates it's tappable -->
+    <string name="tap_for_battery_health">点击查看电池健康状态</string>
+
+    <!-- Battery charge limit label. %d is the percentage (e.g., "Limit: 80%") -->
+    <string name="charge_limit_format">上限: %d%%</string>
+
+    <!-- Battery charge limit label when value is unavailable -->
+    <string name="charge_limit_unknown">上限: --</string>
+
+    <!-- Power unit abbreviation for kilowatts -->
+    <string name="unit_kw">kW</string>
+
+    <!-- DC (Direct Current) charging indicator badge -->
+    <string name="charging_dc">DC</string>
+
+    <!-- AC (Alternating Current) charging indicator badge -->
+    <string name="charging_ac">AC</string>
+
+    <!-- Content description for warning icon when battery is above 90% -->
+    <string name="high_charge_level">电量过高</string>
+
+    <!-- Title and message for the high SoC info dialog shown when tapping the warning icon -->
+    <string name="high_soc_warning_title">高电量状态</string>
+    <string name="high_soc_warning_message">长时间将电池保持在 100% 或接近满电状态可能会加速电池老化。\n\n• NCM 电池（大多数 Tesla 车型）：日常使用建议充电至 80–90%。仅在长途出行前充至 100%。\n• LFP 电池（标准续航版 Model 3/Y）：可以经常充至 100%——Tesla 建议定期满充以校准电池。\n\n请尽量避免车辆长时间停放在满电状态。</string>
+
+    <!-- Location card section title -->
+    <string name="location">位置</string>
+
+    <!-- Elevation label in location card -->
+    <string name="elevation">海拔</string>
+
+    <!-- Vehicle info card section title -->
+    <string name="vehicle_info">车辆信息</string>
+
+    <!-- Navigation button to charges list -->
+    <string name="nav_charges">充电记录</string>
+
+    <!-- Navigation button to drives list -->
+    <string name="nav_drives">行程记录</string>
+
+    <!-- Navigation button to mileage/odometer screen -->
+    <string name="nav_mileage">里程</string>
+
+    <!-- Navigation button to software versions screen -->
+    <string name="nav_software">软件</string>
+
+    <!-- Tire pressure position labels (Front Left, Front Right, Rear Left, Rear Right) -->
+    <string name="tire_fl">左前</string>
+    <string name="tire_fr">右前</string>
+    <string name="tire_rl">左后</string>
+    <string name="tire_rr">右后</string>
+
+    <!-- ==================== Settings Screen ==================== -->
+    <!-- Top bar title for settings screen -->
+    <string name="settings_title">MateDroid 设置</string>
+
+    <!-- Shown while loading settings from storage -->
+    <string name="loading_settings">正在加载设置…</string>
+
+    <!-- Content description for expand/collapse section arrows -->
+    <string name="collapse">收起</string>
+    <string name="expand">展开</string>
+
+    <!-- Server connection section -->
+    <string name="settings_connect_title">连接 TeslamateApi</string>
+    <string name="settings_connect_description">输入你的 TeslamateApi 服务器 URL 以连接。</string>
+
+    <!-- Server URL field -->
+    <string name="settings_server_url_label">服务器 URL</string>
+    <string name="settings_server_url_placeholder">https://teslamate-api.example.com</string>
+
+    <!-- Advanced network settings section (collapsible) -->
+    <string name="settings_advanced_network">高级网络设置</string>
+
+    <!-- Secondary server URL field -->
+    <string name="settings_secondary_url_label">备用服务器 URL（可选）</string>
+    <string name="settings_secondary_url_placeholder">https://teslamate-api-internal.local</string>
+    <string name="settings_secondary_url_hint">当主服务器不可用时使用的备用 URL。适用于局域网/VPN 访问。</string>
+
+    <!-- API token field -->
+    <string name="settings_api_token_label">API 令牌（可选）</string>
+    <string name="settings_api_token_placeholder">你的 API 令牌</string>
+    <string name="settings_api_token_hint">如果你的 TeslamateApi 不需要身份验证，请留空。</string>
+
+    <!-- Content description for password visibility toggle -->
+    <string name="hide_token">隐藏令牌</string>
+    <string name="show_token">显示令牌</string>
+
+    <!-- Accept invalid certificates toggle -->
+    <string name="settings_accept_invalid_certs">接受无效证书</string>
+    <string name="settings_accept_invalid_certs_hint">为自签名证书启用此选项</string>
+    <string name="settings_accept_invalid_certs_warning">禁用证书验证会使连接容易受到中间人攻击。请仅在可信网络上使用。</string>
+
+    <!-- Display settings section -->
+    <string name="settings_display_title">显示设置</string>
+
+    <!-- Currency selector -->
+    <string name="settings_currency_label">费用货币</string>
+    <string name="settings_currency_select">选择货币</string>
+
+    <!-- Extra settings section (collapsible) -->
+    <string name="settings_extra">附加设置</string>
+
+    <!-- Show short drives/charges toggle -->
+    <string name="settings_show_short_label">显示短途行程/充电</string>
+    <string name="settings_show_short_hint">在列表中显示极短行程和少量充电记录</string>
+    <string name="more_information">更多信息</string>
+
+    <!-- Short drives/charges info dialog -->
+    <string name="settings_short_dialog_title">短途行程和充电</string>
+    <string name="settings_short_dialog_text">关闭时（默认），以下内容将从列表中隐藏：\n\n• 不足 1 分钟或不到 0.1 km 的行程\n• 0.1 kWh 以下的充电\n\n这些记录仍会计入总计、平均值和统计数据。启用此设置可在列表中查看所有记录。</string>
+
+    <!-- Force resync button and dialog -->
+    <string name="settings_resync_button">强制全量同步</string>
+    <string name="settings_resyncing">正在同步…</string>
+    <string name="settings_resync_hint">重新下载所有行程和充电详情。如果统计数据异常，请使用此功能。</string>
+    <string name="settings_resync_dialog_title">确定要强制全量同步？</string>
+    <string name="settings_resync_dialog_text_prefix">此操作将</string>
+    <string name="settings_resync_dialog_text_delete">删除</string>
+    <string name="settings_resync_dialog_text_suffix">所有已缓存的行程、充电和统计数据，然后从服务器重新下载。\n\n此过程可能需要几分钟，具体取决于数据量。</string>
+    <string name="settings_resync_confirm">同步</string>
+
+    <!-- Action buttons -->
+    <string name="settings_test_connection">测试连接</string>
+    <string name="settings_save">保存并继续</string>
+
+    <!-- Debug palette preview button -->
+    <string name="settings_palette_preview">预览调色板（调试）</string>
+
+    <!-- Test result labels -->
+    <string name="settings_primary_server">主服务器</string>
+    <string name="settings_secondary_server">备用服务器</string>
+    <string name="settings_connected">已连接</string>
+
+    <!-- Link to GitHub issues page shown below version number -->
+    <string name="settings_report_issue">反馈问题</string>
+
+    <!-- ==================== Drives Screen ==================== -->
+    <!-- Top bar title -->
+    <string name="drives_title">行程</string>
+
+    <!-- Content description for back button -->
+    <string name="back">返回</string>
+
+    <!-- Section title for drive history list -->
+    <string name="drive_history">行程历史</string>
+
+    <!-- Empty state when no drives match filters -->
+    <string name="no_drives_found">所选时段内无行程记录</string>
+
+    <!-- Summary card title -->
+    <string name="summary">概览</string>
+
+    <!-- Summary card labels -->
+    <string name="total_trips">总行程数</string>
+    <string name="total_distance">总距离</string>
+    <string name="total_time">总时间</string>
+    <string name="max_speed">最高速度</string>
+
+    <!-- Drive item stat labels -->
+    <string name="distance">距离</string>
+    <string name="duration">时长</string>
+    <string name="battery">电池</string>
+
+    <!-- Date filter chips -->
+    <string name="filter_today">今天</string>
+    <string name="filter_last_7_days">近 7 天</string>
+    <string name="filter_last_30_days">近 30 天</string>
+    <string name="filter_last_90_days">近 90 天</string>
+    <string name="filter_last_year">近一年</string>
+    <string name="filter_all_time">全部</string>
+
+    <!-- Distance filter chips (metric) -->
+    <string name="filter_all">全部</string>
+    <string name="filter_commute_km">通勤 (&lt; 10 km)</string>
+    <string name="filter_day_trip_km">短途 (10–100 km)</string>
+    <string name="filter_road_trip_km">长途 (&gt; 100 km)</string>
+
+    <!-- Distance filter chips (imperial) -->
+    <string name="filter_commute_mi">通勤 (&lt; 6 mi)</string>
+    <string name="filter_day_trip_mi">短途 (6–60 mi)</string>
+    <string name="filter_road_trip_mi">长途 (&gt; 60 mi)</string>
+
+    <!-- Chart titles - drives per period -->
+    <string name="chart_drives_per_day">每日行程数</string>
+    <string name="chart_drives_per_week">每周行程数</string>
+    <string name="chart_drives_per_month">每月行程数</string>
+
+    <!-- Chart titles - driving time per period -->
+    <string name="chart_time_per_day">每日行驶时间</string>
+    <string name="chart_time_per_week">每周行驶时间</string>
+    <string name="chart_time_per_month">每月行驶时间</string>
+
+    <!-- Chart titles - distance per period -->
+    <string name="chart_distance_per_day">每日行驶距离</string>
+    <string name="chart_distance_per_week">每周行驶距离</string>
+    <string name="chart_distance_per_month">每月行驶距离</string>
+
+    <!-- Chart titles - top speed per period -->
+    <string name="chart_speed_per_day">每日最高速度</string>
+    <string name="chart_speed_per_week">每周最高速度</string>
+    <string name="chart_speed_per_month">每月最高速度</string>
+
+    <!-- ==================== Drive Detail Screen ==================== -->
+    <!-- Top bar title -->
+    <string name="drive_details_title">行程详情</string>
+
+    <!-- Route card labels -->
+    <string name="from">出发</string>
+    <string name="to">到达</string>
+    <string name="unknown_location">未知地点</string>
+    <string name="started">开始</string>
+    <string name="ended">结束</string>
+    <!-- %s is the duration string (e.g., "1h 23m") -->
+    <string name="duration_label">时长: %s</string>
+
+    <!-- Map card title -->
+    <string name="route_map">路线地图</string>
+
+    <!-- Stats section titles -->
+    <string name="speed">速度</string>
+    <string name="trip">行程</string>
+    <string name="power">功率</string>
+    <string name="temperature">温度</string>
+
+    <!-- Stat labels -->
+    <string name="maximum">最大</string>
+    <string name="minimum">最小</string>
+    <string name="average">平均</string>
+    <string name="avg_distance">平均（距离）</string>
+    <string name="efficiency">能效</string>
+    <string name="start">起始</string>
+    <string name="end">终止</string>
+    <string name="used">已用</string>
+    <string name="energy">能量</string>
+    <string name="max_accel">最大（加速）</string>
+    <string name="min_regen">最小（回收）</string>
+    <string name="gain">增加</string>
+    <string name="loss">损耗</string>
+    <string name="outside">车外</string>
+    <string name="inside">车内</string>
+
+    <!-- Chart card titles -->
+    <string name="speed_profile">速度曲线</string>
+    <string name="power_profile">功率曲线</string>
+    <string name="battery_level">电池电量</string>
+    <string name="elevation_profile">海拔曲线</string>
+    <!-- Title for the speed distribution histogram in drive details -->
+    <string name="speed_distribution">速度分布</string>
+
+    <!-- Weather section -->
+    <string name="weather_along_way">沿途天气</string>
+
+    <!-- ==================== Charges Screen ==================== -->
+    <!-- Top bar title -->
+    <string name="charges_title">充电记录</string>
+
+    <!-- Section title for charge history list -->
+    <string name="charge_history">充电历史</string>
+
+    <!-- Filter location -->
+    <string name="filter_location">位置</string>
+    <string name="search">搜索</string>
+
+    <!-- Empty state when no charges match filters -->
+    <string name="no_charges_found">所选时段内无充电记录</string>
+
+    <!-- Summary card labels -->
+    <string name="total_sessions">总充电次数</string>
+    <string name="total_energy">总能量</string>
+    <string name="total_cost">总费用</string>
+    <string name="avg_cost_per_session">平均费用/次</string>
+
+    <!-- Charge item stat labels -->
+    <string name="energy_added">已充</string>
+    <string name="cost">费用</string>
+
+    <!-- Content description for edit cost button -->
+    <string name="edit">编辑</string>
+
+    <!-- Chart titles - energy per period -->
+    <string name="chart_energy_per_day">每日充电量</string>
+    <string name="chart_energy_per_week">每周充电量</string>
+    <string name="chart_energy_per_month">每月充电量</string>
+
+    <!-- Chart titles - cost per period -->
+    <string name="chart_cost_per_day">每日费用</string>
+    <string name="chart_cost_per_week">每周费用</string>
+    <string name="chart_cost_per_month">每月费用</string>
+
+    <!-- Chart titles - charges count per period -->
+    <string name="chart_charges_per_day">每日充电次数</string>
+    <string name="chart_charges_per_week">每周充电次数</string>
+    <string name="chart_charges_per_month">每月充电次数</string>
+
+    <!-- ==================== Charge Detail Screen ==================== -->
+    <!-- Top bar title -->
+    <string name="charge_details_title">充电详情</string>
+
+    <!-- Header labels -->
+    <string name="energy_added_header">已充电量</string>
+
+    <!-- Map marker title -->
+    <string name="charge_location">充电位置</string>
+
+    <!-- Stats section titles -->
+    <string name="charger">充电桩</string>
+
+    <!-- Charger stats labels -->
+    <string name="voltage_max">电压（最大）</string>
+    <string name="voltage_min">电压（最小）</string>
+    <string name="voltage_avg">电压（平均）</string>
+    <string name="current_max">电流（最大）</string>
+    <string name="current_min">电流（最小）</string>
+    <string name="current_avg">电流（平均）</string>
+
+    <!-- Cost stats labels -->
+    <string name="total">总计</string>
+    <string name="per_kwh">每 kWh</string>
+
+    <!-- Chart card titles -->
+    <string name="voltage_profile">电压曲线</string>
+    <string name="current_profile">电流曲线</string>
+
+    <!-- ==================== Battery Screen ==================== -->
+    <!-- Top bar title -->
+    <string name="battery_health_title">电池健康</string>
+
+    <!-- Empty state -->
+    <string name="no_battery_data">暂无电池数据</string>
+
+    <!-- Capacity section -->
+    <string name="capacity">容量</string>
+    <string name="usable_new">可用（出厂）</string>
+    <string name="usable_now">可用（当前）</string>
+    <string name="rated">额定</string>
+
+    <!-- Capacity info dialog -->
+    <string name="battery_capacity_title">电池容量</string>
+    <string name="battery_capacity_message">显示电池的储能容量。\n\n• 可用（出厂）：新车时的原始可用容量\n• 可用（当前）：衰减后的当前可用容量\n• 额定能效：标准测试条件下的能耗 (Wh/km)</string>
+
+    <!-- Degradation section -->
+    <string name="estimated_degradation">预估衰减</string>
+    <string name="loss_kwh">损失 (kWh)</string>
+    <string name="loss_percent">损失 (%)</string>
+
+    <!-- Degradation info dialog -->
+    <string name="estimated_degradation_title">预估衰减</string>
+    <string name="estimated_degradation_message">电池衰减根据 TeslaMate 数据估算。\n\n• 容量 (%)：与新电池相比的剩余电池健康度\n• 损失 (kWh)：因衰减而损失的能量容量\n• 损失 (%)：原始容量的损失百分比\n\n注意：这是一个估算值。Tesla 不提供官方衰减数据。</string>
+
+    <!-- Range section -->
+    <string name="range">续航</string>
+    <string name="max_range_new">最大续航（出厂）</string>
+    <string name="max_range_now">最大续航（当前）</string>
+    <string name="range_loss">续航损失</string>
+
+    <!-- Battery detail screen -->
+    <string name="battery_detail_title">电池详情</string>
+
+    <!-- Current charge section -->
+    <string name="current_charge">当前电量</string>
+    <!-- %d is the percentage of usable battery -->
+    <string name="usable_percent">可用: %d%%</string>
+
+    <!-- Current charge info dialog -->
+    <string name="current_charge_title">当前电量</string>
+    <string name="current_charge_message">显示电池当前的充电状态。\n\n • 电池 (%)：仪表盘上显示的电量百分比\n • 可用 (%)：实际可用电量（Tesla 会预留少量缓冲以保护电池）\n\n这是当前电量，并非电池的长期健康状态。</string>
+
+    <!-- Range information section -->
+    <string name="range_information">续航信息</string>
+    <string name="estimated_range">估算续航</string>
+    <string name="estimated_range_subtitle">基于当前驾驶条件</string>
+    <string name="rated_range">额定续航</string>
+    <string name="rated_range_subtitle">官方 EPA/WLTP 续航</string>
+    <string name="ideal_range">理想续航</string>
+    <string name="ideal_range_subtitle">理想驾驶条件</string>
+
+    <!-- Range information info dialog -->
+    <string name="range_information_title">续航信息</string>
+    <string name="range_information_message">不同方式估算你能行驶多远。\n\n• 估算续航：基于你近期的驾驶能效和当前条件\n• 额定续航：官方 EPA/WLTP 测试续航（Tesla 标称值）\n• 理想续航：完美条件下的最大理论续航（不开空调、平坦路面、适中车速）</string>
+
+    <!-- Estimated total capacity section -->
+    <string name="estimated_total_capacity">估算总容量</string>
+    <string name="range_at_100">满电续航</string>
+    <!-- %1$d is the current battery percentage, %2$.1f is the rated range in km -->
+    <string name="estimated_range_description">基于当前 %1$d%% 电量和 %2$.1f km 额定续航估算</string>
+
+    <!-- Estimated total capacity info dialog. %d is the current battery percentage -->
+    <string name="estimated_total_capacity_title">估算总容量</string>
+    <string name="estimated_total_capacity_message">推算充至 100%% 时的最大续航。\n\n通过将当前 %d%% 电量下的额定续航外推至满电来计算。\n\n这可以帮助你了解电池当前的完整容量，而无需充至 100%%（日常使用不建议满充）。</string>
+
+    <!-- Common dialog button -->
+    <string name="got_it">知道了</string>
+
+    <!-- Content description for info icon -->
+    <string name="info">信息</string>
+
+    <!-- Close button used in dialogs -->
+    <string name="close">关闭</string>
+
+    <!-- ==================== Stats Screen ==================== -->
+    <!-- Top bar title - playful name for the detailed statistics screen -->
+    <string name="stats_title">极客统计</string>
+
+    <!-- Empty state when syncing data from server -->
+    <string name="stats_syncing">正在同步数据…</string>
+
+    <!-- Empty state when no stats are available, with instruction to pull to refresh -->
+    <string name="stats_empty">暂无统计数据。\n下拉以同步。</string>
+
+    <!-- Sync phase: fetching summary data from server -->
+    <string name="sync_phase_summaries">正在获取行程和充电数据…</string>
+
+    <!-- Sync phase: processing individual drive details -->
+    <string name="sync_phase_drives">正在处理行程详情…</string>
+
+    <!-- Sync phase: processing individual charge details -->
+    <string name="sync_phase_charges">正在处理充电详情…</string>
+
+    <!-- Sync progress percentage. %d is the percentage (e.g., "42% synced") -->
+    <string name="stats_sync_percent">已同步 %d%%</string>
+
+    <!-- Sync progress card title when deep sync is running -->
+    <string name="stats_deep_sync_title">深度统计同步中</string>
+
+    <!-- Sync progress completion percentage. %d is the percentage -->
+    <string name="stats_sync_complete">已完成 %d%%</string>
+
+    <!-- Geocode progress card title when location identification is running -->
+    <string name="geocode_progress_title">正在识别位置</string>
+
+    <!-- Geocode progress status. %1$d is processed count, %2$d is total count -->
+    <string name="geocode_progress_status">%1$d / %2$d 个位置</string>
+
+    <!-- Section: Drives Overview - summary statistics about all drives -->
+    <string name="stats_drives_overview">行程概览</string>
+
+    <!-- Label for total number of drives -->
+    <string name="stats_total_drives">总行程数</string>
+
+    <!-- Label for number of days with at least one drive -->
+    <string name="stats_driving_days">行驶天数</string>
+
+    <!-- Label for total energy consumed while driving -->
+    <string name="stats_energy_used">已用能量</string>
+
+    <!-- Label for average energy efficiency (Wh/km) -->
+    <string name="stats_avg_efficiency">平均能效</string>
+
+    <!-- Label for maximum speed recorded -->
+    <string name="stats_top_speed">最高速度</string>
+
+    <!-- Label for average cost per 100 km. %1$s is the distance unit (km or mi) -->
+    <string name="stats_cost_per_distance">费用 / 100 %1$s</string>
+
+    <!-- Section: Charges Overview - summary statistics about all charges -->
+    <string name="stats_charges_overview">充电概览</string>
+
+    <!-- Label for total number of charge sessions -->
+    <string name="stats_total_charges">总充电次数</string>
+
+    <!-- Label for average cost per kWh of energy -->
+    <string name="stats_avg_cost_kwh">平均费用/kWh</string>
+
+    <!-- Section: Records - personal bests and extremes -->
+    <string name="stats_records">纪录</string>
+
+    <!-- Record category: driving-related records -->
+    <string name="stats_category_drives">行程</string>
+
+    <!-- Record category: battery and charging records -->
+    <string name="stats_category_battery">电池</string>
+
+    <!-- Record category: weather and altitude records -->
+    <string name="stats_category_weather">天气与海拔</string>
+
+    <!-- Record category: distance and gap records -->
+    <string name="stats_category_misc">其他</string>
+
+    <!-- Record: longest single drive by distance -->
+    <string name="record_longest_drive">最长行程</string>
+
+    <!-- Record: fastest speed ever recorded -->
+    <string name="record_top_speed">最高速度</string>
+
+    <!-- Record: most efficient drive (lowest Wh/km) -->
+    <string name="record_most_efficient">最高能效</string>
+
+    <!-- Record: longest consecutive days of driving -->
+    <string name="record_longest_streak">最长连续天数</string>
+
+    <!-- Record: day with most number of drives -->
+    <string name="record_busiest_day">最忙碌的一天</string>
+
+    <!-- Record: count of unique countries visited while driving -->
+    <string name="record_countries_visited">到访国家</string>
+
+    <!-- Record: charge session with biggest battery percentage gain -->
+    <string name="record_biggest_gain">最大电量增加</string>
+
+    <!-- Record: drive with biggest battery percentage loss -->
+    <string name="record_biggest_drain">最大电量消耗</string>
+
+    <!-- Record: charge session with most energy added -->
+    <string name="record_biggest_charge">最大充电量</string>
+
+    <!-- Record: highest charging power achieved -->
+    <string name="record_peak_power">峰值功率</string>
+
+    <!-- Record: most expensive single charge session -->
+    <string name="record_most_expensive">最贵充电</string>
+
+    <!-- Record: highest cost per kWh for a charge -->
+    <string name="record_priciest_kwh">最高单价/kWh</string>
+
+    <!-- Record: highest elevation reached while driving -->
+    <string name="record_highest_point">最高海拔</string>
+
+    <!-- Record: most elevation gain in a single drive -->
+    <string name="record_most_climbing">最大爬升</string>
+
+    <!-- Record: drive with highest outside temperature -->
+    <string name="record_hottest_drive">最热行程</string>
+
+    <!-- Record: drive with lowest outside temperature -->
+    <string name="record_coldest_drive">最冷行程</string>
+
+    <!-- Record: charge session with highest outside temperature -->
+    <string name="record_hottest_charge">最热充电</string>
+
+    <!-- Record: charge session with lowest outside temperature -->
+    <string name="record_coldest_charge">最冷充电</string>
+
+    <!-- Record: longest distance traveled between two charges -->
+    <string name="record_longest_range">最长续航</string>
+
+    <!-- Record: longest period without charging the vehicle -->
+    <string name="record_longest_no_charging">最久未充电</string>
+
+    <!-- Record: longest period without driving the vehicle -->
+    <string name="record_longest_no_driving">最久未驾驶</string>
+
+    <!-- Record: day with most distance traveled -->
+    <string name="record_most_distance_day">最多里程日</string>
+
+    <!-- Format for streak duration. %d is number of days -->
+    <string name="format_days">%.1f 天</string>
+
+    <!-- Format for number of drives. %d is the count -->
+    <string name="format_drives_count">%d 次行程</string>
+
+    <!-- Section: Temperature extremes recorded while driving and charging -->
+    <string name="stats_temperature_extremes">极端温度</string>
+
+    <!-- Sub-section: temperatures recorded while driving -->
+    <string name="stats_while_driving">行驶期间</string>
+
+    <!-- Label for highest temperature -->
+    <string name="stats_hottest">最高温</string>
+
+    <!-- Label for lowest temperature -->
+    <string name="stats_coldest">最低温</string>
+
+    <!-- Sub-section: cabin (interior) temperatures -->
+    <string name="stats_cabin_temperature">车内温度</string>
+
+    <!-- Section: ratio between AC and DC charging -->
+    <string name="stats_ac_dc_ratio">AC/DC 充电比例</string>
+
+    <!-- Label for energy charged via AC -->
+    <string name="stats_ac_energy">AC 能量</string>
+
+    <!-- Label for energy charged via DC -->
+    <string name="stats_dc_energy">DC 能量</string>
+
+    <!-- Format for number of charge sessions. %d is the count -->
+    <string name="format_charges_count">%d 次充电</string>
+
+    <!-- Debug dialog title for viewing sync logs -->
+    <string name="stats_sync_logs_title">同步日志</string>
+
+    <!-- Dialog title for gap record (period without activity). %s is "Charging" or "Driving" -->
+    <string name="stats_gap_dialog_title">最久未%s</string>
+
+    <!-- Gap type: charging -->
+    <string name="gap_type_charging">充电</string>
+
+    <!-- Gap type: driving -->
+    <string name="gap_type_driving">行驶</string>
+
+    <!-- Dialog title for range record details -->
+    <string name="stats_range_record_title">最长续航</string>
+
+    <!-- Label for number of drives in range record. %d is the count -->
+    <string name="stats_drives_count">行程 (%d)</string>
+
+    <!-- Empty state when no drives found in range record dialog -->
+    <string name="stats_no_drives_found">未找到行程</string>
+
+    <!-- Content description for arrow indicating tappable record -->
+    <string name="view_details">查看详情</string>
+
+    <!-- Content description for arrow to view drive details -->
+    <string name="view_drive">查看行程</string>
+
+    <!-- ==================== Countries Visited Screen ==================== -->
+    <!-- Top bar title for countries visited screen -->
+    <string name="countries_visited_title">到访国家</string>
+
+    <!-- Plural for number of countries. %d is the count -->
+    <plurals name="format_countries_count">
+        <item quantity="one">%d 个国家</item>
+        <item quantity="other">%d 个国家</item>
+    </plurals>
+
+    <!-- Label for first visit date to a country. %s is the formatted date -->
+    <string name="country_first_visit">首次到访: %s</string>
+
+    <!-- Label for last visit date to a country. %s is the formatted date -->
+    <string name="country_last_visit">最近到访: %s</string>
+
+    <!-- Plural for number of drives in a country -->
+    <plurals name="drives_count">
+        <item quantity="one">次行程</item>
+        <item quantity="other">次行程</item>
+    </plurals>
+
+    <!-- Plural for number of charges in a country -->
+    <plurals name="charges_count">
+        <item quantity="one">%d 次充电</item>
+        <item quantity="other">%d 次充电</item>
+    </plurals>
+
+    <!-- Sort option: sort by first visit date -->
+    <string name="sort_by_first_visit">按首次到访</string>
+
+    <!-- Sort option: sort alphabetically by name -->
+    <string name="sort_alphabetically">按字母排序</string>
+
+    <!-- Sort option: sort by number of drives -->
+    <string name="sort_by_drive_count">按行程数</string>
+
+    <!-- Sort option: sort by total distance -->
+    <string name="sort_by_distance">按距离</string>
+
+    <!-- Sort option: sort by total energy charged -->
+    <string name="sort_by_energy">按充电量</string>
+
+    <!-- Sort option: sort by number of charges -->
+    <string name="sort_by_charges">按充电次数</string>
+
+    <!-- Empty state when no countries have been recorded -->
+    <string name="no_countries_found">暂无国家记录。需要先同步行程详情。</string>
+
+    <!-- Content description for sort button -->
+    <string name="sort">排序</string>
+
+    <!-- ==================== Regions Visited Screen ==================== -->
+    <!-- Top bar title for regions visited screen. %s is the country name -->
+    <string name="regions_visited_title">%s 的地区</string>
+
+    <!-- Plural for number of regions. %d is the count -->
+    <plurals name="format_regions_count">
+        <item quantity="one">%d 个地区</item>
+        <item quantity="other">%d 个地区</item>
+    </plurals>
+
+    <!-- Empty state when no regions have been recorded -->
+    <string name="no_regions_found">暂无地区记录。</string>
+
+    <!-- Header card title showing country totals -->
+    <string name="regions_country_summary">国家概览</string>
+
+    <!-- Map showing charge locations in the country -->
+    <string name="country_charge_map_title">充电位置</string>
+    <!-- Plural for number of charges on the map. %d is the count -->
+    <plurals name="format_charges_on_map">
+        <item quantity="one">%d 次充电</item>
+        <item quantity="other">%d 次充电</item>
+    </plurals>
+
+    <!-- Map showing drive start locations in the country -->
+    <string name="country_drives_map_title">行程位置</string>
+    <!-- Plural for number of drives on the map. %d is the count -->
+    <plurals name="format_drives_on_map">
+        <item quantity="one">%d 次行程</item>
+        <item quantity="other">%d 次行程</item>
+    </plurals>
+
+    <!-- Map mode toggle labels -->
+    <string name="map_mode_charges">充电</string>
+    <string name="map_mode_drives">行程</string>
+
+    <!-- Legend label for drive start marker -->
+    <string name="drive_start_legend">起点</string>
+
+    <!-- Year filter chip for all years -->
+    <string name="all_years">全部</string>
+
+    <!-- ==================== Mileage Screen ==================== -->
+    <!-- Top bar title for mileage screen -->
+    <string name="mileage_title">里程</string>
+
+    <!-- Empty state when no drive data is available -->
+    <string name="mileage_no_data">暂无行驶数据</string>
+
+    <!-- Empty state when no drive data for a specific year. %d is the year -->
+    <string name="mileage_no_data_year">%d 年无行驶数据</string>
+
+    <!-- Chart title: mileage grouped by year -->
+    <string name="mileage_by_year">年度里程</string>
+
+    <!-- Chart title: mileage grouped by month -->
+    <string name="mileage_by_month">月度里程</string>
+
+    <!-- Chart title: mileage grouped by day -->
+    <string name="mileage_by_day">每日里程</string>
+
+    <!-- Format for number of days with data. %d is the count -->
+    <string name="format_days_count">%d 天</string>
+
+    <!-- Section header for recent trips list -->
+    <string name="mileage_recent_trips">最近行程</string>
+
+    <!-- Section header for drives list in day detail -->
+    <string name="mileage_drives">行程</string>
+
+    <!-- Summary label: Total distance -->
+    <string name="mileage_total">总计</string>
+
+    <!-- Summary label: average per year -->
+    <string name="mileage_avg_year">年均</string>
+
+    <!-- Summary label: average per month -->
+    <string name="mileage_avg_month">月均</string>
+
+    <!-- Summary label: number of drives -->
+    <string name="mileage_drive_count">行程数</string>
+
+    <!-- Info dialog title for average per year calculation -->
+    <string name="mileage_avg_year_title">年均里程</string>
+
+    <!-- Info dialog explaining average per year calculation. %1$s is the date, %2$d is the number of days -->
+    <string name="mileage_avg_year_message">基于自首次记录行程 %1$s 以来的日均行驶量（%2$d 天前）。\n\n计算方式：总距离 ÷ 天数 × 365</string>
+
+    <!-- Content description for info button explaining calculation -->
+    <string name="info_about_calculation">计算说明</string>
+
+    <!-- ==================== Software Versions Screen ==================== -->
+    <!-- Top bar title for software updates screen -->
+    <string name="software_title">软件版本</string>
+
+    <!-- Date filter: last 6 months -->
+    <string name="filter_last_6_months">近 6 个月</string>
+
+    <!-- Section header for update history list -->
+    <string name="software_update_history">更新历史</string>
+
+    <!-- Empty state when no software updates found -->
+    <string name="software_no_updates">未找到软件更新</string>
+
+    <!-- Overview card title -->
+    <string name="software_overview">概览</string>
+
+    <!-- Label for total number of updates -->
+    <string name="software_total_updates">总更新数</string>
+
+    <!-- Label for average interval between updates -->
+    <string name="software_avg_interval">平均间隔</string>
+
+    <!-- Format for average interval in days. %d is the number of days -->
+    <string name="format_interval_days">%d 天</string>
+
+    <!-- Label for newest software version -->
+    <string name="software_newest">最新</string>
+
+    <!-- Label for oldest software version -->
+    <string name="software_oldest">最早</string>
+
+    <!-- Chart title: updates grouped by month -->
+    <string name="software_updates_per_month">每月更新数</string>
+
+    <!-- Tooltip format for chart. %d is the count -->
+    <string name="format_updates_count">%d 次更新</string>
+
+    <!-- Format for single update in chart -->
+    <string name="format_updates_decimal">%.0f 次更新</string>
+
+    <!-- Content description for release notes link -->
+    <string name="software_view_release_notes">查看版本说明</string>
+
+    <!-- Badge label for current installed version -->
+    <string name="software_current_version">当前版本</string>
+
+    <!-- Content description for longest installed badge icon -->
+    <string name="software_longest_installed">安装最久</string>
+
+    <!-- Badge label for version installed for longest time -->
+    <string name="software_longest">最久</string>
+
+    <!-- Label for installation date of software -->
+    <string name="software_installed">安装日期</string>
+
+    <!-- Label for number of days a version was installed -->
+    <string name="software_days">天数</string>
+
+    <!-- Label for update installation duration -->
+    <string name="software_duration">时长</string>
+
+    <!-- ==================== Common Components ==================== -->
+    <!-- Content description for fullscreen mode button in charts -->
+    <string name="fullscreen">全屏</string>
+
+    <!-- Content description for exit fullscreen button -->
+    <string name="exit_fullscreen">退出全屏</string>
+
+    <!-- ==================== Weather Card ==================== -->
+    <!-- Title for weather along the way card -->
+    <string name="weather_card_title">沿途天气</string>
+
+    <!-- Loading state while fetching weather data -->
+    <string name="weather_loading">正在加载天气数据…</string>
+
+    <!-- Empty state when weather data is unavailable -->
+    <string name="weather_unavailable">天气数据不可用</string>
+
+    <!-- Table header: time column -->
+    <string name="weather_time">时间</string>
+
+    <!-- Table header: distance column -->
+    <string name="weather_distance">距离</string>
+
+    <!-- Table header: weather column -->
+    <string name="weather_weather">天气</string>
+
+    <!-- Distance marker for route start point -->
+    <string name="weather_start">起点</string>
+
+    <!-- Distance marker for route end point -->
+    <string name="weather_end">终点</string>
+
+    <!-- Weather condition: clear sky -->
+    <string name="weather_clear">晴朗</string>
+
+    <!-- Weather condition: partly cloudy -->
+    <string name="weather_partly_cloudy">局部多云</string>
+
+    <!-- Weather condition: foggy -->
+    <string name="weather_fog">有雾</string>
+
+    <!-- Weather condition: light rain/drizzle -->
+    <string name="weather_drizzle">小雨</string>
+
+    <!-- Weather condition: rain -->
+    <string name="weather_rain">雨</string>
+
+    <!-- Weather condition: snow -->
+    <string name="weather_snow">雪</string>
+
+    <!-- Weather condition: thunderstorm -->
+    <string name="weather_thunderstorm">雷暴</string>
+
+    <!-- ==================== Tire Pressure Notifications ==================== -->
+    <!-- Notification channel name for tire pressure alerts -->
+    <string name="tpms_channel_name">胎压警报</string>
+
+    <!-- Notification channel description -->
+    <string name="tpms_channel_description">胎压偏低时发出提醒</string>
+
+    <!-- Notification title when tire pressure warning is detected -->
+    <string name="tpms_notification_title">胎压警告</string>
+
+    <!-- Notification body when tires have low pressure. %1$s is car name, %2$s is comma-separated tire list -->
+    <string name="tpms_notification_body">%1$s：%2$s 胎压偏低</string>
+
+    <!-- Notification body when all tires are back to normal. %s is car name -->
+    <string name="tpms_notification_cleared">%s：所有轮胎胎压正常</string>
+
+    <!-- Full tire position names for notifications -->
+    <string name="tire_fl_full">左前轮</string>
+    <string name="tire_fr_full">右前轮</string>
+    <string name="tire_rl_full">左后轮</string>
+    <string name="tire_rr_full">右后轮</string>
+
+    <!-- Debug buttons for TPMS testing -->
+    <string name="debug_tpms_simulate_warning">模拟胎压警告</string>
+    <string name="debug_tpms_clear_state">清除胎压状态</string>
+    <string name="debug_tpms_run_now">立即检查胎压</string>
+    <!-- Debug: simulate a sentry event for testing notifications -->
+    <string name="debug_sentry_simulate_event">模拟哨兵事件</string>
+
+    <!-- ==================== Charging Notifications ==================== -->
+    <!-- Notification channel name for charging session alerts -->
+    <string name="charging_channel_name">充电动态</string>
+
+    <!-- Notification channel description -->
+    <string name="charging_channel_description">充电期间的实时更新</string>
+
+    <!-- Notification title during charging. %s is car name -->
+    <string name="charging_notification_title">%s - 充电中</string>
+    <string name="charging_notification_loading">正在检查充电状态…</string>
+
+    <!-- ==================== Sentry Notifications ==================== -->
+    <!-- Notification channel name for sentry mode alerts -->
+    <string name="sentry_channel_name">哨兵警报</string>
+
+    <!-- Notification channel description -->
+    <string name="sentry_channel_description">哨兵模式检测到车辆附近异常时发出提醒</string>
+
+    <!-- Notification title for sentry alert. %s is car name -->
+    <string name="sentry_notification_title">%s - 哨兵警报</string>
+
+    <!-- Notification body for sentry events (plurals) -->
+    <plurals name="sentry_notification_body">
+        <item quantity="one">检测到 %d 个事件</item>
+        <item quantity="other">检测到 %d 个事件</item>
+    </plurals>
+
+    <!-- Notification action button to open the Tesla app -->
+    <string name="sentry_action_open_tesla">打开 Tesla 应用</string>
+
+    <!-- ==================== Car Image Picker ==================== -->
+    <!-- Dialog title for selecting car appearance (long-press on car image) -->
+    <string name="car_picker_title">选择车辆外观</string>
+
+    <!-- Label for model variant selector section -->
+    <string name="car_picker_model_variant">车型版本</string>
+
+    <!-- Label for wheel style selector section -->
+    <string name="car_picker_wheel_style">轮毂样式</string>
+
+    <!-- Button to confirm the car image selection -->
+    <string name="car_picker_confirm">确认选择</string>
+
+    <!-- Button to reset to automatic detection -->
+    <string name="car_picker_auto">自动</string>
+
+    <!-- Content description for reset to default button -->
+    <string name="car_picker_reset_default">重置为自动检测</string>
+
+    <!-- Hint text shown below wheel carousel -->
+    <string name="car_picker_tap_to_select">点击图片进行选择</string>
+
+    <!-- Hint text shown when a car is selected, tap again to confirm -->
+    <string name="car_picker_tap_to_confirm">再次点击以确认</string>
+
+    <!-- Model Y variant names -->
+    <string name="car_variant_my_legacy">MY pre-2025</string>
+    <string name="car_variant_my_standard">MY 2025 Standard</string>
+    <string name="car_variant_my_premium">MY 2025 Premium</string>
+    <string name="car_variant_my_performance">MY 2025 Performance</string>
+
+    <!-- Model 3 variant names -->
+    <string name="car_variant_m3_legacy">M3 pre-2024</string>
+    <string name="car_variant_m3_highland">M3 2024+</string>
+    <string name="car_variant_m3_highland_perf">M3 2024+ Performance</string>
+
+    <!-- ==================== Live Charge Screen ==================== -->
+    <!-- Live indicator badge shown during active charging -->
+    <string name="current_charge_live">LIVE</string>
+    <!-- Elapsed time label for live counter -->
+    <string name="current_charge_elapsed">已用时</string>
+    <!-- Estimated completion time label -->
+    <string name="current_charge_estimated_end">预计完成</string>
+    <!-- Shown when API version is too old -->
+    <string name="current_charge_unsupported">实时充电监控需要 TeslaMate API 1.24 或更高版本</string>
+    <!-- Shown when the car is not currently charging -->
+    <string name="current_charge_not_charging">车辆当前未在充电</string>
+    <!-- Chart title for voltage and current dual-axis chart -->
+    <string name="voltage_and_current_profile">电压与电流</string>
+    <!-- SoC labels for the 3-column row in live charge header -->
+    <string name="soc_start">起始</string>
+    <string name="soc_now">当前</string>
+    <string name="soc_target">目标</string>
+    <!-- Compact energy/power row labels -->
+    <string name="soc_energy_added">已充电量</string>
+    <string name="soc_instant_power">实时</string>
+
+    <!-- ==================== Home Screen Widget ==================== -->
+    <!-- Widget description shown in the system widget picker -->
+    <string name="widget_description">Tesla 电池状态小组件</string>
+
+    <!-- Title of the car selection screen shown when configuring the widget -->
+    <string name="widget_select_car_title">为小组件选择一辆车</string>
+
+    <!-- Shown on the widget while data is being loaded for the first time -->
+    <string name="widget_loading">加载中…</string>
+
+    <!-- Shown on the widget when the car ID is not yet configured -->
+    <string name="widget_error_configure">点击以配置</string>
+
+    <!-- Tap hint shown on the widget (accessibility / tooltip) -->
+    <string name="widget_tap_to_open">点击打开 MateDroid</string>
+
+    <!-- ==================== Notification Permission Dialog ==================== -->
+    <!-- Title of the one-time dialog asking the user to enable notifications -->
+    <string name="notification_permission_title">及时了解车况</string>
+    <!-- Body text explaining why notifications are useful -->
+    <string name="notification_permission_message">MateDroid 可以通知你哨兵模式事件、胎压警告和充电状态。开启通知以随时了解你的车辆状况。</string>
+    <!-- Confirm button to trigger the system notification permission prompt -->
+    <string name="notification_permission_grant">开启通知</string>
+
+    <!-- ==================== Where Was I Screen ==================== -->
+    <!-- Title of the "Where was I that day?" feature card on dashboard -->
+    <string name="where_was_i_title">那天我在哪？</string>
+    <!-- Hint text on the tappable chip to pick a date -->
+    <string name="where_was_i_hint">选择日期</string>
+    <!-- Screen title for the Where Was I result screen -->
+    <string name="where_was_i_screen_title">我在哪？</string>
+    <!-- Label when the car was driving -->
+    <string name="where_was_i_driving">行驶中</string>
+    <!-- Label when the car was charging -->
+    <string name="where_was_i_charging">充电中</string>
+    <!-- Label when the car was parked -->
+    <string name="where_was_i_parked">停放中</string>
+    <!-- Button to confirm date/time selection -->
+    <string name="where_was_i_go">查看！</string>
+    <!-- Date picker dialog title -->
+    <string name="where_was_i_pick_date">选择日期</string>
+    <!-- Time picker dialog title -->
+    <string name="where_was_i_pick_time">选择时间</string>
+    <!-- Tap hint on driving/charging state cards -->
+    <string name="where_was_i_tap_details">点击查看详情</string>
+    <!-- Error when no data available for the selected date -->
+    <string name="where_was_i_no_data">该日期没有可用数据</string>
+</resources>

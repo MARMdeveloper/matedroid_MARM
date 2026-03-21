@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Line chart visual revamp**: Smooth cubic Bezier curves, gradient fills, dashed grid lines, vertical crosshair, glowing indicators, animated entrance, and theme-aware tooltips.
 - **Battery heater overlay**: Grafana-style orange annotation bands on drive detail Power and Battery charts highlighting battery pre-heating periods.
 - **Speed distribution histogram**: Drive details now include a speed histogram showing the percentage of time spent in each speed bucket (10 km/h or 5 mph).
+- **Chinese language support**: Added Simplified Chinese (简体中文) as the 5th supported language.
 
 ## [1.2.3] - 2026-03-08
 

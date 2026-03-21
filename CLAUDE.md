@@ -26,7 +26,7 @@
 
 * The app is published on F-Droid, which builds from source.
 * Fastlane metadata is stored in `fastlane/metadata/android/` with locale subdirectories:
-  - `en-US/` (English), `it-IT/` (Italian), `es-ES/` (Spanish), `ca-ES/` (Catalan)
+  - `en-US/` (English), `it-IT/` (Italian), `es-ES/` (Spanish), `ca-ES/` (Catalan), `zh-CN/` (Chinese Simplified)
   - Each locale contains: `title.txt`, `short_description.txt`, `full_description.txt`, and `changelogs/`
   - `changelogs/<versionCode>.txt` for each release (e.g., `24.txt` for versionCode 24)
   - Images are only in `en-US/images/` (icon.png, phoneScreenshots/)
@@ -38,11 +38,12 @@
 ## Localization
 
 * NEVER hardcode user-visible strings in Kotlin code. Always use `stringResource(R.string.xxx)`.
-* When adding new UI text, add the string to all 4 locale files:
+* When adding new UI text, add the string to all 5 locale files:
   - `res/values/strings.xml` (English, default)
   - `res/values-it/strings.xml` (Italian)
   - `res/values-es/strings.xml` (Spanish)
   - `res/values-ca/strings.xml` (Catalan)
+  - `res/values-zh/strings.xml` (Chinese, Simplified)
 * Use snake_case for string names (e.g., `settings_title`, `drive_history`).
 * Add XML comments above strings to provide context for translators.
 * Technical terms like AC, DC, kW, kWh should NOT be translated.
