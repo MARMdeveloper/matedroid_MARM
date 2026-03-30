@@ -1,0 +1,12 @@
+Nueva función "¿Dónde estaba?" para buscar la posición del coche en cualquier momento, incluso cuando dormía todo el día.
+
+Añadido:
+- "¿Dónde estaba?" con mapa, ubicación, clima y detalles
+- Gráficos renovados con curvas suaves y degradados
+- Overlay calentamiento batería en gráficos de viaje
+- Histograma distribución de velocidad en viajes
+- Soporte de idioma chino
+
+Cambiado:
+- Marcadores de mapa personalizados
+- User-Agent MateDroid/VERSION en todas las solicitudes HTTP

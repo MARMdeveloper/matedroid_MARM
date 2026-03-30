@@ -1,0 +1,12 @@
+Nuova funzione "Dove ero?" per cercare la posizione dell'auto in qualsiasi momento, anche quando dormiva tutto il giorno.
+
+Aggiunto:
+- "Dove ero?" con mappa, posizione, meteo e attività
+- Grafici rinnovati con curve morbide e sfumature
+- Overlay riscaldamento batteria nei grafici viaggio
+- Istogramma distribuzione velocità nei dettagli viaggio
+- Supporto lingua cinese
+
+Modificato:
+- Segnaposto a spillo su tutte le mappe
+- User-Agent MateDroid/VERSION su tutte le richieste HTTP

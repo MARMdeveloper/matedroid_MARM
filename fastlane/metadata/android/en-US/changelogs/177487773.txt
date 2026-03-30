@@ -1,0 +1,12 @@
+New "Where was I?" feature lets you look up your car's position at any past date and time — even when the car was sleeping all day.
+
+Added:
+- "Where was I?" with map, location, weather, and activity details
+- Line chart revamp with smooth curves and gradient fills
+- Battery heater overlay on drive detail charts
+- Speed distribution histogram in drive details
+- Chinese language support
+
+Changed:
+- Custom pin-needle map markers on all screens
+- MateDroid/VERSION User-Agent on all HTTP requests

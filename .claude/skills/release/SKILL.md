@@ -45,6 +45,7 @@ Create `fastlane/metadata/android/en-US/changelogs/{versionCode}.txt` with the r
 **Important — stable vs beta scope:**
 - **Beta release** (e.g. `1.1.0-beta2`): the changelog covers only the changes since the previous release (beta or stable).
 - **Stable (production) release** (e.g. `1.1.0`): the changelog must cover **all changes since the previous stable release** (e.g. `1.0.0`), NOT just what changed since the last beta. Collect entries from every intermediate beta and the `[Unreleased]` section, then write a single consolidated changelog. This is what end-users on the production track will see — they never saw the beta changelogs.
+  - **Stable changelog should only include**: new features, behavioural changes, and bugfixes relative to the previous *stable* release. Do NOT mention fixes for bugs that were introduced during the beta cycle itself — those never existed for stable users. For example, if beta1 introduced a feature with a broken tooltip and beta2 fixed it, the stable changelog should describe the feature as working correctly, without mentioning the intermediate fix.
 
 Format (max 500 chars for Play Store):
 ```

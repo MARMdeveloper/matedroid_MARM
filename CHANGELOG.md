@@ -7,26 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.0-beta2] - 2026-03-30
+## [1.3.0] - 2026-03-30
 
 ### Added
-- **Where was I?**: When the car was parked/sleeping all day, the feature now looks back up to 1 year to find the last activity and shows the car's inferred parked location, duration, and a "since" timestamp. Tapping the parked card navigates to the last drive or charge detail.
-
-### Changed
-- **Map markers**: Replaced default OSMDroid markers with custom pin-needle markers (accent-colored circle head with thin needle) across all map screens (dashboard, Where was I?, charge details).
-- **HTTP requests**: All HTTP requests now include a `MateDroid/<version>` User-Agent header.
-
-### Fixed
-- **Where was I?**: Tapping the map pin now shows a "You were here!" tooltip instead of an empty bubble.
-
-## [1.3.0-beta1] - 2026-03-21
-
-### Added
-- **Where was I that day?**: New feature on the dashboard to look up the car's position and activity at any past date and time. Shows map, location breadcrumb (country/region/city), car state (driving/charging/parked), state-specific details, and weather. Tapping a driving or charging card navigates to the corresponding detail screen.
+- **Where was I that day?**: New feature on the dashboard to look up the car's position and activity at any past date and time. Shows map, location breadcrumb (country/region/city), car state (driving/charging/parked), state-specific details, and weather. Tapping a card navigates to the corresponding detail screen. When the car was parked/sleeping all day, it finds the last known location and shows how long the car has been parked with a "since" timestamp.
 - **Line chart visual revamp**: Smooth cubic Bezier curves, gradient fills, dashed grid lines, vertical crosshair, glowing indicators, animated entrance, and theme-aware tooltips.
 - **Battery heater overlay**: Grafana-style orange annotation bands on drive detail Power and Battery charts highlighting battery pre-heating periods.
 - **Speed distribution histogram**: Drive details now include a speed histogram showing the percentage of time spent in each speed bucket (10 km/h or 5 mph).
 - **Chinese language support**: Added Simplified Chinese (简体中文) as the 5th supported language.
+
+### Changed
+- **Map markers**: Replaced default OSMDroid markers with custom pin-needle markers (accent-colored circle head with thin needle) across all map screens (dashboard, Where was I?, charge details).
+- **HTTP requests**: All HTTP requests now include a `MateDroid/<version>` User-Agent header.
 
 ## [1.2.3] - 2026-03-08
 
@@ -452,7 +444,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.3.0-beta2...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/vide/matedroid/compare/v1.2.3...v1.3.0
 [1.3.0-beta2]: https://github.com/vide/matedroid/compare/v1.3.0-beta1...v1.3.0-beta2
 [1.3.0-beta1]: https://github.com/vide/matedroid/compare/v1.2.3...v1.3.0-beta1
 [1.2.3]: https://github.com/vide/matedroid/compare/v1.2.2...v1.2.3

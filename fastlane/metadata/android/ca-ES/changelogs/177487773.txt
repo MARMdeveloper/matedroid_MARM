@@ -1,0 +1,12 @@
+Nova funció "On era?" per cercar la posició del cotxe en qualsevol moment, fins i tot quan dormia tot el dia.
+
+Afegit:
+- "On era?" amb mapa, ubicació, temps i detalls d'activitat
+- Gràfics renovats amb corbes suaus i degradats
+- Overlay escalfament bateria als gràfics de viatge
+- Histograma distribució velocitat als detalls de viatge
+- Suport de l'idioma xinès
+
+Canviat:
+- Marcadors de mapa personalitzats a totes les pantalles
+- User-Agent MateDroid/VERSION a totes les sol·licituds HTTP
