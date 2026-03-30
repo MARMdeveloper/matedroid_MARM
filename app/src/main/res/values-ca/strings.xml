@@ -1099,4 +1099,6 @@
     <string name="where_was_i_pick_time">Tria una hora</string>
     <string name="where_was_i_tap_details">Toca per veure detalls</string>
     <string name="where_was_i_no_data">No hi ha dades disponibles per a aquesta data</string>
+    <!-- Tooltip shown when tapping the map pin on the Where Was I screen -->
+    <string name="you_were_here">Eres aquí!</string>
 </resources>

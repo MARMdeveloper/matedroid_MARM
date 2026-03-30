@@ -203,6 +203,7 @@ fun WhereWasIScreen(
                     if (lat != null && lon != null) {
                         val context = LocalContext.current
                         val accentArgb = palette.accent.toArgb()
+                        val youWereHere = stringResource(R.string.you_were_here)
                         Card(
                             colors = CardDefaults.cardColors(containerColor = palette.surface),
                             modifier = Modifier.clickable {
@@ -222,6 +223,7 @@ fun WhereWasIScreen(
                                         marker.position = GeoPoint(lat, lon)
                                         marker.setAnchor(org.osmdroid.views.overlay.Marker.ANCHOR_CENTER, org.osmdroid.views.overlay.Marker.ANCHOR_BOTTOM)
                                         marker.icon = createPinMarkerDrawable(ctx.resources, accentArgb)
+                                        marker.title = youWereHere
                                         overlays.add(marker)
                                     }
                                 },
