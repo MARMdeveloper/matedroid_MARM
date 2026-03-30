@@ -53,8 +53,11 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -422,27 +425,53 @@ fun WhereWasIScreen(
                                                 if (hours > 0) append("${hours}h ")
                                                 if (days == 0L && minutes > 0) append("${minutes}m")
                                             }.trim()
+                                            val parkedForPrefix = stringResource(R.string.parked_for, "").trimEnd()
                                             val sinceStr = state.parkedSince
-                                            val valueStr = if (sinceStr != null) {
-                                                stringResource(R.string.parked_for, durationStr) + "\n" +
-                                                    stringResource(R.string.parked_since, sinceStr)
-                                            } else {
-                                                stringResource(R.string.parked_for, durationStr)
-                                            }
-                                            Row(modifier = Modifier.fillMaxWidth()) {
-                                                InfoItem(
-                                                    label = stringResource(R.string.where_was_i_parked),
-                                                    value = valueStr,
-                                                    palette = palette,
-                                                    modifier = Modifier.weight(1f)
-                                                )
+                                            val sincePrefix = sinceStr?.let { stringResource(R.string.parked_since, "").trimEnd() }
+
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = buildAnnotatedString {
+                                                            append("$parkedForPrefix ")
+                                                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                                append(durationStr)
+                                                            }
+                                                        },
+                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        color = palette.onSurface
+                                                    )
+                                                    if (sinceStr != null && sincePrefix != null) {
+                                                        Text(
+                                                            text = buildAnnotatedString {
+                                                                append("$sincePrefix ")
+                                                                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                                    append(sinceStr)
+                                                                }
+                                                            },
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            color = palette.onSurfaceVariant
+                                                        )
+                                                    }
+                                                }
+                                                if (hasLinkedActivity) {
+                                                    Icon(
+                                                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                                        contentDescription = null,
+                                                        tint = palette.onSurfaceVariant,
+                                                        modifier = Modifier.size(24.dp)
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 }
 
-                                // Chevron hint for tappable cards
-                                if (hasLinkedActivity) {
+                                // Chevron hint for tappable cards (driving/charging)
+                                if (hasLinkedActivity && carState != CarActivityState.PARKED) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Icon(
                                         Icons.AutoMirrored.Filled.KeyboardArrowRight,
