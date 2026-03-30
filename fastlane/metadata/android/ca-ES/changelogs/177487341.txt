@@ -1,0 +1,12 @@
+La funció "On era?" ara funciona fins i tot quan el cotxe dormia tot el dia: troba l'última ubicació coneguda i mostra quant de temps porta aparcat.
+
+Afegit:
+- Ubicació d'aparcament amb durada i marca "des de"
+- Toca la targeta d'aparcat per veure l'últim viatge o càrrega
+
+Canviat:
+- Marcadors de mapa personalitzats a totes les pantalles
+- User-Agent MateDroid/VERSION a totes les sol·licituds HTTP
+
+Corregit:
+- El tooltip del marcador ja no mostra una bombolla buida

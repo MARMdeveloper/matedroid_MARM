@@ -1,0 +1,12 @@
+The "Where was I?" feature now works even when the car was sleeping all day — it finds the last known location and shows how long the car has been parked.
+
+Added:
+- Parked location fallback with duration and "since" timestamp
+- Tap parked card to view last drive or charge
+
+Changed:
+- Custom pin-needle map markers across all screens
+- MateDroid/VERSION User-Agent on all HTTP requests
+
+Fixed:
+- Map pin tooltip no longer shows empty bubble

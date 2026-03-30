@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta2] - 2026-03-30
+
+### Added
+- **Where was I?**: When the car was parked/sleeping all day, the feature now looks back up to 1 year to find the last activity and shows the car's inferred parked location, duration, and a "since" timestamp. Tapping the parked card navigates to the last drive or charge detail.
+
+### Changed
+- **Map markers**: Replaced default OSMDroid markers with custom pin-needle markers (accent-colored circle head with thin needle) across all map screens (dashboard, Where was I?, charge details).
+- **HTTP requests**: All HTTP requests now include a `MateDroid/<version>` User-Agent header.
+
+### Fixed
+- **Where was I?**: Tapping the map pin now shows a "You were here!" tooltip instead of an empty bubble.
+
 ## [1.3.0-beta1] - 2026-03-21
 
 ### Added
@@ -440,7 +452,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.3.0-beta1...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.3.0-beta2...HEAD
+[1.3.0-beta2]: https://github.com/vide/matedroid/compare/v1.3.0-beta1...v1.3.0-beta2
 [1.3.0-beta1]: https://github.com/vide/matedroid/compare/v1.2.3...v1.3.0-beta1
 [1.2.3]: https://github.com/vide/matedroid/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/vide/matedroid/compare/v1.2.1...v1.2.2

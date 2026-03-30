@@ -1,0 +1,12 @@
+La funzione "Dove ero?" ora funziona anche quando l'auto dormiva tutto il giorno: trova l'ultima posizione nota e mostra da quanto tempo l'auto è parcheggiata.
+
+Aggiunto:
+- Posizione parcheggio con durata e orario "dalle"
+- Tocca la scheda parcheggio per vedere l'ultimo viaggio o ricarica
+
+Modificato:
+- Segnaposto a spillo personalizzato su tutte le mappe
+- User-Agent MateDroid/VERSION su tutte le richieste HTTP
+
+Corretto:
+- Il tooltip del segnaposto non mostra più una bolla vuota

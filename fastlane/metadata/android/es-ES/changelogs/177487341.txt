@@ -1,0 +1,12 @@
+"¿Dónde estaba?" ahora funciona cuando el coche dormía todo el día: encuentra la última ubicación y muestra cuánto tiempo lleva aparcado.
+
+Añadido:
+- Ubicación de aparcamiento con duración y marca "desde"
+- Toca la tarjeta de aparcado para ver el último viaje o carga
+
+Cambiado:
+- Marcadores de mapa personalizados en todas las pantallas
+- User-Agent MateDroid/VERSION en todas las solicitudes HTTP
+
+Corregido:
+- El tooltip del marcador ya no muestra una burbuja vacía
