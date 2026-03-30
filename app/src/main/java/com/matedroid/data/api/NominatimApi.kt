@@ -4,7 +4,6 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import retrofit2.Response
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.Query
 
 @JsonClass(generateAdapter = true)
@@ -57,8 +56,7 @@ interface NominatimApi {
         @Query("lat") latitude: Double,
         @Query("lon") longitude: Double,
         @Query("format") format: String = "json",
-        @Query("addressdetails") addressDetails: Int = 1,
-        @Header("User-Agent") userAgent: String = "MateDroid/1.0 Android"
+        @Query("addressdetails") addressDetails: Int = 1
     ): Response<NominatimResponse>
 
     /**
@@ -69,7 +67,6 @@ interface NominatimApi {
         @Query("country") countryCode: String,
         @Query("format") format: String = "json",
         @Query("polygon_geojson") polygonGeoJson: Int = 1,
-        @Query("limit") limit: Int = 1,
-        @Header("User-Agent") userAgent: String = "MateDroid/1.0 Android"
+        @Query("limit") limit: Int = 1
     ): Response<List<NominatimSearchResult>>
 }

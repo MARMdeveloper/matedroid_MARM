@@ -1,5 +1,6 @@
 package com.matedroid.ui.screens.charges
 
+import com.matedroid.BuildConfig
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -592,7 +593,7 @@ private fun ChargeMapCard(latitude: Double, longitude: Double) {
                 val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
 
                 DisposableEffect(Unit) {
-                    Configuration.getInstance().userAgentValue = "MateDroid/1.0"
+                    Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
                     onDispose { }
                 }
 

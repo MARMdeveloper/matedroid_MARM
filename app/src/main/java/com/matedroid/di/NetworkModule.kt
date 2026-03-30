@@ -13,6 +13,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -28,6 +29,15 @@ import javax.net.ssl.X509TrustManager
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    private const val USER_AGENT = "MateDroid/${BuildConfig.VERSION_NAME}"
+
+    private val userAgentInterceptor = Interceptor { chain ->
+        val request = chain.request().newBuilder()
+            .header("User-Agent", USER_AGENT)
+            .build()
+        chain.proceed(request)
+    }
 
     @Provides
     @Singleton
@@ -49,6 +59,7 @@ object NetworkModule {
     @Singleton
     fun provideNominatimApi(moshi: Moshi): NominatimApi {
         val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(userAgentInterceptor)
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(10, TimeUnit.SECONDS)
             .build()
@@ -65,6 +76,7 @@ object NetworkModule {
     @Singleton
     fun provideOpenMeteoApi(moshi: Moshi): OpenMeteoApi {
         val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(userAgentInterceptor)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .build()
@@ -151,14 +163,12 @@ class TeslamateApiFactory(
     private fun createOkHttpClient(apiToken: String, acceptInvalidCerts: Boolean): OkHttpClient {
         val builder = OkHttpClient.Builder()
             .addInterceptor { chain ->
-                val request = if (apiToken.isNotBlank()) {
-                    chain.request().newBuilder()
-                        .addHeader("Authorization", "Bearer $apiToken")
-                        .build()
-                } else {
-                    chain.request()
+                val requestBuilder = chain.request().newBuilder()
+                    .header("User-Agent", "MateDroid/${BuildConfig.VERSION_NAME}")
+                if (apiToken.isNotBlank()) {
+                    requestBuilder.addHeader("Authorization", "Bearer $apiToken")
                 }
-                chain.proceed(request)
+                chain.proceed(requestBuilder.build())
             }
             .connectTimeout(1, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

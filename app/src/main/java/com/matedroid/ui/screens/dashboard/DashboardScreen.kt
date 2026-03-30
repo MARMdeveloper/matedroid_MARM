@@ -1,5 +1,6 @@
 package com.matedroid.ui.screens.dashboard
 
+import com.matedroid.BuildConfig
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -1784,7 +1785,7 @@ private fun SmallLocationMap(
     val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
 
     DisposableEffect(Unit) {
-        Configuration.getInstance().userAgentValue = "MateDroid/1.0"
+        Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
         onDispose { }
     }
 

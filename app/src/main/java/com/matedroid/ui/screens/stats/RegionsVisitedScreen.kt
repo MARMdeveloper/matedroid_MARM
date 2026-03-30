@@ -1,5 +1,6 @@
 package com.matedroid.ui.screens.stats
 
+import com.matedroid.BuildConfig
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -563,7 +564,7 @@ private fun CountryMapCard(
                     .clip(RoundedCornerShape(16.dp))
             ) {
                 DisposableEffect(Unit) {
-                    Configuration.getInstance().userAgentValue = "MateDroid/1.0"
+                    Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
                     onDispose { }
                 }
 

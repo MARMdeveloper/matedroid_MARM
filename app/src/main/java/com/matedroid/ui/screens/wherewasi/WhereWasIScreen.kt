@@ -1,5 +1,6 @@
 package com.matedroid.ui.screens.wherewasi
 
+import com.matedroid.BuildConfig
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
@@ -208,7 +209,7 @@ fun WhereWasIScreen(
                         ) {
                             AndroidView(
                                 factory = { ctx ->
-                                    Configuration.getInstance().userAgentValue = "MateDroid/1.0"
+                                    Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
                                     MapView(ctx).apply {
                                         setTileSource(TileSourceFactory.MAPNIK)
                                         setMultiTouchControls(false)
