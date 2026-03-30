@@ -1126,4 +1126,6 @@
     <string name="where_was_i_no_data">No data available for this date</string>
     <!-- Tooltip shown when tapping the map pin on the Where Was I screen -->
     <string name="you_were_here">You were here!</string>
+    <!-- Parked duration shown on the Where Was I screen, e.g. "Parked for 2 days, 4h" -->
+    <string name="parked_for">Parked for %s</string>
 </resources>

@@ -246,11 +246,13 @@ class TeslamateRepository @Inject constructor(
     suspend fun getCharges(
         carId: Int,
         startDate: String? = null,
-        endDate: String? = null
+        endDate: String? = null,
+        page: Int = 1,
+        show: Int = 50000
     ): ApiResult<List<ChargeData>> {
         return executeWithFallback { api ->
             try {
-                val response = api.getCharges(carId, startDate, endDate, page = 1, show = 50000)
+                val response = api.getCharges(carId, startDate, endDate, page = page, show = show)
                 if (response.isSuccessful) {
                     val charges = response.body()?.data?.charges ?: emptyList()
                     ApiResult.Success(charges)
@@ -306,11 +308,13 @@ class TeslamateRepository @Inject constructor(
     suspend fun getDrives(
         carId: Int,
         startDate: String? = null,
-        endDate: String? = null
+        endDate: String? = null,
+        page: Int = 1,
+        show: Int = 50000
     ): ApiResult<List<DriveData>> {
         return executeWithFallback { api ->
             try {
-                val response = api.getDrives(carId, startDate, endDate, page = 1, show = 50000)
+                val response = api.getDrives(carId, startDate, endDate, page = page, show = show)
                 if (response.isSuccessful) {
                     val drives = response.body()?.data?.drives ?: emptyList()
                     ApiResult.Success(drives)

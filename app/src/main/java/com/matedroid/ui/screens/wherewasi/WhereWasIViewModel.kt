@@ -14,6 +14,7 @@ import com.matedroid.data.repository.TeslamateRepository
 import com.matedroid.data.repository.WeatherCondition
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,6 +47,8 @@ data class WhereWasIUiState(
     val chargeId: Int? = null,
     val batteryLevel: Int? = null,
     val chargerPower: Int? = null,
+    // Parked-specific
+    val parkedDurationMinutes: Long? = null,
     // Display
     val targetDateTime: String? = null,
     val geofenceName: String? = null
@@ -183,6 +186,15 @@ class WhereWasIViewModel @Inject constructor(
         fetchGeocodingAndWeather(lat, lon, targetTime)
     }
 
+    private data class ActivityEnd(
+        val lat: Double?,
+        val lon: Double?,
+        val odometer: Double?,
+        val temp: Double?,
+        val endTime: LocalDateTime,
+        val geofenceName: String? = null
+    )
+
     private suspend fun handleParked(
         carId: Int,
         drives: List<DriveData>,
@@ -191,73 +203,17 @@ class WhereWasIViewModel @Inject constructor(
         units: Units?,
         dayStart: String
     ) {
-        // Find the nearest activity to determine position
-        data class ActivityEnd(val lat: Double?, val lon: Double?, val odometer: Double?, val temp: Double?, val endTime: LocalDateTime)
-
-        val activityEnds = mutableListOf<ActivityEnd>()
-
-        // Drive end positions
-        for (drive in drives) {
-            val endTime = parseDateTime(drive.endDate ?: "") ?: continue
-            if (endTime <= targetTime) {
-                // Get last position from drive detail for lat/lon
-                val detail = when (val r = repository.getDriveDetail(carId, drive.driveId)) {
-                    is ApiResult.Success -> r.data
-                    is ApiResult.Error -> null
-                }
-                val lastPos = detail?.positions?.lastOrNull()
-                activityEnds.add(ActivityEnd(
-                    lat = lastPos?.latitude,
-                    lon = lastPos?.longitude,
-                    odometer = drive.odometerDetails?.odometerEnd,
-                    temp = drive.outsideTempAvg,
-                    endTime = endTime
-                ))
-            }
-        }
-
-        // Charge locations (already have lat/lon)
-        for (charge in charges) {
-            val endTime = parseDateTime(charge.endDate ?: "") ?: continue
-            if (endTime <= targetTime) {
-                activityEnds.add(ActivityEnd(
-                    lat = charge.latitude,
-                    lon = charge.longitude,
-                    odometer = charge.odometer,
-                    temp = charge.outsideTempAvg,
-                    endTime = endTime
-                ))
-            }
-        }
-
-        // Find the most recent activity end before target time
-        val nearest = activityEnds.maxByOrNull { it.endTime }
+        var result = findLastActivityBefore(carId, drives, charges, targetTime)
 
         // If nothing before target time on this day, try the first activity after
-        val fallback = if (nearest == null) {
-            val firstDriveAfter = drives.firstOrNull { d ->
-                val st = parseDateTime(d.startDate ?: "")
-                st != null && st > targetTime
-            }
-            if (firstDriveAfter != null) {
-                val detail = when (val r = repository.getDriveDetail(carId, firstDriveAfter.driveId)) {
-                    is ApiResult.Success -> r.data
-                    is ApiResult.Error -> null
-                }
-                val firstPos = detail?.positions?.firstOrNull()
-                ActivityEnd(firstPos?.latitude, firstPos?.longitude, firstDriveAfter.odometerDetails?.odometerStart, firstDriveAfter.outsideTempAvg, targetTime)
-            } else {
-                val firstChargeAfter = charges.firstOrNull { c ->
-                    val st = parseDateTime(c.startDate ?: "")
-                    st != null && st > targetTime
-                }
-                firstChargeAfter?.let {
-                    ActivityEnd(it.latitude, it.longitude, it.odometer, it.outsideTempAvg, targetTime)
-                }
-            }
-        } else null
+        if (result == null) {
+            result = findFirstActivityAfter(carId, drives, charges, targetTime)
+        }
 
-        val result = nearest ?: fallback
+        // If still nothing, search up to 1 year back (API returns most recent first, show=1 is cheap)
+        if (result == null) {
+            result = findLastActivityInHistory(carId, targetTime)
+        }
 
         if (result?.lat == null || result.lon == null) {
             _uiState.value = WhereWasIUiState(
@@ -269,6 +225,8 @@ class WhereWasIViewModel @Inject constructor(
             return
         }
 
+        val parkedMinutes = java.time.Duration.between(result.endTime, targetTime).toMinutes()
+
         _uiState.value = WhereWasIUiState(
             isLoading = false,
             carState = CarActivityState.PARKED,
@@ -277,10 +235,144 @@ class WhereWasIViewModel @Inject constructor(
             odometer = result.odometer,
             outsideTemp = result.temp,
             units = units,
-            targetDateTime = _uiState.value.targetDateTime
+            parkedDurationMinutes = parkedMinutes,
+            targetDateTime = _uiState.value.targetDateTime,
+            geofenceName = result.geofenceName
         )
 
         fetchGeocodingAndWeather(result.lat, result.lon, targetTime)
+    }
+
+    private suspend fun findLastActivityBefore(
+        carId: Int,
+        drives: List<DriveData>,
+        charges: List<ChargeData>,
+        targetTime: LocalDateTime
+    ): ActivityEnd? {
+        val activityEnds = mutableListOf<ActivityEnd>()
+
+        for (drive in drives) {
+            val endTime = parseDateTime(drive.endDate ?: "") ?: continue
+            if (endTime <= targetTime) {
+                val detail = when (val r = repository.getDriveDetail(carId, drive.driveId)) {
+                    is ApiResult.Success -> r.data
+                    is ApiResult.Error -> null
+                }
+                val lastPos = detail?.positions?.lastOrNull()
+                activityEnds.add(ActivityEnd(
+                    lat = lastPos?.latitude,
+                    lon = lastPos?.longitude,
+                    odometer = drive.odometerDetails?.odometerEnd,
+                    temp = drive.outsideTempAvg,
+                    endTime = endTime,
+                    geofenceName = drive.endAddress
+                ))
+            }
+        }
+
+        for (charge in charges) {
+            val endTime = parseDateTime(charge.endDate ?: "") ?: continue
+            if (endTime <= targetTime) {
+                activityEnds.add(ActivityEnd(
+                    lat = charge.latitude,
+                    lon = charge.longitude,
+                    odometer = charge.odometer,
+                    temp = charge.outsideTempAvg,
+                    endTime = endTime,
+                    geofenceName = charge.address
+                ))
+            }
+        }
+
+        return activityEnds.maxByOrNull { it.endTime }
+    }
+
+    private suspend fun findFirstActivityAfter(
+        carId: Int,
+        drives: List<DriveData>,
+        charges: List<ChargeData>,
+        targetTime: LocalDateTime
+    ): ActivityEnd? {
+        val firstDriveAfter = drives.firstOrNull { d ->
+            val st = parseDateTime(d.startDate ?: "")
+            st != null && st > targetTime
+        }
+        if (firstDriveAfter != null) {
+            val detail = when (val r = repository.getDriveDetail(carId, firstDriveAfter.driveId)) {
+                is ApiResult.Success -> r.data
+                is ApiResult.Error -> null
+            }
+            val firstPos = detail?.positions?.firstOrNull()
+            return ActivityEnd(firstPos?.latitude, firstPos?.longitude, firstDriveAfter.odometerDetails?.odometerStart, firstDriveAfter.outsideTempAvg, targetTime, firstDriveAfter.startAddress)
+        }
+
+        val firstChargeAfter = charges.firstOrNull { c ->
+            val st = parseDateTime(c.startDate ?: "")
+            st != null && st > targetTime
+        }
+        return firstChargeAfter?.let {
+            ActivityEnd(it.latitude, it.longitude, it.odometer, it.outsideTempAvg, targetTime, it.address)
+        }
+    }
+
+    /**
+     * Searches up to 1 year back for the most recent drive or charge that ended before targetTime.
+     * The API returns results most-recent-first, so show=1 is a cheap query.
+     */
+    private suspend fun findLastActivityInHistory(carId: Int, targetTime: LocalDateTime): ActivityEnd? = coroutineScope {
+        val searchEnd = targetTime.format(DateTimeFormatter.ISO_LOCAL_DATE) + "T00:00:00Z"
+        val searchStart = targetTime.minusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE) + "T00:00:00Z"
+
+        val drivesDeferred = async {
+            repository.getDrives(carId, searchStart, searchEnd, page = 1, show = 1)
+        }
+        val chargesDeferred = async {
+            repository.getCharges(carId, searchStart, searchEnd, page = 1, show = 1)
+        }
+
+        val lastDrive = when (val r = drivesDeferred.await()) {
+            is ApiResult.Success -> r.data.firstOrNull()
+            is ApiResult.Error -> null
+        }
+        val lastCharge = when (val r = chargesDeferred.await()) {
+            is ApiResult.Success -> r.data.firstOrNull()
+            is ApiResult.Error -> null
+        }
+
+        val driveEndTime = lastDrive?.let { parseDateTime(it.endDate ?: "") }
+        val chargeEndTime = lastCharge?.let { parseDateTime(it.endDate ?: "") }
+
+        // Pick whichever ended later
+        val useDrive = when {
+            driveEndTime != null && chargeEndTime != null -> driveEndTime.isAfter(chargeEndTime)
+            driveEndTime != null -> true
+            else -> false
+        }
+
+        return@coroutineScope if (useDrive && lastDrive != null && driveEndTime != null) {
+            val detail = when (val r = repository.getDriveDetail(carId, lastDrive.driveId)) {
+                is ApiResult.Success -> r.data
+                is ApiResult.Error -> null
+            }
+            val lastPos = detail?.positions?.lastOrNull()
+            ActivityEnd(
+                lat = lastPos?.latitude,
+                lon = lastPos?.longitude,
+                odometer = lastDrive.odometerDetails?.odometerEnd,
+                temp = lastDrive.outsideTempAvg,
+                endTime = driveEndTime,
+                geofenceName = lastDrive.endAddress
+            )
+        } else if (lastCharge != null && chargeEndTime != null) {
+            ActivityEnd(
+                lat = lastCharge.latitude,
+                lon = lastCharge.longitude,
+                odometer = lastCharge.odometer,
+                temp = lastCharge.outsideTempAvg,
+                endTime = chargeEndTime,
+                geofenceName = lastCharge.address
+            )
+        } else null
     }
 
     private suspend fun fetchGeocodingAndWeather(lat: Double?, lon: Double?, targetTime: LocalDateTime) {

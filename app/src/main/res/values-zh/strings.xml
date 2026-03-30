@@ -1126,4 +1126,6 @@
     <string name="where_was_i_no_data">该日期没有可用数据</string>
     <!-- Tooltip shown when tapping the map pin on the Where Was I screen -->
     <string name="you_were_here">你当时在这里！</string>
+    <!-- Parked duration shown on the Where Was I screen -->
+    <string name="parked_for">已停放 %s</string>
 </resources>

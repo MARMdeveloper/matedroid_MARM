@@ -405,7 +405,26 @@ fun WhereWasIScreen(
                                             )
                                         }
                                     }
-                                    CarActivityState.PARKED -> { /* No additional rows */ }
+                                    CarActivityState.PARKED -> {
+                                        state.parkedDurationMinutes?.takeIf { it > 0 }?.let { totalMin ->
+                                            val days = totalMin / (24 * 60)
+                                            val hours = (totalMin % (24 * 60)) / 60
+                                            val minutes = totalMin % 60
+                                            val durationStr = buildString {
+                                                if (days > 0) append("${days}d ")
+                                                if (hours > 0) append("${hours}h ")
+                                                if (days == 0L && minutes > 0) append("${minutes}m")
+                                            }.trim()
+                                            Row(modifier = Modifier.fillMaxWidth()) {
+                                                InfoItem(
+                                                    label = stringResource(R.string.where_was_i_parked),
+                                                    value = stringResource(R.string.parked_for, durationStr),
+                                                    palette = palette,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
 
                                 // Chevron hint for tappable cards
