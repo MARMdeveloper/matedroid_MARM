@@ -126,6 +126,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.R
 import com.matedroid.data.local.CarImageOverride
 import com.matedroid.ui.components.CarImagePickerDialog
+import com.matedroid.ui.components.createPinMarkerDrawable
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -1811,7 +1812,7 @@ private fun SmallLocationMap(
                     val marker = Marker(this).apply {
                         position = carLocation
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        icon = ctx.getDrawable(android.R.drawable.ic_menu_mylocation)
+                        icon = createPinMarkerDrawable(ctx.resources, primaryColor)
                     }
                     overlays.add(marker)
                 }
