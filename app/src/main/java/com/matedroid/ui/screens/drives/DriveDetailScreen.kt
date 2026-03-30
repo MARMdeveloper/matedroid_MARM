@@ -1,5 +1,6 @@
 package com.matedroid.ui.screens.drives
 
+import com.matedroid.BuildConfig
 import android.content.Intent
 import android.graphics.Paint
 import android.net.Uri
@@ -526,7 +527,7 @@ private fun DriveMapCard(positions: List<DrivePosition>, routeColor: Color) {
                     .clip(RoundedCornerShape(8.dp))
             ) {
                 DisposableEffect(Unit) {
-                    Configuration.getInstance().userAgentValue = "MateDroid/1.0"
+                    Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
                     onDispose { }
                 }
 
