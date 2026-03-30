@@ -49,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -63,6 +64,7 @@ import com.matedroid.data.repository.WeatherCondition
 import com.matedroid.data.repository.countryCodeToFlag
 import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.icons.CustomIcons
+import com.matedroid.ui.components.createPinMarkerDrawable
 import com.matedroid.ui.theme.CarColorPalettes
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -200,6 +202,7 @@ fun WhereWasIScreen(
                     val lon = state.longitude
                     if (lat != null && lon != null) {
                         val context = LocalContext.current
+                        val accentArgb = palette.accent.toArgb()
                         Card(
                             colors = CardDefaults.cardColors(containerColor = palette.surface),
                             modifier = Modifier.clickable {
@@ -218,6 +221,7 @@ fun WhereWasIScreen(
                                         val marker = org.osmdroid.views.overlay.Marker(this)
                                         marker.position = GeoPoint(lat, lon)
                                         marker.setAnchor(org.osmdroid.views.overlay.Marker.ANCHOR_CENTER, org.osmdroid.views.overlay.Marker.ANCHOR_BOTTOM)
+                                        marker.icon = createPinMarkerDrawable(ctx.resources, accentArgb)
                                         overlays.add(marker)
                                     }
                                 },

@@ -75,6 +75,7 @@ import com.matedroid.data.api.models.ChargePoint
 import com.matedroid.data.api.models.Units
 import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.components.FullscreenLineChart
+import com.matedroid.ui.components.createPinMarkerDrawable
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -610,6 +611,7 @@ private fun ChargeMapCard(latitude: Double, longitude: Double) {
                                 position = geoPoint
                                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                                 title = chargeLocationMarker
+                                icon = createPinMarkerDrawable(ctx.resources, primaryColor)
                             }
                             overlays.add(marker)
 
