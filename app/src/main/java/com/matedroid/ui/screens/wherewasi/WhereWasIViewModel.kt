@@ -49,6 +49,9 @@ data class WhereWasIUiState(
     val chargerPower: Int? = null,
     // Parked-specific
     val parkedDurationMinutes: Long? = null,
+    val parkedSince: String? = null, // Formatted localized datetime of last activity end
+    val lastActivityDriveId: Int? = null,
+    val lastActivityChargeId: Int? = null,
     // Display
     val targetDateTime: String? = null,
     val geofenceName: String? = null
@@ -192,7 +195,9 @@ class WhereWasIViewModel @Inject constructor(
         val odometer: Double?,
         val temp: Double?,
         val endTime: LocalDateTime,
-        val geofenceName: String? = null
+        val geofenceName: String? = null,
+        val driveId: Int? = null,
+        val chargeId: Int? = null
     )
 
     private suspend fun handleParked(
@@ -226,6 +231,7 @@ class WhereWasIViewModel @Inject constructor(
         }
 
         val parkedMinutes = java.time.Duration.between(result.endTime, targetTime).toMinutes()
+        val sinceFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm")
 
         _uiState.value = WhereWasIUiState(
             isLoading = false,
@@ -236,6 +242,9 @@ class WhereWasIViewModel @Inject constructor(
             outsideTemp = result.temp,
             units = units,
             parkedDurationMinutes = parkedMinutes,
+            parkedSince = result.endTime.format(sinceFormatter),
+            lastActivityDriveId = result.driveId,
+            lastActivityChargeId = result.chargeId,
             targetDateTime = _uiState.value.targetDateTime,
             geofenceName = result.geofenceName
         )
@@ -265,7 +274,8 @@ class WhereWasIViewModel @Inject constructor(
                     odometer = drive.odometerDetails?.odometerEnd,
                     temp = drive.outsideTempAvg,
                     endTime = endTime,
-                    geofenceName = drive.endAddress
+                    geofenceName = drive.endAddress,
+                    driveId = drive.driveId
                 ))
             }
         }
@@ -279,7 +289,8 @@ class WhereWasIViewModel @Inject constructor(
                     odometer = charge.odometer,
                     temp = charge.outsideTempAvg,
                     endTime = endTime,
-                    geofenceName = charge.address
+                    geofenceName = charge.address,
+                    chargeId = charge.chargeId
                 ))
             }
         }
@@ -303,7 +314,7 @@ class WhereWasIViewModel @Inject constructor(
                 is ApiResult.Error -> null
             }
             val firstPos = detail?.positions?.firstOrNull()
-            return ActivityEnd(firstPos?.latitude, firstPos?.longitude, firstDriveAfter.odometerDetails?.odometerStart, firstDriveAfter.outsideTempAvg, targetTime, firstDriveAfter.startAddress)
+            return ActivityEnd(firstPos?.latitude, firstPos?.longitude, firstDriveAfter.odometerDetails?.odometerStart, firstDriveAfter.outsideTempAvg, targetTime, firstDriveAfter.startAddress, driveId = firstDriveAfter.driveId)
         }
 
         val firstChargeAfter = charges.firstOrNull { c ->
@@ -311,7 +322,7 @@ class WhereWasIViewModel @Inject constructor(
             st != null && st > targetTime
         }
         return firstChargeAfter?.let {
-            ActivityEnd(it.latitude, it.longitude, it.odometer, it.outsideTempAvg, targetTime, it.address)
+            ActivityEnd(it.latitude, it.longitude, it.odometer, it.outsideTempAvg, targetTime, it.address, chargeId = it.chargeId)
         }
     }
 
@@ -361,7 +372,8 @@ class WhereWasIViewModel @Inject constructor(
                 odometer = lastDrive.odometerDetails?.odometerEnd,
                 temp = lastDrive.outsideTempAvg,
                 endTime = driveEndTime,
-                geofenceName = lastDrive.endAddress
+                geofenceName = lastDrive.endAddress,
+                driveId = lastDrive.driveId
             )
         } else if (lastCharge != null && chargeEndTime != null) {
             ActivityEnd(
@@ -370,7 +382,8 @@ class WhereWasIViewModel @Inject constructor(
                 odometer = lastCharge.odometer,
                 temp = lastCharge.outsideTempAvg,
                 endTime = chargeEndTime,
-                geofenceName = lastCharge.address
+                geofenceName = lastCharge.address,
+                chargeId = lastCharge.chargeId
             )
         } else null
     }

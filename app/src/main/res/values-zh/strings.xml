@@ -1128,4 +1128,5 @@
     <string name="you_were_here">你当时在这里！</string>
     <!-- Parked duration shown on the Where Was I screen -->
     <string name="parked_for">已停放 %s</string>
+    <string name="parked_since">自 %s 起</string>
 </resources>

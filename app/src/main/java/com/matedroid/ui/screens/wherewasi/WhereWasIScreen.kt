@@ -304,17 +304,24 @@ fun WhereWasIScreen(
 
                     // State card
                     state.carState?.let { carState ->
-                        val isClickable = carState == CarActivityState.DRIVING || carState == CarActivityState.CHARGING
+                        val hasLinkedActivity = when (carState) {
+                            CarActivityState.DRIVING -> state.driveId != null
+                            CarActivityState.CHARGING -> state.chargeId != null
+                            CarActivityState.PARKED -> state.lastActivityDriveId != null || state.lastActivityChargeId != null
+                        }
                         Card(
                             colors = CardDefaults.cardColors(containerColor = palette.surface),
-                            modifier = if (isClickable) {
+                            modifier = if (hasLinkedActivity) {
                                 Modifier
                                     .fillMaxWidth()
                                     .clickable {
                                         when (carState) {
                                             CarActivityState.DRIVING -> state.driveId?.let { onNavigateToDriveDetail(it) }
                                             CarActivityState.CHARGING -> state.chargeId?.let { onNavigateToChargeDetail(it) }
-                                            else -> {}
+                                            CarActivityState.PARKED -> {
+                                                state.lastActivityDriveId?.let { onNavigateToDriveDetail(it) }
+                                                    ?: state.lastActivityChargeId?.let { onNavigateToChargeDetail(it) }
+                                            }
                                         }
                                     }
                             } else Modifier.fillMaxWidth()
@@ -415,10 +422,17 @@ fun WhereWasIScreen(
                                                 if (hours > 0) append("${hours}h ")
                                                 if (days == 0L && minutes > 0) append("${minutes}m")
                                             }.trim()
+                                            val sinceStr = state.parkedSince
+                                            val valueStr = if (sinceStr != null) {
+                                                stringResource(R.string.parked_for, durationStr) + "\n" +
+                                                    stringResource(R.string.parked_since, sinceStr)
+                                            } else {
+                                                stringResource(R.string.parked_for, durationStr)
+                                            }
                                             Row(modifier = Modifier.fillMaxWidth()) {
                                                 InfoItem(
                                                     label = stringResource(R.string.where_was_i_parked),
-                                                    value = stringResource(R.string.parked_for, durationStr),
+                                                    value = valueStr,
                                                     palette = palette,
                                                     modifier = Modifier.weight(1f)
                                                 )
@@ -428,7 +442,7 @@ fun WhereWasIScreen(
                                 }
 
                                 // Chevron hint for tappable cards
-                                if (isClickable) {
+                                if (hasLinkedActivity) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Icon(
                                         Icons.AutoMirrored.Filled.KeyboardArrowRight,

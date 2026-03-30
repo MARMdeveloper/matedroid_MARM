@@ -1128,4 +1128,6 @@
     <string name="you_were_here">You were here!</string>
     <!-- Parked duration shown on the Where Was I screen, e.g. "Parked for 2 days, 4h" -->
     <string name="parked_for">Parked for %s</string>
+    <!-- "Since" date of last activity, e.g. "since 22 Mar 2026, 11:52" -->
+    <string name="parked_since">since %s</string>
 </resources>
