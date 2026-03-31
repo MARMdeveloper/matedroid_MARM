@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Sentry alert history**: Persistent on-device log of sentry alert events. Tap the red sentry dot on the dashboard or widget to view current session alerts and past alerts grouped by day. Sentry notifications also deep-link to the history screen.
+
 ## [1.3.0] - 2026-03-30
 
 ### Added

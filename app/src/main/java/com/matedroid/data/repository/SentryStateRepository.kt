@@ -1,7 +1,8 @@
 package com.matedroid.data.repository
 
-import com.matedroid.data.local.SentryState
 import com.matedroid.data.local.SentryStateDataStore
+import com.matedroid.data.local.dao.SentryAlertLogDao
+import com.matedroid.data.local.entity.SentryAlertLog
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,7 +32,8 @@ sealed class SentryEvent {
  */
 @Singleton
 class SentryStateRepository @Inject constructor(
-    private val dataStore: SentryStateDataStore
+    private val dataStore: SentryStateDataStore,
+    private val alertLogDao: SentryAlertLogDao
 ) {
     companion object {
         /** Debounce window for notification alerting (not counting).
@@ -63,9 +65,14 @@ class SentryStateRepository @Inject constructor(
         // Sentry mode is off and was already off — nothing to do
         if (!sentryMode) return null
 
-        // Mark sentry as active if not already
+        // Mark sentry as active if not already, recording session start time
+        val sessionStartedAt: Long
         if (!state.sentryActive) {
-            dataStore.saveState(carId, state.copy(sentryActive = true))
+            val now = System.currentTimeMillis()
+            sessionStartedAt = now
+            dataStore.saveState(carId, state.copy(sentryActive = true, sessionStartedAt = now))
+        } else {
+            sessionStartedAt = state.sessionStartedAt
         }
 
         // Check for a sentry alert event
@@ -77,6 +84,17 @@ class SentryStateRepository @Inject constructor(
             val now = System.currentTimeMillis()
             val timeSinceLastEvent = now - state.lastEventAt
             val shouldNotify = timeSinceLastEvent >= NOTIFY_DEBOUNCE_MS
+
+            // Log to persistent history using the same dedup rules as notifications
+            if (shouldNotify) {
+                alertLogDao.insert(
+                    SentryAlertLog(
+                        carId = carId,
+                        detectedAt = now,
+                        sessionStartedAt = sessionStartedAt
+                    )
+                )
+            }
 
             return SentryEvent.AlertDetected(updated.eventCount, shouldNotify)
         }
@@ -96,11 +114,25 @@ class SentryStateRepository @Inject constructor(
      * Used for debug simulation only.
      */
     suspend fun forceIncrementEventCount(carId: Int): Int {
-        // Ensure sentry is marked active
+        // Ensure sentry is marked active with a session start time
         val state = dataStore.getState(carId)
+        val sessionStartedAt: Long
         if (!state.sentryActive) {
-            dataStore.saveState(carId, state.copy(sentryActive = true))
+            val now = System.currentTimeMillis()
+            sessionStartedAt = now
+            dataStore.saveState(carId, state.copy(sentryActive = true, sessionStartedAt = now))
+        } else {
+            sessionStartedAt = state.sessionStartedAt
         }
-        return dataStore.incrementEventCount(carId).eventCount
+        val updated = dataStore.incrementEventCount(carId)
+        // Always log for debug simulation (bypasses debounce like the notification does)
+        alertLogDao.insert(
+            SentryAlertLog(
+                carId = carId,
+                detectedAt = System.currentTimeMillis(),
+                sessionStartedAt = sessionStartedAt
+            )
+        )
+        return updated.eventCount
     }
 }

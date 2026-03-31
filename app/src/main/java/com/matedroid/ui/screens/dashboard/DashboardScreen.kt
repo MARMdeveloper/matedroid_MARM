@@ -156,7 +156,7 @@ import com.matedroid.ui.theme.StatusSuccess
 import com.matedroid.ui.theme.StatusWarning
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DashboardScreen(
     intent: Intent? = null,
@@ -169,6 +169,7 @@ fun DashboardScreen(
     onNavigateToStats: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     onNavigateToCurrentCharge: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     onNavigateToWhereWasI: (carId: Int, timestamp: String, exteriorColor: String?) -> Unit = { _, _, _ -> },
+    onNavigateToSentryHistory: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -196,7 +197,19 @@ fun DashboardScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(uiState.selectedCarName ?: "MateDroid")
+                    Text(
+                        text = uiState.selectedCarName ?: "MateDroid",
+                        modifier = if (BuildConfig.DEBUG) {
+                            Modifier.combinedClickable(
+                                onClick = {},
+                                onDoubleClick = {
+                                    uiState.selectedCarId?.let { carId ->
+                                        onNavigateToSentryHistory(carId, uiState.selectedCarExterior?.exteriorColor)
+                                    }
+                                }
+                            )
+                        } else Modifier
+                    )
                 },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
@@ -274,6 +287,11 @@ fun DashboardScreen(
                         onNavigateToWhereWasI = { timestamp ->
                             uiState.selectedCarId?.let { carId ->
                                 onNavigateToWhereWasI(carId, timestamp, uiState.selectedCarExterior?.exteriorColor)
+                            }
+                        },
+                        onNavigateToSentryHistory = {
+                            uiState.selectedCarId?.let { carId ->
+                                onNavigateToSentryHistory(carId, uiState.selectedCarExterior?.exteriorColor)
                             }
                         }
                     )
@@ -433,7 +451,8 @@ private fun DashboardContent(
     onNavigateToStats: () -> Unit = {},
     onNavigateToCurrentCharge: () -> Unit = {},
     onSaveCarImageOverride: (CarImageOverride?) -> Unit = {},
-    onNavigateToWhereWasI: (timestamp: String) -> Unit = {}
+    onNavigateToWhereWasI: (timestamp: String) -> Unit = {},
+    onNavigateToSentryHistory: () -> Unit = {}
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val palette = CarColorPalettes.forExteriorColor(carExterior?.exteriorColor, isDarkTheme)
@@ -484,7 +503,8 @@ private fun DashboardContent(
             onNavigateToBattery = onNavigateToBattery,
             onNavigateToStats = onNavigateToStats,
             onNavigateToCurrentCharge = onNavigateToCurrentCharge,
-            onCarImageLongPress = { showCarImagePicker = true }
+            onCarImageLongPress = { showCarImagePicker = true },
+            onNavigateToSentryHistory = onNavigateToSentryHistory
         )
 
         // Location Section - show if we have coordinates
@@ -791,6 +811,7 @@ private fun StatusIndicatorsRow(
     units: Units?,
     palette: CarColorPalette,
     sentryEventCount: Int = 0,
+    onNavigateToSentryHistory: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isSentryModeActive = status.sentryMode == true
@@ -859,42 +880,25 @@ private fun StatusIndicatorsRow(
                     tint = if (isLocked) palette.onSurfaceVariant else StatusError.copy(alpha = 0.7f)
                 )
 
-                // Sentry mode red dot (if active) + event count
+                // Sentry mode red dot (if active) + event count — tapping opens history
                 if (isSentryModeActive) {
-                    val sentryTooltipState = rememberTooltipState(isPersistent = true)
-                    val scope = rememberCoroutineScope()
-                    val tooltipText = if (sentryEventCount > 0) {
-                        stringResource(R.string.sentry_mode_active) + " ($sentryEventCount)"
-                    } else {
-                        stringResource(R.string.sentry_mode_active)
-                    }
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                        tooltip = {
-                            PlainTooltip {
-                                Text(tooltipText)
-                            }
-                        },
-                        state = sentryTooltipState
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        modifier = Modifier.clickable { onNavigateToSentryHistory() }
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp),
-                            modifier = Modifier.clickable { scope.launch { sentryTooltipState.show() } }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp)
-                                    .background(StatusError, RoundedCornerShape(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .background(StatusError, RoundedCornerShape(6.dp))
+                        )
+                        if (sentryEventCount > 0) {
+                            Text(
+                                text = "$sentryEventCount",
+                                color = StatusError,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
                             )
-                            if (sentryEventCount > 0) {
-                                Text(
-                                    text = "$sentryEventCount",
-                                    color = StatusError,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
                         }
                     }
                 }
@@ -1016,7 +1020,8 @@ private fun BatteryCard(
     onNavigateToBattery: () -> Unit = {},
     onNavigateToStats: () -> Unit = {},
     onNavigateToCurrentCharge: () -> Unit = {},
-    onCarImageLongPress: () -> Unit = {}
+    onCarImageLongPress: () -> Unit = {},
+    onNavigateToSentryHistory: () -> Unit = {}
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val palette = CarColorPalettes.forExteriorColor(carExterior?.exteriorColor, isDarkTheme)
@@ -1071,6 +1076,7 @@ private fun BatteryCard(
                 units = units,
                 palette = palette,
                 sentryEventCount = sentryEventCount,
+                onNavigateToSentryHistory = onNavigateToSentryHistory,
                 modifier = Modifier.padding(top = 4.dp, bottom = 0.dp)
             )
 

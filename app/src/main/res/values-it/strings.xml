@@ -1019,6 +1019,16 @@
     <!-- Notification action button to open the Tesla app -->
     <string name="sentry_action_open_tesla">Apri app Tesla</string>
 
+    <!-- ==================== Sentry History Screen ==================== -->
+    <string name="sentry_history_title">Cronologia Sentinella</string>
+    <string name="sentry_history_current_session">Sessione corrente</string>
+    <string name="sentry_history_no_alerts">Nessun allarme rilevato finora</string>
+    <string name="sentry_history_past">Allarmi passati</string>
+    <string name="sentry_alert_detected">Allarme rilevato</string>
+    <string name="sentry_history_empty">Nessuno storico allarmi sentinella</string>
+    <string name="sentry_history_today">Oggi</string>
+    <string name="sentry_history_yesterday">Ieri</string>
+
     <!-- ==================== Car Image Picker ==================== -->
     <!-- Dialog title for selecting car appearance (long-press on car image) -->
     <string name="car_picker_title">Seleziona aspetto auto</string>

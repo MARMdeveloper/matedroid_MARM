@@ -1020,6 +1020,24 @@
     <!-- Notification action button to open the Tesla app -->
     <string name="sentry_action_open_tesla">Open Tesla app</string>
 
+    <!-- ==================== Sentry History Screen ==================== -->
+    <!-- Title for the sentry alert history screen -->
+    <string name="sentry_history_title">Sentry History</string>
+    <!-- Header for the current sentry session section -->
+    <string name="sentry_history_current_session">Current Session</string>
+    <!-- Message shown when no alerts were detected in the current session -->
+    <string name="sentry_history_no_alerts">No alerts detected so far</string>
+    <!-- Header for past alert history -->
+    <string name="sentry_history_past">Past Alerts</string>
+    <!-- Label for a single sentry alert row, showing the time -->
+    <string name="sentry_alert_detected">Alert detected</string>
+    <!-- Message shown when there is no history at all -->
+    <string name="sentry_history_empty">No sentry alert history</string>
+    <!-- Relative date label for today -->
+    <string name="sentry_history_today">Today</string>
+    <!-- Relative date label for yesterday -->
+    <string name="sentry_history_yesterday">Yesterday</string>
+
     <!-- ==================== Car Image Picker ==================== -->
     <!-- Dialog title for selecting car appearance (long-press on car image) -->
     <string name="car_picker_title">Select Car Appearance</string>

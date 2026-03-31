@@ -22,7 +22,8 @@ private val Context.sentryDataStore: DataStore<Preferences> by preferencesDataSt
 data class SentryState(
     val sentryActive: Boolean = false,
     val eventCount: Int = 0,
-    val lastEventAt: Long = 0L
+    val lastEventAt: Long = 0L,
+    val sessionStartedAt: Long = 0L
 )
 
 /**
@@ -36,6 +37,7 @@ class SentryStateDataStore @Inject constructor(
     private fun activeKey(carId: Int) = booleanPreferencesKey("sentry_active_$carId")
     private fun eventCountKey(carId: Int) = intPreferencesKey("sentry_event_count_$carId")
     private fun lastEventKey(carId: Int) = longPreferencesKey("sentry_last_event_$carId")
+    private fun sessionStartedAtKey(carId: Int) = longPreferencesKey("sentry_session_started_$carId")
 
     /**
      * Get the current sentry state for a specific car.
@@ -45,7 +47,8 @@ class SentryStateDataStore @Inject constructor(
             SentryState(
                 sentryActive = preferences[activeKey(carId)] ?: false,
                 eventCount = preferences[eventCountKey(carId)] ?: 0,
-                lastEventAt = preferences[lastEventKey(carId)] ?: 0L
+                lastEventAt = preferences[lastEventKey(carId)] ?: 0L,
+                sessionStartedAt = preferences[sessionStartedAtKey(carId)] ?: 0L
             )
         }.first()
     }
@@ -58,6 +61,7 @@ class SentryStateDataStore @Inject constructor(
             preferences[activeKey(carId)] = state.sentryActive
             preferences[eventCountKey(carId)] = state.eventCount
             preferences[lastEventKey(carId)] = state.lastEventAt
+            preferences[sessionStartedAtKey(carId)] = state.sessionStartedAt
         }
     }
 
@@ -82,6 +86,7 @@ class SentryStateDataStore @Inject constructor(
             preferences[activeKey(carId)] = false
             preferences[eventCountKey(carId)] = 0
             preferences[lastEventKey(carId)] = 0L
+            preferences[sessionStartedAtKey(carId)] = 0L
         }
     }
 }

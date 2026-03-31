@@ -106,6 +106,7 @@ class SentryNotificationManager @Inject constructor(
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("EXTRA_CAR_ID", carId)
+            putExtra("EXTRA_NAVIGATE_TO", "sentry_history")
         }
         return PendingIntent.getActivity(
             context,

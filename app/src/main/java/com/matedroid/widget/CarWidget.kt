@@ -298,26 +298,33 @@ class CarWidget : GlanceAppWidget() {
                                         colorFilter = ColorFilter.tint(ColorProvider(lockColor))
                                     )
 
-                                    // Sentry dot + event count
+                                    // Sentry dot + event count — tapping opens sentry history
                                     if (sentryMode) {
                                         Spacer(modifier = GlanceModifier.width(iconGap))
                                         val dotSize = if (isCompact) 7.dp else 8.dp
-                                        Box(
-                                            modifier = GlanceModifier
-                                                .size(dotSize)
-                                                .background(ColorProvider(STATUS_ERROR))
-                                                .cornerRadius(4.dp)
-                                        ) {}
-                                        if (sentryEventCount > 0) {
-                                            Spacer(modifier = GlanceModifier.width(2.dp))
-                                            Text(
-                                                text = "$sentryEventCount",
-                                                style = TextStyle(
-                                                    color = ColorProvider(STATUS_ERROR),
-                                                    fontSize = if (isCompact) 9.sp else 10.sp,
-                                                    fontWeight = FontWeight.Bold
+                                        Row(
+                                            modifier = GlanceModifier.clickable(
+                                                actionRunCallback<SentryHistoryCallback>()
+                                            ),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = GlanceModifier
+                                                    .size(dotSize)
+                                                    .background(ColorProvider(STATUS_ERROR))
+                                                    .cornerRadius(4.dp)
+                                            ) {}
+                                            if (sentryEventCount > 0) {
+                                                Spacer(modifier = GlanceModifier.width(2.dp))
+                                                Text(
+                                                    text = "$sentryEventCount",
+                                                    style = TextStyle(
+                                                        color = ColorProvider(STATUS_ERROR),
+                                                        fontSize = if (isCompact) 9.sp else 10.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
                                                 )
-                                            )
+                                            }
                                         }
                                     }
 

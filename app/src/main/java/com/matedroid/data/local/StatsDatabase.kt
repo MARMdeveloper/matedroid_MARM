@@ -10,6 +10,7 @@ import com.matedroid.data.local.dao.DriveSummaryDao
 import com.matedroid.data.local.dao.GeocodeCacheDao
 import com.matedroid.data.local.dao.GeocodeProgressDao
 import com.matedroid.data.local.dao.GeocodeQueueDao
+import com.matedroid.data.local.dao.SentryAlertLogDao
 import com.matedroid.data.local.dao.SyncStateDao
 import com.matedroid.data.local.entity.ChargeDetailAggregate
 import com.matedroid.data.local.entity.ChargeSummary
@@ -18,6 +19,7 @@ import com.matedroid.data.local.entity.DriveSummary
 import com.matedroid.data.local.entity.GeocodeCache
 import com.matedroid.data.local.entity.GeocodeProgress
 import com.matedroid.data.local.entity.GeocodeQueueItem
+import com.matedroid.data.local.entity.SentryAlertLog
 import com.matedroid.data.local.entity.SyncState
 
 /**
@@ -41,9 +43,10 @@ import com.matedroid.data.local.entity.SyncState
         ChargeDetailAggregate::class,
         GeocodeCache::class,
         GeocodeQueueItem::class,
-        GeocodeProgress::class
+        GeocodeProgress::class,
+        SentryAlertLog::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class StatsDatabase : RoomDatabase() {
@@ -55,6 +58,7 @@ abstract class StatsDatabase : RoomDatabase() {
     abstract fun geocodeCacheDao(): GeocodeCacheDao
     abstract fun geocodeQueueDao(): GeocodeQueueDao
     abstract fun geocodeProgressDao(): GeocodeProgressDao
+    abstract fun sentryAlertLogDao(): SentryAlertLogDao
 
     companion object {
         const val DATABASE_NAME = "matedroid_stats.db"
@@ -148,6 +152,24 @@ abstract class StatsDatabase : RoomDatabase() {
             }
         }
 
-        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+        /** Migration from V5 to V6: Add sentry alert history log table */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS sentry_alert_log (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        carId INTEGER NOT NULL,
+                        detectedAt INTEGER NOT NULL,
+                        sessionStartedAt INTEGER NOT NULL
+                    )
+                """)
+                db.execSQL("""
+                    CREATE INDEX IF NOT EXISTS index_sentry_alert_log_carId_detectedAt
+                    ON sentry_alert_log (carId, detectedAt)
+                """)
+            }
+        }
+
+        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
     }
 }

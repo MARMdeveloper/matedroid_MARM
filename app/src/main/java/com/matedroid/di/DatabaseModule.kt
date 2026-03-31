@@ -9,6 +9,7 @@ import com.matedroid.data.local.dao.DriveSummaryDao
 import com.matedroid.data.local.dao.GeocodeCacheDao
 import com.matedroid.data.local.dao.GeocodeProgressDao
 import com.matedroid.data.local.dao.GeocodeQueueDao
+import com.matedroid.data.local.dao.SentryAlertLogDao
 import com.matedroid.data.local.dao.SyncStateDao
 import dagger.Module
 import dagger.Provides
@@ -76,5 +77,11 @@ object DatabaseModule {
     @Singleton
     fun provideGeocodeProgressDao(database: StatsDatabase): GeocodeProgressDao {
         return database.geocodeProgressDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSentryAlertLogDao(database: StatsDatabase): SentryAlertLogDao {
+        return database.sentryAlertLogDao()
     }
 }
