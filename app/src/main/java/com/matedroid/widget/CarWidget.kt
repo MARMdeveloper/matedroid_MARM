@@ -202,6 +202,7 @@ class CarWidget : GlanceAppWidget() {
                             val locationText = prefs[LOCATION_TEXT_KEY]
                             val chargeEnergyAdded = prefs[CHARGE_ENERGY_ADDED_KEY]?.takeIf { it >= 0f }
                             val timeToFull = prefs[TIME_TO_FULL_KEY]?.takeIf { it >= 0f }
+                            val chargerPower = prefs[CHARGER_POWER_KEY]?.takeIf { it >= 0 }
                             val chargerVoltage = prefs[CHARGER_VOLTAGE_KEY]?.takeIf { it >= 0 }
                             val chargerCurrent = prefs[CHARGER_CURRENT_KEY]?.takeIf { it >= 0 }
                             val acPhases = prefs[AC_PHASES_KEY]?.takeIf { it >= 0 }
@@ -261,7 +262,18 @@ class CarWidget : GlanceAppWidget() {
                                     modifier = GlanceModifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // State icon
+                                    // Charging power + state icon
+                                    if (stateIsCharging && chargerPower != null && chargerPower > 0) {
+                                        Text(
+                                            text = "${chargerPower} kW",
+                                            style = TextStyle(
+                                                color = ColorProvider(stateColor),
+                                                fontSize = if (isCompact) 9.sp else 11.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        )
+                                        Spacer(modifier = GlanceModifier.width(3.dp))
+                                    }
                                     val stateIconRes = when {
                                         stateIsCharging -> com.matedroid.R.drawable.ic_bolt
                                         isAsleep -> com.matedroid.R.drawable.ic_bedtime
@@ -632,21 +644,75 @@ class CarWidget : GlanceAppWidget() {
 
             if (isCharging) {
                 val glowColor = if (isDcCharging) palette.dcColor else palette.acColor
-                val glowBitmap = GlowBitmapRenderer.createGlowBitmap(carBitmap, glowColor, 30f)
-                val glowScaledW = (scaledW * 1.4f).roundToInt().coerceAtLeast(1)
-                val glowScaledH = (scaledH * 1.4f).roundToInt().coerceAtLeast(1)
-                val glowScaled = Bitmap.createScaledBitmap(glowBitmap, glowScaledW, glowScaledH, true)
+                // Desaturated version of the glow color for the outermost halo
+                val desatColor = glowColor.copy(
+                    red = glowColor.red * 0.6f + 0.4f,
+                    green = glowColor.green * 0.6f + 0.4f,
+                    blue = glowColor.blue * 0.6f + 0.4f
+                )
+
+                // Layer 1: Outer halo — wide, faint, desaturated color bleed
+                val outerBitmap = GlowBitmapRenderer.createGlowBitmap(carBitmap, desatColor, 70f)
+                val outerScaledW = (scaledW * 1.6f).roundToInt().coerceAtLeast(1)
+                val outerScaledH = (scaledH * 1.6f).roundToInt().coerceAtLeast(1)
+                val outerScaled = Bitmap.createScaledBitmap(outerBitmap, outerScaledW, outerScaledH, true)
+                val outerPaint = Paint().apply { alpha = 75 }
                 canvas.drawBitmap(
-                    glowScaled,
-                    (width - glowScaled.width) / 2f,
-                    carTop - (glowScaled.height - scaledH) / 2f,
+                    outerScaled,
+                    (width - outerScaled.width) / 2f,
+                    carTop - (outerScaled.height - scaledH) / 2f,
+                    outerPaint
+                )
+                outerScaled.recycle()
+                outerBitmap.recycle()
+
+                // Layer 2: Mid glow — AC/DC color at medium radius
+                val midBitmap = GlowBitmapRenderer.createGlowBitmap(carBitmap, glowColor, 40f)
+                val midScaledW = (scaledW * 1.3f).roundToInt().coerceAtLeast(1)
+                val midScaledH = (scaledH * 1.3f).roundToInt().coerceAtLeast(1)
+                val midScaled = Bitmap.createScaledBitmap(midBitmap, midScaledW, midScaledH, true)
+                val midPaint = Paint().apply { alpha = 180 }
+                canvas.drawBitmap(
+                    midScaled,
+                    (width - midScaled.width) / 2f,
+                    carTop - (midScaled.height - scaledH) / 2f,
+                    midPaint
+                )
+                midScaled.recycle()
+                midBitmap.recycle()
+
+                // Layer 3: Inner white-hot core — tight, bright white glow
+                val coreBitmap = GlowBitmapRenderer.createGlowBitmap(carBitmap, Color.White, 15f)
+                val coreScaledW = (scaledW * 1.1f).roundToInt().coerceAtLeast(1)
+                val coreScaledH = (scaledH * 1.1f).roundToInt().coerceAtLeast(1)
+                val coreScaled = Bitmap.createScaledBitmap(coreBitmap, coreScaledW, coreScaledH, true)
+                val corePaint = Paint().apply { alpha = 130 }
+                canvas.drawBitmap(
+                    coreScaled,
+                    (width - coreScaled.width) / 2f,
+                    carTop - (coreScaled.height - scaledH) / 2f,
+                    corePaint
+                )
+                coreScaled.recycle()
+                coreBitmap.recycle()
+
+                // Layer 4: Rim light — sharp bright outline tracing the car silhouette
+                val rimBitmap = GlowBitmapRenderer.createRimLightBitmap(carBitmap, glowColor, rimRadius = 5f, passes = 3)
+                val rimScaleCompensation = rimBitmap.width.toFloat() / carBitmap.width
+                val rimScaledW = (scaledW * rimScaleCompensation).roundToInt().coerceAtLeast(1)
+                val rimScaledH = (scaledH * rimScaleCompensation).roundToInt().coerceAtLeast(1)
+                val rimScaled = Bitmap.createScaledBitmap(rimBitmap, rimScaledW, rimScaledH, true)
+                canvas.drawBitmap(
+                    rimScaled,
+                    (width - rimScaled.width) / 2f,
+                    carTop - (rimScaled.height - scaledH) / 2f,
                     null
                 )
-                glowScaled.recycle()
-                glowBitmap.recycle()
+                rimScaled.recycle()
+                rimBitmap.recycle()
             }
 
-            val dimmed = GlowBitmapRenderer.createDimmedCarBitmap(carBitmap, 0.35f)
+            val dimmed = GlowBitmapRenderer.createDimmedCarBitmap(carBitmap, 0.20f)
             val scaled = Bitmap.createScaledBitmap(dimmed, scaledW, scaledH, true)
             canvas.drawBitmap(scaled, carLeft, carTop, null)
             scaled.recycle()
