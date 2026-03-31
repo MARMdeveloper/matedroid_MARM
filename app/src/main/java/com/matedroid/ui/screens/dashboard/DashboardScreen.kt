@@ -11,6 +11,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -889,9 +890,16 @@ private fun StatusIndicatorsRow(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(12.dp)
-                                .background(StatusError, RoundedCornerShape(6.dp))
-                        )
+                                .size(16.dp)
+                                .border(2.dp, palette.onSurfaceVariant.copy(alpha = 0.35f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(StatusError, CircleShape)
+                            )
+                        }
                         if (sentryEventCount > 0) {
                             Text(
                                 text = "$sentryEventCount",

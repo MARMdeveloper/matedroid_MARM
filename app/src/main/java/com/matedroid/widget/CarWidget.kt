@@ -301,19 +301,29 @@ class CarWidget : GlanceAppWidget() {
                                     // Sentry dot + event count — tapping opens sentry history
                                     if (sentryMode) {
                                         Spacer(modifier = GlanceModifier.width(iconGap))
-                                        val dotSize = if (isCompact) 7.dp else 8.dp
+                                        val ringSize = if (isCompact) 11.dp else 14.dp
+                                        val dotSize = if (isCompact) 5.dp else 7.dp
                                         Row(
                                             modifier = GlanceModifier.clickable(
                                                 actionRunCallback<SentryHistoryCallback>()
                                             ),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
+                                            // Grey ring + red dot (Tesla-style sentry indicator)
                                             Box(
                                                 modifier = GlanceModifier
-                                                    .size(dotSize)
-                                                    .background(ColorProvider(STATUS_ERROR))
-                                                    .cornerRadius(4.dp)
-                                            ) {}
+                                                    .size(ringSize)
+                                                    .background(ColorProvider(Color.White.copy(alpha = 0.2f)))
+                                                    .cornerRadius(7.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Box(
+                                                    modifier = GlanceModifier
+                                                        .size(dotSize)
+                                                        .background(ColorProvider(STATUS_ERROR))
+                                                        .cornerRadius(4.dp)
+                                                ) {}
+                                            }
                                             if (sentryEventCount > 0) {
                                                 Spacer(modifier = GlanceModifier.width(2.dp))
                                                 Text(
