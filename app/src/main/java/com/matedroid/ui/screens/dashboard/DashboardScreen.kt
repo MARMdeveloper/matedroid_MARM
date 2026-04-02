@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -171,6 +172,7 @@ fun DashboardScreen(
     onNavigateToCurrentCharge: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     onNavigateToWhereWasI: (carId: Int, timestamp: String, exteriorColor: String?) -> Unit = { _, _, _ -> },
     onNavigateToSentryHistory: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
+    onNavigateToTrips: (carId: Int, exteriorColor: String?) -> Unit = { _, _ -> },
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -240,6 +242,7 @@ fun DashboardScreen(
                         resolvedAddress = uiState.resolvedAddress,
                         totalCharges = uiState.totalCharges,
                         totalDrives = uiState.totalDrives,
+                        totalTrips = uiState.totalTrips,
                         imageOverride = uiState.carImageOverride,
                         cars = uiState.cars,
                         selectedCarId = uiState.selectedCarId,
@@ -293,6 +296,11 @@ fun DashboardScreen(
                         onNavigateToSentryHistory = {
                             uiState.selectedCarId?.let { carId ->
                                 onNavigateToSentryHistory(carId, uiState.selectedCarExterior?.exteriorColor)
+                            }
+                        },
+                        onNavigateToTrips = {
+                            uiState.selectedCarId?.let { carId ->
+                                onNavigateToTrips(carId, uiState.selectedCarExterior?.exteriorColor)
                             }
                         }
                     )
@@ -437,6 +445,7 @@ private fun DashboardContent(
     resolvedAddress: String? = null,
     totalCharges: Int? = null,
     totalDrives: Int? = null,
+    totalTrips: Int? = null,
     imageOverride: CarImageOverride? = null,
     cars: List<CarData> = emptyList(),
     selectedCarId: Int? = null,
@@ -453,7 +462,8 @@ private fun DashboardContent(
     onNavigateToCurrentCharge: () -> Unit = {},
     onSaveCarImageOverride: (CarImageOverride?) -> Unit = {},
     onNavigateToWhereWasI: (timestamp: String) -> Unit = {},
-    onNavigateToSentryHistory: () -> Unit = {}
+    onNavigateToSentryHistory: () -> Unit = {},
+    onNavigateToTrips: () -> Unit = {}
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val palette = CarColorPalettes.forExteriorColor(carExterior?.exteriorColor, isDarkTheme)
@@ -526,10 +536,12 @@ private fun DashboardContent(
             palette = palette,
             totalCharges = totalCharges,
             totalDrives = totalDrives,
+            totalTrips = totalTrips,
             onNavigateToCharges = onNavigateToCharges,
             onNavigateToDrives = onNavigateToDrives,
             onNavigateToMileage = onNavigateToMileage,
-            onNavigateToUpdates = onNavigateToUpdates
+            onNavigateToUpdates = onNavigateToUpdates,
+            onNavigateToTrips = onNavigateToTrips
         )
     }
 }
@@ -1842,10 +1854,12 @@ private fun VehicleInfoCard(
     palette: CarColorPalette,
     totalCharges: Int?,
     totalDrives: Int?,
+    totalTrips: Int? = null,
     onNavigateToCharges: () -> Unit,
     onNavigateToDrives: () -> Unit,
     onNavigateToMileage: () -> Unit,
-    onNavigateToUpdates: () -> Unit
+    onNavigateToUpdates: () -> Unit,
+    onNavigateToTrips: () -> Unit = {}
 ) {
     val tpms = status.tpmsDetails
 
@@ -1879,7 +1893,7 @@ private fun VehicleInfoCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Navigation buttons - 2x2 grid of rectangular buttons
+            // Navigation buttons - 3+2 grid
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1898,6 +1912,14 @@ private fun VehicleInfoCard(
                     icon = CustomIcons.SteeringWheel,
                     palette = palette,
                     onClick = onNavigateToDrives,
+                    modifier = Modifier.weight(1f)
+                )
+                NavButton(
+                    title = stringResource(R.string.nav_trips),
+                    value = totalTrips?.let { "%,d".format(it) } ?: "--",
+                    icon = Icons.Filled.Route,
+                    palette = palette,
+                    onClick = onNavigateToTrips,
                     modifier = Modifier.weight(1f)
                 )
             }
