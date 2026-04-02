@@ -42,11 +42,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -583,6 +586,9 @@ private fun TripMapCard(
         }
     }
 
+    // Track when the map has zoomed to the route — hides the world-view flash
+    var mapReady by remember { mutableStateOf(false) }
+
     val startColorArgb = StatusSuccess.toArgb()
     val chargeColorArgb = palette.accent.toArgb()
     val endColorArgb = StatusError.toArgb()
@@ -610,98 +616,115 @@ private fun TripMapCard(
                     .height(250.dp)
                     .clip(RoundedCornerShape(8.dp))
             ) {
-                if (isMapLoading) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) { CircularProgressIndicator(modifier = Modifier.size(32.dp)) }
-                } else if (routeSegments.isNotEmpty()) {
-                    AndroidView(
-                        factory = { mapCtx ->
-                            MapView(mapCtx).apply {
-                                setTileSource(TileSourceFactory.MAPNIK)
-                                setMultiTouchControls(true)
+                AndroidView(
+                    factory = { mapCtx ->
+                        MapView(mapCtx).apply {
+                            setTileSource(TileSourceFactory.MAPNIK)
+                            setMultiTouchControls(true)
+                        }
+                    },
+                    update = { mapView ->
+                        if (routeSegments.isEmpty()) return@AndroidView
 
-                                routeSegments.forEachIndexed { index, segment ->
-                                    val geoPoints = segment.points.map {
-                                        GeoPoint(it.latitude, it.longitude)
-                                    }
-                                    if (geoPoints.size >= 2) {
-                                        val polyline = Polyline().apply {
-                                            setPoints(geoPoints)
-                                            outlinePaint.color =
-                                                if (index % 2 == 0) oddLegColorArgb
-                                                else evenLegColorArgb
-                                            outlinePaint.strokeWidth = 8f
-                                            outlinePaint.strokeCap = Paint.Cap.ROUND
-                                            outlinePaint.strokeJoin = Paint.Join.ROUND
-                                        }
-                                        overlays.add(polyline)
-                                    }
+                        // Clear previous overlays and redraw
+                        mapView.overlays.clear()
+
+                        routeSegments.forEachIndexed { index, segment ->
+                            val geoPoints = segment.points.map {
+                                GeoPoint(it.latitude, it.longitude)
+                            }
+                            if (geoPoints.size >= 2) {
+                                val polyline = Polyline().apply {
+                                    setPoints(geoPoints)
+                                    outlinePaint.color =
+                                        if (index % 2 == 0) oddLegColorArgb
+                                        else evenLegColorArgb
+                                    outlinePaint.strokeWidth = 8f
+                                    outlinePaint.strokeCap = Paint.Cap.ROUND
+                                    outlinePaint.strokeJoin = Paint.Join.ROUND
                                 }
+                                mapView.overlays.add(polyline)
+                            }
+                        }
 
-                                val mapView = this
-                                markers.forEach { point ->
-                                    val color = when (point.type) {
-                                        TripMapPointType.START -> startColorArgb
-                                        TripMapPointType.CHARGE -> chargeColorArgb
-                                        TripMapPointType.END -> endColorArgb
-                                    }
-                                    val markerIcon = when (point.type) {
-                                        TripMapPointType.CHARGE -> createZapMarkerDrawable(mapCtx.resources, color)
-                                        else -> createPinMarkerDrawable(mapCtx.resources, color)
-                                    }
-                                    val marker = Marker(mapView).apply {
-                                        position = GeoPoint(point.latitude, point.longitude)
-                                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                        title = point.label
-                                        icon = markerIcon
-                                        if (point.chargeId != null) {
-                                            val cid = point.chargeId
-                                            infoWindow = object : org.osmdroid.views.overlay.infowindow.MarkerInfoWindow(
-                                                org.osmdroid.library.R.layout.bonuspack_bubble, mapView
-                                            ) {
-                                                override fun onOpen(item: Any?) {
-                                                    super.onOpen(item)
-                                                    // Set click on every child so any tap on the bubble navigates
-                                                    val clickListener = android.view.View.OnClickListener {
-                                                        close()
-                                                        pendingChargeNav = cid
-                                                    }
-                                                    view?.setOnClickListener(clickListener)
-                                                    (view as? android.view.ViewGroup)?.let { vg ->
-                                                        for (i in 0 until vg.childCount) {
-                                                            vg.getChildAt(i).setOnClickListener(clickListener)
-                                                        }
-                                                    }
+                        val mapCtx = mapView.context
+                        markers.forEach { point ->
+                            val color = when (point.type) {
+                                TripMapPointType.START -> startColorArgb
+                                TripMapPointType.CHARGE -> chargeColorArgb
+                                TripMapPointType.END -> endColorArgb
+                            }
+                            val markerIcon = when (point.type) {
+                                TripMapPointType.CHARGE -> createZapMarkerDrawable(mapCtx.resources, color)
+                                else -> createPinMarkerDrawable(mapCtx.resources, color)
+                            }
+                            val marker = Marker(mapView).apply {
+                                position = GeoPoint(point.latitude, point.longitude)
+                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                title = point.label
+                                icon = markerIcon
+                                if (point.chargeId != null) {
+                                    val cid = point.chargeId
+                                    infoWindow = object : org.osmdroid.views.overlay.infowindow.MarkerInfoWindow(
+                                        org.osmdroid.library.R.layout.bonuspack_bubble, mapView
+                                    ) {
+                                        override fun onOpen(item: Any?) {
+                                            super.onOpen(item)
+                                            val clickListener = android.view.View.OnClickListener {
+                                                close()
+                                                pendingChargeNav = cid
+                                            }
+                                            view?.setOnClickListener(clickListener)
+                                            (view as? android.view.ViewGroup)?.let { vg ->
+                                                for (i in 0 until vg.childCount) {
+                                                    vg.getChildAt(i).setOnClickListener(clickListener)
                                                 }
                                             }
                                         }
                                     }
-                                    overlays.add(marker)
-                                }
-
-                                val allPoints = routeSegments.flatMap { it.points }
-                                if (allPoints.isNotEmpty()) {
-                                    val north = allPoints.maxOf { it.latitude }
-                                    val south = allPoints.minOf { it.latitude }
-                                    val east = allPoints.maxOf { it.longitude }
-                                    val west = allPoints.minOf { it.longitude }
-                                    val latPad = (north - south) * 0.15
-                                    val lonPad = (east - west) * 0.15
-                                    val bb = BoundingBox(
-                                        north + latPad, east + lonPad,
-                                        south - latPad, west - lonPad
-                                    )
-                                    post {
-                                        zoomToBoundingBox(bb, false)
-                                        invalidate()
-                                    }
                                 }
                             }
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
+                            mapView.overlays.add(marker)
+                        }
+
+                        val allPoints = routeSegments.flatMap { it.points }
+                        if (allPoints.isNotEmpty()) {
+                            val north = allPoints.maxOf { it.latitude }
+                            val south = allPoints.minOf { it.latitude }
+                            val east = allPoints.maxOf { it.longitude }
+                            val west = allPoints.minOf { it.longitude }
+                            val latPad = (north - south) * 0.15
+                            val lonPad = (east - west) * 0.15
+                            val bb = BoundingBox(
+                                north + latPad, east + lonPad,
+                                south - latPad, west - lonPad
+                            )
+                            mapView.post {
+                                mapView.zoomToBoundingBox(bb, false)
+                                mapView.invalidate()
+                                mapReady = true
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+                // Opaque cover hides the world-view zoom until route is drawn
+                val overlayAlpha by animateFloatAsState(
+                    targetValue = if (mapReady) 0f else 1f,
+                    animationSpec = tween(durationMillis = 300),
+                    label = "mapOverlay"
+                )
+                if (overlayAlpha > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = overlayAlpha)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isMapLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                        }
+                    }
                 }
             }
         }
