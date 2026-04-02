@@ -7,7 +7,9 @@ import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.local.dao.AggregateDao
 import com.matedroid.data.local.dao.DriveSummaryDao
 import com.matedroid.data.local.dao.GeocodeCacheDao
+import com.matedroid.data.local.dao.TripCountryCacheDao
 import com.matedroid.data.local.dao.TripRouteCacheDao
+import com.matedroid.data.local.entity.TripCountryCache
 import com.matedroid.data.local.entity.TripRouteCache
 import com.matedroid.data.model.Currency
 import com.matedroid.data.repository.ApiResult
@@ -71,6 +73,7 @@ class TripDetailViewModel @Inject constructor(
     private val aggregateDao: AggregateDao,
     private val geocodeCacheDao: GeocodeCacheDao,
     private val tripRouteCacheDao: TripRouteCacheDao,
+    private val tripCountryCacheDao: TripCountryCacheDao,
     private val tripDetector: TripDetector,
     private val tripCache: TripCache,
     private val repository: TeslamateRepository,
@@ -128,9 +131,26 @@ class TripDetailViewModel @Inject constructor(
                 it.copy(isLoading = false, trip = trip, markers = markers)
             }
 
-            // Resolve countries in background (may involve 1 API call)
+            // Resolve countries — try cache first, resolve in background if miss
             launch {
-                val countries = resolveCountriesFromDriveEdges(trip)
+                val tripKey = computeTripKey(trip)
+                val cached = tripCountryCacheDao.get(tripKey)
+                val countries = if (cached != null) {
+                    cached.countries.split(",")
+                        .map { TripCountry(it, countryCodeToFlag(it)) }
+                } else {
+                    val resolved = resolveCountriesFromDriveEdges(trip)
+                    if (resolved.isNotEmpty()) {
+                        tripCountryCacheDao.insert(
+                            TripCountryCache(
+                                tripKey = tripKey,
+                                countries = resolved.joinToString(",") { it.countryCode },
+                                createdAt = System.currentTimeMillis()
+                            )
+                        )
+                    }
+                    resolved
+                }
                 _uiState.update { it.copy(countries = countries) }
             }
 
@@ -148,9 +168,8 @@ class TripDetailViewModel @Inject constructor(
      *   - last leg end     → trip end country
      *   - everything else  → deduplicated intermediates (excl start & end)
      *
-     * Drive aggregates only store start coords; for end coords we use the
-     * next charge's location as proxy, and fetch the last drive's end from
-     * the API (1 call).
+     * Drive aggregates store start + end coords (V9+). For aggregates computed
+     * before V9, the last drive's end is fetched from the API as fallback (1 call).
      */
     private suspend fun resolveCountriesFromDriveEdges(trip: Trip): List<TripCountry> {
         // 1. Collect all edge points in chronological order
@@ -161,12 +180,28 @@ class TripDetailViewModel @Inject constructor(
         val driveCoords = aggregateDao.getDriveEdgeCoordinates(trip.drives.map { it.driveId })
             .associateBy { it.driveId }
 
-        // Drive start + end points from cached coordinates (no API call needed)
+        // Drive start + end points from cached coordinates
         for (drive in trip.drives) {
             val coord = driveCoords[drive.driveId] ?: continue
             points.add(EdgePoint(coord.startLatitude, coord.startLongitude, drive.startDate))
             if (coord.endLatitude != null && coord.endLongitude != null) {
                 points.add(EdgePoint(coord.endLatitude, coord.endLongitude, drive.endDate))
+            }
+        }
+
+        // Fallback: if the last drive has no cached end coords, fetch from API (1 call).
+        // SchemaVersion V5 triggers re-sync to populate end coords, but the sync may
+        // not have completed yet when the user first opens the trip detail after update.
+        val lastDrive = trip.drives.lastOrNull()
+        val lastCoord = lastDrive?.let { driveCoords[it.driveId] }
+        if (lastDrive != null && (lastCoord == null || lastCoord.endLatitude == null)) {
+            when (val result = repository.getDriveDetail(lastDrive.carId, lastDrive.driveId)) {
+                is ApiResult.Success -> {
+                    result.data.positions
+                        ?.lastOrNull { it.latitude != null && it.longitude != null }
+                        ?.let { points.add(EdgePoint(it.latitude!!, it.longitude!!, lastDrive.endDate)) }
+                }
+                is ApiResult.Error -> {}
             }
         }
 
