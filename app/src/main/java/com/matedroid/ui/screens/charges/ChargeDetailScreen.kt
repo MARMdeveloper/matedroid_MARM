@@ -805,7 +805,12 @@ private fun TemperatureChartCard(
 ) {
     val temps = chargePoints.mapNotNull { it.outsideTemp?.toFloat() }
     if (temps.size < 2) return
-
+    var yMin = (kotlin.math.floor(temps.min() ) ).toFloat()
+    var yMax = (kotlin.math.ceil(temps.max() ) ).toFloat()
+    if (yMin == yMax) {
+        yMin -= 1
+        yMax += 1
+    }
     ChartCard(
         title = title,
         icon = Icons.Default.DeviceThermostat,
@@ -813,6 +818,7 @@ private fun TemperatureChartCard(
         color = Color(0xFFFF9800),
         unit = UnitFormatter.getTemperatureUnit(units),
         timeLabels = timeLabels,
+        fixedMinMax = Pair(yMin, yMax),
         externalSelectedFraction = externalSelectedFraction,
         onXSelected = onXSelected,
         fractionToTimeLabel = fractionToTimeLabel,
@@ -833,6 +839,12 @@ private fun BatteryChartCard(
 ) {
     val batteryLevels = chargePoints.mapNotNull { it.batteryLevel?.toFloat() }
     if (batteryLevels.size < 2) return
+    var yMin = (kotlin.math.floor(batteryLevels.min() / 10.0) * 10).toFloat()
+    var yMax = (kotlin.math.ceil(batteryLevels.max() / 10.0) * 10).toFloat()
+    if (yMin == yMax) {
+        yMin -= 1
+        yMax += 1
+    }
 
     ChartCard(
         title = title,
@@ -840,7 +852,7 @@ private fun BatteryChartCard(
         data = batteryLevels,
         color = MaterialTheme.colorScheme.primary,
         unit = "%",
-        fixedMinMax = Pair(0f, 100f),
+        fixedMinMax = Pair(yMin, yMax),
         timeLabels = timeLabels,
         externalSelectedFraction = externalSelectedFraction,
         onXSelected = onXSelected,
