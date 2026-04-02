@@ -1,0 +1,16 @@
+Road trips get the spotlight! Multi-stop trips detected with route maps, country flags, and stats.
+
+Added:
+- Trip grouping with route map and leg breakdown
+- Sentry alert history screen
+- Energy cost and efficiency in Mileage
+- Select all/deselect all in charge filter
+
+Changed:
+- Faster trip maps with caching and parallel loading
+- Smarter chart Y-axis labels
+
+Fixed:
+- Temperature double-conversion on charge charts
+- Missing °F conversion for weather
+- Hardcoded imperial conversions on drives

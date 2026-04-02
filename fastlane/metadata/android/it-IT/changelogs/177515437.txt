@@ -1,0 +1,16 @@
+I viaggi sotto i riflettori! Viaggi con più soste rilevati con mappe, bandiere e statistiche.
+
+Aggiunto:
+- Raggruppamento viaggi con mappa e dettaglio tratta
+- Cronologia allerte Sentry
+- Costi e efficienza in Chilometraggio
+- Seleziona/deseleziona tutto nel filtro
+
+Modificato:
+- Mappe viaggio più veloci con cache
+- Etichette asse Y più intelligenti
+
+Corretto:
+- Doppia conversione temperature nei grafici
+- Conversione °F mancante per il meteo
+- Conversioni imperiali fisse nelle guide

@@ -1,0 +1,16 @@
+Els viatges són protagonistes! Viatges amb parades detectats amb mapes, banderes i stats.
+
+Afegit:
+- Agrupació de viatges amb mapa i detall per tram
+- Historial d'alertes Sentry
+- Cost i eficiència a Quilometratge
+- Seleccionar/desseleccionar tot al filtre ubicacions
+
+Canviat:
+- Mapes de viatge més ràpids amb cache
+- Etiquetes de l'eix Y més intel·ligents
+
+Corregit:
+- Doble conversió de temperatura als gràfics
+- Conversió °F absent al temps
+- Conversions imperials fixes a conduccions

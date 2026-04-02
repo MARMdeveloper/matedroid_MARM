@@ -1,0 +1,16 @@
+Los viajes son protagonistas. Viajes con paradas detectados con mapas, banderas y stats.
+
+Añadido:
+- Agrupación de viajes con mapa y detalle por tramo
+- Historial de alertas Sentry
+- Coste y eficiencia en Kilometraje
+- Seleccionar/deseleccionar todo en filtro
+
+Cambiado:
+- Mapas de viaje más rápidos con caché
+- Etiquetas del eje Y más inteligentes
+
+Corregido:
+- Doble conversión de temperatura en gráficos
+- Conversión °F faltante para el clima
+- Conversiones imperiales fijas en viajes
