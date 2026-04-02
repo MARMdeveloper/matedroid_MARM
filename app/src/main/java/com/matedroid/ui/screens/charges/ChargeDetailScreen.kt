@@ -1,6 +1,5 @@
 package com.matedroid.ui.screens.charges
 
-import com.matedroid.BuildConfig
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -46,7 +45,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,7 +74,6 @@ import com.matedroid.data.api.models.Units
 import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.components.FullscreenLineChart
 import com.matedroid.ui.components.createPinMarkerDrawable
-import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -592,11 +589,6 @@ private fun ChargeMapCard(latitude: Double, longitude: Double) {
                     .clip(RoundedCornerShape(8.dp))
             ) {
                 val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
-
-                DisposableEffect(Unit) {
-                    Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
-                    onDispose { }
-                }
 
                 AndroidView(
                     factory = { ctx ->

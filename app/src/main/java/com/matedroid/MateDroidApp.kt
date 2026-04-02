@@ -2,6 +2,7 @@ package com.matedroid
 
 import android.app.Application
 import android.util.Log
+import java.io.File
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import androidx.work.BackoffPolicy
@@ -36,6 +37,15 @@ class MateDroidApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+
+        // Configure OSMDroid tile cache (shared across all map screens)
+        org.osmdroid.config.Configuration.getInstance().apply {
+            userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
+            osmdroidTileCache = File(cacheDir, "osmdroid")
+            tileFileSystemCacheMaxBytes = 100L * 1024 * 1024  // 100 MB
+            tileFileSystemCacheTrimBytes = 80L * 1024 * 1024  // trim to 80 MB
+            expirationOverrideDuration = 7L * 24 * 60 * 60 * 1000  // 7 days
+        }
 
         // Start background sync on app launch
         enqueueSyncWork()

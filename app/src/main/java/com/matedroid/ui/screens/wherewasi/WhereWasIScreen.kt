@@ -1,6 +1,5 @@
 package com.matedroid.ui.screens.wherewasi
 
-import com.matedroid.BuildConfig
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
@@ -69,7 +68,6 @@ import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.ui.icons.CustomIcons
 import com.matedroid.ui.components.createPinMarkerDrawable
 import com.matedroid.ui.theme.CarColorPalettes
-import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -216,7 +214,6 @@ fun WhereWasIScreen(
                         ) {
                             AndroidView(
                                 factory = { ctx ->
-                                    Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
                                     MapView(ctx).apply {
                                         setTileSource(TileSourceFactory.MAPNIK)
                                         setMultiTouchControls(false)

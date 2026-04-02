@@ -1,6 +1,5 @@
 package com.matedroid.ui.screens.stats
 
-import com.matedroid.BuildConfig
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -47,7 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -85,7 +83,6 @@ import com.matedroid.ui.icons.CustomIcons
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import com.matedroid.ui.theme.BoundaryColor
-import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -563,11 +560,6 @@ private fun CountryMapCard(
                     .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
                     .clip(RoundedCornerShape(16.dp))
             ) {
-                DisposableEffect(Unit) {
-                    Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
-                    onDispose { }
-                }
-
                 AndroidView(
                     factory = { ctx ->
                         MapView(ctx).apply {

@@ -95,7 +95,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -129,7 +128,6 @@ import com.matedroid.R
 import com.matedroid.data.local.CarImageOverride
 import com.matedroid.ui.components.CarImagePickerDialog
 import com.matedroid.ui.components.createPinMarkerDrawable
-import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -1810,11 +1808,6 @@ private fun SmallLocationMap(
     modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
-
-    DisposableEffect(Unit) {
-        Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
-        onDispose { }
-    }
 
     Box(
         modifier = modifier.clickable { onClick() }

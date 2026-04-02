@@ -1,6 +1,5 @@
 package com.matedroid.ui.screens.drives
 
-import com.matedroid.BuildConfig
 import android.content.Intent
 import android.graphics.Paint
 import android.net.Uri
@@ -48,7 +47,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -83,7 +81,6 @@ import com.matedroid.ui.components.BarChartData
 import com.matedroid.ui.components.FullscreenLineChart
 import com.matedroid.ui.components.InteractiveBarChart
 import com.matedroid.ui.theme.CarColorPalettes
-import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -526,11 +523,6 @@ private fun DriveMapCard(positions: List<DrivePosition>, routeColor: Color) {
                     .height(250.dp)
                     .clip(RoundedCornerShape(8.dp))
             ) {
-                DisposableEffect(Unit) {
-                    Configuration.getInstance().userAgentValue = "MateDroid/${BuildConfig.VERSION_NAME}"
-                    onDispose { }
-                }
-
                 AndroidView(
                     factory = { ctx ->
                         MapView(ctx).apply {

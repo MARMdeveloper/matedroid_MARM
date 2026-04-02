@@ -43,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -65,7 +64,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.matedroid.BuildConfig
 import com.matedroid.R
 import com.matedroid.data.api.models.Units
 import com.matedroid.domain.model.Trip
@@ -77,7 +75,6 @@ import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import com.matedroid.ui.theme.StatusError
 import com.matedroid.ui.theme.StatusSuccess
-import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -619,11 +616,6 @@ private fun TripMapCard(
                         contentAlignment = Alignment.Center
                     ) { CircularProgressIndicator(modifier = Modifier.size(32.dp)) }
                 } else if (routeSegments.isNotEmpty()) {
-                    DisposableEffect(Unit) {
-                        Configuration.getInstance().userAgentValue =
-                            "MateDroid/${BuildConfig.VERSION_NAME}"
-                        onDispose { }
-                    }
                     AndroidView(
                         factory = { mapCtx ->
                             MapView(mapCtx).apply {
