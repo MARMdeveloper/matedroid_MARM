@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0-beta2] - 2026-04-04
+
+### Added
+- **Sentry event heatmap**: 6-day activity heatmap (12x6 grid, 2-hour blocks) at the top of the Sentry History screen. Color intensity from palette empty to red indicates event density (0–20+ events). Tapping a cell shows a tooltip with date, time range, and event count; tapping the tooltip scrolls to matching alerts. Future hours are transparent.
+- **Sentry alert addresses**: Alert rows now show the TeslaMate geofence name or reverse-geocoded address instead of repeating "Alert detected". Coordinates are captured at detection time; addresses are resolved lazily from the geocode cache or Nominatim.
+
+### Fixed
+- **Sentry History theme**: Screen now follows the system light/dark theme instead of being always dark.
+
 ## [1.4.0-beta1] - 2026-04-02
 
 ### Added
@@ -465,7 +474,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.4.0-beta1...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.4.0-beta2...HEAD
+[1.4.0-beta2]: https://github.com/vide/matedroid/compare/v1.4.0-beta1...v1.4.0-beta2
 [1.4.0-beta1]: https://github.com/vide/matedroid/compare/v1.3.0...v1.4.0-beta1
 [1.3.0]: https://github.com/vide/matedroid/compare/v1.2.3...v1.3.0
 [1.3.0-beta2]: https://github.com/vide/matedroid/compare/v1.3.0-beta1...v1.3.0-beta2

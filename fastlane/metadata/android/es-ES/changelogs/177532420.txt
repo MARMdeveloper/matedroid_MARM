@@ -1,0 +1,8 @@
+El historial de sentinela se vuelve más inteligente con un mapa de calor de 6 días y alertas con ubicación.
+
+Añadido:
+- Mapa de calor de eventos sentinela (6 días, bloques de 2h) con tooltips al tocar
+- Las alertas ahora muestran el nombre del geofence o la dirección en lugar de "Alerta detectada"
+
+Corregido:
+- La pantalla de Historial de Sentinela ahora sigue el tema claro/oscuro del sistema

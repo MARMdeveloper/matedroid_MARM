@@ -1,0 +1,8 @@
+Sentry history gets smarter with a 6-day activity heatmap and location-aware alerts.
+
+Added:
+- Sentry event heatmap (6 days, 2h blocks) with tap-to-inspect tooltips
+- Alert rows now show geofence name or address instead of "Alert detected"
+
+Fixed:
+- Sentry History screen now follows system light/dark theme

@@ -1,0 +1,8 @@
+La cronologia sentinella diventa più smart con una heatmap di 6 giorni e avvisi con posizione.
+
+Aggiunto:
+- Heatmap eventi sentinella (6 giorni, blocchi da 2h) con tooltip al tocco
+- Gli avvisi ora mostrano il nome del geofence o l'indirizzo al posto di "Allarme rilevato"
+
+Corretto:
+- La schermata Cronologia Sentinella ora segue il tema chiaro/scuro del sistema

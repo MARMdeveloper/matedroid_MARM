@@ -1,0 +1,8 @@
+L'historial de sentinella es torna més intel·ligent amb un mapa de calor de 6 dies i alertes amb ubicació.
+
+Afegit:
+- Mapa de calor d'events sentinella (6 dies, blocs de 2h) amb tooltips en tocar
+- Les alertes ara mostren el nom del geofence o l'adreça en lloc de "Alerta detectada"
+
+Corregit:
+- La pantalla d'Historial de Sentinella ara segueix el tema clar/fosc del sistema
