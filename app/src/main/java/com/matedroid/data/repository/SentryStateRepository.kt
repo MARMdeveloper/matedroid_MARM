@@ -52,7 +52,10 @@ class SentryStateRepository @Inject constructor(
     suspend fun processStatus(
         carId: Int,
         sentryMode: Boolean,
-        isSentryAlerted: Boolean
+        isSentryAlerted: Boolean,
+        latitude: Double? = null,
+        longitude: Double? = null,
+        geofence: String? = null
     ): SentryEvent? {
         val state = dataStore.getState(carId)
 
@@ -91,7 +94,10 @@ class SentryStateRepository @Inject constructor(
                     SentryAlertLog(
                         carId = carId,
                         detectedAt = now,
-                        sessionStartedAt = sessionStartedAt
+                        sessionStartedAt = sessionStartedAt,
+                        latitude = latitude,
+                        longitude = longitude,
+                        address = geofence
                     )
                 )
             }
@@ -113,7 +119,7 @@ class SentryStateRepository @Inject constructor(
      * Force-increment the event count, bypassing debounce.
      * Used for debug simulation only.
      */
-    suspend fun forceIncrementEventCount(carId: Int): Int {
+    suspend fun forceIncrementEventCount(carId: Int, latitude: Double? = null, longitude: Double? = null, geofence: String? = null): Int {
         // Ensure sentry is marked active with a session start time
         val state = dataStore.getState(carId)
         val sessionStartedAt: Long
@@ -130,7 +136,10 @@ class SentryStateRepository @Inject constructor(
             SentryAlertLog(
                 carId = carId,
                 detectedAt = System.currentTimeMillis(),
-                sessionStartedAt = sessionStartedAt
+                sessionStartedAt = sessionStartedAt,
+                latitude = latitude,
+                longitude = longitude,
+                address = geofence
             )
         )
         return updated.eventCount
