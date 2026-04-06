@@ -1,0 +1,13 @@
+Viajes, historial sentinela y gráficos mejorados en MateDroid 1.4.
+
+Añadido:
+- Agrupación de viajes con mapas de ruta, banderas y estadísticas por tramo
+- Historial sentinela con mapa de calor 6 días y alertas con ubicación
+- El widget muestra la potencia de carga
+- Kilometraje: coste energético, consumo y eficiencia
+
+Cambiado:
+- Etiquetas del eje Y se ajustan a los datos
+
+Corregido:
+- Conversión de temperatura y unidades en varias pantallas

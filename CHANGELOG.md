@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-04-06
+
+### Added
+- **Trip grouping**: Automatically detects highway/road trips (drives connected by DC charging stops) and groups them into unified trips. Dedicated Trips screen with list and detail view including route map, country flags, summary stats, and per-leg breakdown.
+- **Sentry alert history**: Persistent on-device log of sentry alert events with 6-day activity heatmap and location-aware alerts showing geofence name or address. Tap the red sentry dot on the dashboard or widget to view current session and past alerts.
+- **Widget charging power**: Home screen widget now shows charging power in the status bar icons.
+- **Mileage screen**: Added energy cost, total energy consumption, and average efficiency (Wh/km) to all levels (lifetime, year, month, day).
+- **Charges screen**: "Select all / Deselect all" toggle in the location filter dropdown, respects the current search query.
+
+### Changed
+- **Trip detail map**: Map tiles now load in parallel with route data for faster display. Route points are simplified with Douglas-Peucker for smoother rendering.
+- **Trip route caching**: GPS route data and country sequence are cached in Room for instant reload on subsequent views.
+- **Chart Y-axis**: Labels now show meaningful, non-repeating values with automatic decimal precision. Battery charts auto-fit to actual data range instead of fixed 0-100%.
+- **OSMDroid tile cache**: Centralized tile cache configuration across all map screens.
+
+### Fixed
+- **Temperature charts**: Removed double-conversion on charge detail temperature chart (values already pre-converted by API).
+- **Weather Along the Way**: Fixed missing °C→°F conversion for Open-Meteo weather data when using imperial units.
+- **Drives screen**: Removed hardcoded imperial unit conversions on max speed, distance chart, and top speed chart (values already pre-converted by API).
+- **Spelling**: Minor spelling and translation corrections.
+
 ## [1.4.0-beta2] - 2026-04-04
 
 ### Added
@@ -474,7 +495,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.4.0-beta2...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/vide/matedroid/compare/v1.3.0...v1.4.0
 [1.4.0-beta2]: https://github.com/vide/matedroid/compare/v1.4.0-beta1...v1.4.0-beta2
 [1.4.0-beta1]: https://github.com/vide/matedroid/compare/v1.3.0...v1.4.0-beta1
 [1.3.0]: https://github.com/vide/matedroid/compare/v1.2.3...v1.3.0

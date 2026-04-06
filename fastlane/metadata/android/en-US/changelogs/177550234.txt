@@ -1,0 +1,13 @@
+Road trips, sentry history, and smarter charts arrive in MateDroid 1.4.
+
+Added:
+- Trip grouping: auto-detects road trips with route maps, country flags, and per-leg stats
+- Sentry alert history with 6-day heatmap and location-aware alerts
+- Widget now shows charging power
+- Mileage screen: energy cost, consumption, and efficiency
+
+Changed:
+- Chart Y-axis labels auto-scale to data range
+
+Fixed:
+- Temperature and unit conversion issues on multiple screens

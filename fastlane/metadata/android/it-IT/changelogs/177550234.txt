@@ -1,0 +1,13 @@
+Viaggi, cronologia sentinella e grafici migliorati in MateDroid 1.4.
+
+Aggiunto:
+- Raggruppamento viaggi con mappe, bandiere e statistiche per tratta
+- Cronologia sentinella con heatmap 6 giorni e avvisi con posizione
+- Il widget mostra la potenza di ricarica
+- Chilometraggio: costo energia, consumo ed efficienza
+
+Modificato:
+- Etichette asse Y si adattano ai dati
+
+Corretto:
+- Conversione temperature e unità su varie schermate
