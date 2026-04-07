@@ -1,0 +1,4 @@
+Corretto il problema degli indirizzi degli avvisi Sentry che apparivano vuoti quando l'auto si trovava fuori da un geofence. Gli avvisi ora mostrano correttamente la posizione geocodificata o un'etichetta predefinita.
+
+Corretto:
+- Avvisi Sentry con testo vuoto invece dell'indirizzo o del testo segnaposto "Avviso rilevato"

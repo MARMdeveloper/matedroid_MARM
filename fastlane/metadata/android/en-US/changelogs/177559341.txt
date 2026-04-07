@@ -1,0 +1,4 @@
+Fixed sentry alert addresses showing blank when the car is outside a geofence. Alerts now correctly display the reverse-geocoded location or a fallback label.
+
+Fixed:
+- Sentry alerts showing empty text instead of address or "Alert detected" placeholder

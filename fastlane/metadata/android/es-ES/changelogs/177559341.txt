@@ -1,0 +1,4 @@
+Corregido el problema de las direcciones de alertas Sentry que aparecían en blanco cuando el coche estaba fuera de un geofence. Las alertas ahora muestran correctamente la ubicación geocodificada o una etiqueta predeterminada.
+
+Corregido:
+- Alertas Sentry con texto vacío en lugar de la dirección o el texto "Alerta detectada"

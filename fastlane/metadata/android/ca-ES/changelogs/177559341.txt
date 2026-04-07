@@ -1,0 +1,4 @@
+Corregit el problema de les adreces d'alertes Sentry que apareixien en blanc quan el cotxe estava fora d'un geofence. Les alertes ara mostren correctament la ubicació geocodificada o una etiqueta predeterminada.
+
+Corregit:
+- Alertes Sentry amb text buit en lloc de l'adreça o el text "Alerta detectada"

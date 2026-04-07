@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-04-07
+
+### Fixed
+- **Sentry alert addresses**: Fixed empty geofence string from the API causing blank address display instead of showing the reverse-geocoded location or "Alert detected" fallback.
+
 ## [1.4.0] - 2026-04-06
 
 ### Added
@@ -495,7 +500,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/vide/matedroid/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/vide/matedroid/compare/v1.3.0...v1.4.0
 [1.4.0-beta2]: https://github.com/vide/matedroid/compare/v1.4.0-beta1...v1.4.0-beta2
 [1.4.0-beta1]: https://github.com/vide/matedroid/compare/v1.3.0...v1.4.0-beta1
