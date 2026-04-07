@@ -160,7 +160,7 @@ class SentryHistoryViewModel @Inject constructor(
 
     private fun resolveAddresses(alerts: List<SentryAlertLog>) {
         for (alert in alerts) {
-            if (alert.address == null && alert.latitude != null && alert.longitude != null && alert.id !in geocodedIds) {
+            if (alert.address.isNullOrBlank() && alert.latitude != null && alert.longitude != null && alert.id !in geocodedIds) {
                 geocodedIds.add(alert.id)
                 viewModelScope.launch {
                     // Try the geocode cache first -- sentry position is the end of the

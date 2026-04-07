@@ -97,7 +97,7 @@ class SentryStateRepository @Inject constructor(
                         sessionStartedAt = sessionStartedAt,
                         latitude = latitude,
                         longitude = longitude,
-                        address = geofence
+                        address = geofence?.ifBlank { null }
                     )
                 )
             }

@@ -522,7 +522,7 @@ private fun AlertRow(
         .toLocalTime()
     val timeStr = time.format(DateTimeFormatter.ofPattern("HH:mm"))
 
-    val displayText = alert.address
+    val displayText = alert.address?.ifBlank { null }
         ?: stringResource(R.string.sentry_alert_detected)
 
     Card(
